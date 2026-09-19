@@ -8,6 +8,7 @@ import { useAuth, ensureProfile } from "@/hooks/useAuth";
 import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
 import { EXAM_BOARDS, SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
+import { subjectElementCount, subjectUnits } from "@/lib/gcse-topics";
 
 function boardLabel(board: string) {
   return board === "WJEC Eduqas" ? "WJEC / Eduqas" : board;
@@ -39,8 +40,15 @@ type Pick = { name: string; board: string | null; tier: Tier | null };
 type DayConfig = { sessions: number; minutes: number };
 
 const DEFAULT_DAY: DayConfig = { sessions: 2, minutes: 45 };
-const TOTAL_STEPS = 5;
-const STEP_LABELS = ["Pick subjects", "Exam boards", "Set timeframe", "Choose topics", "Review"];
+const TOTAL_STEPS = 6;
+const STEP_LABELS = [
+  "Pick subjects",
+  "Exam boards",
+  "Tick topics",
+  "Set timeframe",
+  "Fill topics",
+  "Review",
+];
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -56,6 +64,9 @@ function SetupPage() {
   const [step, setStep] = useState(1);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");
+  /** Ticked checklist topics, keyed by subject name. */
+  const [chosen, setChosen] = useState<Record<string, string[]>>({});
+  const [openSubject, setOpenSubject] = useState<string | null>(null);
 
   const [customName, setCustomName] = useState("");
 
@@ -142,6 +153,26 @@ function SetupPage() {
     }
     setPicks((prev) => [...prev, { name: trimmed, board: null, tier: null }]);
     setCustomName("");
+  }
+
+  function toggleTopic(subjectName: string, label: string) {
+    setChosen((prev) => {
+      const list = prev[subjectName] ?? [];
+      return {
+        ...prev,
+        [subjectName]: list.includes(label)
+          ? list.filter((l) => l !== label)
+          : [...list, label],
+      };
+    });
+  }
+
+  function toggleAllTopics(subjectName: string, labels: string[]) {
+    setChosen((prev) => {
+      const list = prev[subjectName] ?? [];
+      const allOn = labels.every((l) => list.includes(l));
+      return { ...prev, [subjectName]: allOn ? [] : labels };
+    });
   }
 
 

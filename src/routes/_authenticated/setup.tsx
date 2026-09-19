@@ -467,93 +467,150 @@ function SetupPage() {
                 Which topics do you want to cover?
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                These are the official content checklists for your subjects. Tick the elements you
-                want in your timetable, or use Select all for a whole subject. Leave a subject
-                untouched and we'll fill it in for you.
+                For each subject, pick where the topics come from: the official DfE content list,
+                your own typing, or a document you upload. Leave a subject blank and we'll fill it
+                in for you.
               </p>
 
               <div className="mt-4 space-y-2">
                 {picks.map((pick) => {
+                  const mode = source[pick.name] ?? "dfe";
                   const units = subjectUnits(pick.name);
-                  const total = subjectElementCount(pick.name);
-                  const labels = units.flatMap((u) => u.elements.map((e) => e.label));
                   const ticked = chosen[pick.name] ?? [];
                   const open = openSubject === pick.name;
+                  const options =
+                    mode === "upload"
+                      ? (uploaded[pick.name] ?? [])
+                      : units.flatMap((u) => u.elements.map((e) => e.label));
+                  const picked =
+                    mode === "manual" ? manualLines(manualText[pick.name]).length : ticked.length;
                   return (
-                    <div
-                      key={pick.name}
-                      className="rounded-[14px] bg-background ring-1 ring-border"
-                    >
-                      <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
-                        <button
-                          onClick={() => setOpenSubject(open ? null : pick.name)}
-                          className="flex-1 text-left"
-                        >
-                          <span className="text-sm font-extrabold">{pick.name}</span>
-                          <span className="ml-2 text-[12px] font-bold text-muted-foreground">
-                            {total === 0
-                              ? "No checklist yet"
-                              : `${ticked.length} of ${total} ticked`}
-                          </span>
-                        </button>
-                        {total ? (
-                          <button
-                            onClick={() => toggleAllTopics(pick.name, labels)}
-                            className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
-                              ticked.length === total
-                                ? "bg-maths text-background"
-                                : "bg-card text-muted-foreground ring-1 ring-border"
-                            }`}
-                          >
-                            {ticked.length === total ? "Clear all" : "Select all"}
-                          </button>
-                        ) : null}
-                      </div>
+                    <div key={pick.name} className="rounded-[14px] bg-background ring-1 ring-border">
+                      <button
+                        onClick={() => setOpenSubject(open ? null : pick.name)}
+                        className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
+                      >
+                        <span className="text-sm font-extrabold">{pick.name}</span>
+                        <span className="ml-auto text-[12px] font-bold text-muted-foreground">
+                          {picked ? `${picked} topic${picked === 1 ? "" : "s"}` : "Not set"}
+                        </span>
+                      </button>
 
-                      {open && total ? (
-                        <div className="space-y-3 border-t border-border px-3 py-3">
-                          {units.map((unit) => (
-                            <div key={unit.unit}>
-                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                                {unit.unit}
+                      {open ? (
+                        <div className="border-t border-border px-3 py-3">
+                          <div className="flex flex-wrap gap-1.5">
+                            {(
+                              [
+                                ["dfe", "DfE content list"],
+                                ["manual", "Type my own"],
+                                ["upload", "Upload a document"],
+                              ] as const
+                            ).map(([key, label]) => (
+                              <button
+                                key={key}
+                                onClick={() =>
+                                  setSource((prev) => ({ ...prev, [pick.name]: key }))
+                                }
+                                className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
+                                  mode === key
+                                    ? "bg-maths text-background"
+                                    : "bg-card text-muted-foreground ring-1 ring-border"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {mode === "manual" ? (
+                            <textarea
+                              value={manualText[pick.name] ?? ""}
+                              onChange={(e) =>
+                                setManualText((prev) => ({ ...prev, [pick.name]: e.target.value }))
+                              }
+                              rows={6}
+                              placeholder={"One topic per line, e.g.\nQuadratic graphs\nCircle theorems"}
+                              className="mt-3 w-full rounded-[12px] bg-card p-3 text-[13px] font-medium ring-1 ring-border focus:outline-none"
+                            />
+                          ) : null}
+
+                          {mode === "upload" ? (
+                            <div className="mt-3">
+                              <input
+                                type="file"
+                                accept="application/pdf,image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) void readTopicsFile(pick.name, file);
+                                  e.target.value = "";
+                                }}
+                                className="block w-full text-[12px] font-bold text-muted-foreground"
+                              />
+                              <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+                                {parsing === pick.name
+                                  ? "Reading your document…"
+                                  : options.length
+                                    ? "Tick the topics you want to keep."
+                                    : "Upload a PDF or photo of your topic list."}
                               </p>
-                              <div className="mt-1 space-y-1">
-                                {unit.elements.map((element) => {
-                                  const on = ticked.includes(element.label);
-                                  return (
-                                    <button
-                                      key={element.label}
-                                      onClick={() => toggleTopic(pick.name, element.label)}
-                                      className="flex w-full items-start gap-2.5 rounded-[10px] px-2 py-1.5 text-left hover:bg-card"
-                                    >
-                                      <span
-                                        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-[6px] ${
-                                          on ? "bg-maths" : "ring-1 ring-border"
-                                        }`}
-                                      >
-                                        {on ? (
-                                          <Check
-                                            className="size-3 text-background"
-                                            strokeWidth={3}
-                                          />
-                                        ) : null}
-                                      </span>
-                                      <span className="min-w-0">
-                                        <span className="block text-[13px] font-bold">
-                                          {element.label}
-                                        </span>
-                                        {element.detail ? (
-                                          <span className="block text-[12px] font-medium leading-relaxed text-muted-foreground">
-                                            {element.detail}
-                                          </span>
-                                        ) : null}
-                                      </span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
                             </div>
-                          ))}
+                          ) : null}
+
+                          {mode !== "manual" && options.length ? (
+                            <>
+                              <button
+                                onClick={() => toggleAllTopics(pick.name, options)}
+                                className={`mt-3 rounded-full px-3 py-1.5 text-[12px] font-bold ${
+                                  ticked.length === options.length
+                                    ? "bg-maths text-background"
+                                    : "bg-card text-muted-foreground ring-1 ring-border"
+                                }`}
+                              >
+                                {ticked.length === options.length ? "Clear all" : "Select all"}
+                              </button>
+
+                              {mode === "dfe" ? (
+                                <div className="mt-3 space-y-3">
+                                  {units.map((unit) => (
+                                    <div key={unit.unit}>
+                                      <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                                        {unit.unit}
+                                      </p>
+                                      <div className="mt-1 space-y-1">
+                                        {unit.elements.map((element) => (
+                                          <TopicRow
+                                            key={element.label}
+                                            label={element.label}
+                                            detail={element.detail}
+                                            on={ticked.includes(element.label)}
+                                            onClick={() => toggleTopic(pick.name, element.label)}
+                                          />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="mt-3 space-y-1">
+                                  {options.map((topic) => (
+                                    <TopicRow
+                                      key={topic}
+                                      label={topic}
+                                      detail=""
+                                      on={ticked.includes(topic)}
+                                      onClick={() => toggleTopic(pick.name, topic)}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          ) : null}
+
+                          {mode === "dfe" && options.length === 0 ? (
+                            <p className="mt-3 text-[12px] font-bold text-muted-foreground">
+                              No DfE list for this subject yet — type your own or upload a document.
+                            </p>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
@@ -563,8 +620,8 @@ function SetupPage() {
 
               <p className="mt-3 text-[12px] font-bold text-muted-foreground">
                 {totalChosen
-                  ? `${totalChosen} topic${totalChosen === 1 ? "" : "s"} ticked.`
-                  : "Nothing ticked yet — that's fine, topics will be filled in for you."}
+                  ? `${totalChosen} topic${totalChosen === 1 ? "" : "s"} chosen.`
+                  : "Nothing chosen yet — that's fine, topics will be filled in for you."}
               </p>
             </>
           ) : null}

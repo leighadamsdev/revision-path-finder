@@ -56,12 +56,6 @@ function SetupPage() {
   const [step, setStep] = useState(1);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");
-  const [boardSource, setBoardSource] = useState<"manual" | "upload" | null>(null);
-  const [detected, setDetected] = useState<{ name: string; board: string | null; keep: boolean }[] | null>(
-    null,
-  );
-  const [parsing, setParsing] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const [customName, setCustomName] = useState("");
 

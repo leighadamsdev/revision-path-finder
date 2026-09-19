@@ -448,180 +448,50 @@ function SetupPage() {
             <>
               <p className="text-lg font-extrabold tracking-tight">Which exam boards?</p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Set the board for each subject yourself, or upload your school's options booklet and
-                we'll fill them in for you to check.
+                Choose the board for each of your subjects.
               </p>
 
-              {boardSource === null ? (
-                <div className="mt-4 space-y-2">
-                  <button
-                    onClick={() => setBoardSource("manual")}
-                    className="w-full rounded-[14px] bg-background p-4 text-left ring-1 ring-border"
-                  >
-                    <p className="text-[15px] font-extrabold tracking-tight">Set them myself</p>
-                    <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                      Choose a board from a dropdown for each of your subjects.
-                    </p>
-                  </button>
-                  <button
-                    onClick={() => setBoardSource("upload")}
-                    className="w-full rounded-[14px] bg-background p-4 text-left ring-1 ring-border"
-                  >
-                    <p className="text-[15px] font-extrabold tracking-tight">
-                      Use my options booklet
-                    </p>
-                    <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                      Upload the PDF or a photo — we'll read the boards and show them for you to
-                      confirm.
-                    </p>
-                  </button>
-                </div>
-              ) : null}
-
-              {boardSource === "upload" ? (
-                <div className="mt-4">
-                  {detected ? (
-                    <div>
-                      <p className="text-[13px] font-bold">
-                        We found these — untick anything wrong, then confirm.
-                      </p>
-                      <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto pr-1">
-                        {detected.map((item, index) => (
-                          <label
-                            key={`${item.name}-${index}`}
-                            className="flex cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 py-2 hover:bg-background"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={item.keep}
-                              onChange={(e) =>
-                                setDetected((prev) =>
-                                  (prev ?? []).map((d, i) =>
-                                    i === index ? { ...d, keep: e.target.checked } : d,
-                                  ),
-                                )
-                              }
-                              className="size-4 accent-maths"
-                            />
-                            <span className="text-sm font-bold">{item.name}</span>
-                            <span className="ml-auto text-[12px] font-semibold text-muted-foreground">
-                              {item.board ?? "board to confirm"}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                      <div className="mt-3 flex gap-2">
-                        <button
-                          onClick={confirmDetected}
-                          className="flex-1 rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground"
-                        >
-                          Use these boards
-                        </button>
-                        <button
-                          onClick={() => setDetected(null)}
-                          className="rounded-full px-4 py-3 text-sm font-bold text-muted-foreground"
-                        >
-                          Start again
-                        </button>
-                      </div>
-                      <p className="mt-2 text-[11px] font-medium text-muted-foreground">
-                        Booklets vary a lot, so treat this as a quick draft — you can change any
-                        board afterwards.
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => fileInput.current?.click()}
-                        disabled={parsing}
-                        className="flex w-full items-center gap-3 rounded-[12px] border border-dashed border-border px-3 py-4 text-left"
+              <div className="mt-4">
+                <div className="space-y-1.5">
+                  {picks.map((pick) => (
+                    <div
+                      key={pick.name}
+                      className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
+                    >
+                      <span className="text-sm font-bold">
+                        {pick.name}
+                        {pick.tier ? (
+                          <span className="ml-1.5 text-[11px] font-bold text-muted-foreground">
+                            {pick.tier}
+                          </span>
+                        ) : null}
+                      </span>
+                      <select
+                        value={pick.board ?? ""}
+                        onChange={(e) => setBoard(pick.name, e.target.value)}
+                        className="ml-auto rounded-[10px] bg-card px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
                       >
-                        <div className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-background text-muted-foreground">
-                          {parsing ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Upload className="size-4" strokeWidth={2.5} />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-[13px] font-bold">
-                            {parsing ? "Reading your booklet…" : "Upload options booklet"}
-                          </p>
-                          <p className="text-[11px] font-medium text-muted-foreground">
-                            PDF or a photo of the pages
-                          </p>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => setBoardSource("manual")}
-                        className="mt-2 text-[12px] font-bold text-muted-foreground hover:text-foreground"
-                      >
-                        I'll set the boards myself instead
-                      </button>
-                    </>
-                  )}
-                  <input
-                    ref={fileInput}
-                    type="file"
-                    accept="application/pdf,image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void handleFile(file);
-                      e.target.value = "";
-                    }}
-                  />
-                </div>
-              ) : null}
-
-              {boardSource === "manual" ? (
-                <div className="mt-4">
-                  <div className="space-y-1.5">
-                    {picks.map((pick) => (
-                      <div
-                        key={pick.name}
-                        className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
-                      >
-                        <span className="text-sm font-bold">
-                          {pick.name}
-                          {pick.tier ? (
-                            <span className="ml-1.5 text-[11px] font-bold text-muted-foreground">
-                              {pick.tier}
-                            </span>
-                          ) : null}
-                        </span>
-                        <select
-                          value={pick.board ?? ""}
-                          onChange={(e) => setBoard(pick.name, e.target.value)}
-                          className="ml-auto rounded-[10px] bg-card px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
-                        >
-                          <option value="" disabled>
-                            Choose board
+                        <option value="" disabled>
+                          Choose board
+                        </option>
+                        {EXAM_BOARDS.map((board) => (
+                          <option key={board} value={board}>
+                            {boardLabel(board)}
                           </option>
-                          {boardOptions(pick.name).map((board) => (
-                            <option key={board} value={board}>
-                              {board}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                  {missingBoards ? (
-                    <p className="mt-2 text-[12px] font-bold text-muted-foreground">
-                      {missingBoards} still need an exam board.
-                    </p>
-                  ) : null}
-                  <button
-                    onClick={() => setBoardSource("upload")}
-                    className="mt-3 text-[12px] font-bold text-muted-foreground hover:text-foreground"
-                  >
-                    Use my options booklet instead
-                  </button>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
                 </div>
-              ) : null}
+                {missingBoards ? (
+                  <p className="mt-2 text-[12px] font-bold text-muted-foreground">
+                    {missingBoards} still need an exam board.
+                  </p>
+                ) : null}
+              </div>
             </>
           ) : null}
+
 
           {step === 3 ? (
             <>

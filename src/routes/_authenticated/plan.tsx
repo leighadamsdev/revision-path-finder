@@ -179,7 +179,7 @@ function TimetablePage() {
                     key={session.id}
                     session={session}
                     subject={subjects.find((s) => s.id === session.subject_id)}
-                    minutes={plan.session_length_minutes}
+                    minutes={session.length_minutes ?? plan.session_length_minutes}
                     onChanged={(patch) => patchSession(session.id, patch)}
                   />
                 ))}

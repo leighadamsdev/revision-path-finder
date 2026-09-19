@@ -241,3 +241,33 @@ export async function regenerateSessionTopic(session: SessionRow, subject: Subje
   if (error) throw error;
   return topic;
 }
+
+/** Finds the subject row for a name + board pair, creating a custom one if we don't stock it. */
+export async function resolveSubjectId(
+  name: string,
+  board: string,
+  userId: string,
+  known: Subject[],
+): Promise<string> {
+  const match = known.find(
+    (s) =>
+      s.name.toLowerCase() === name.toLowerCase() &&
+      s.exam_board.toLowerCase() === board.toLowerCase(),
+  );
+  if (match) return match.id;
+
+  const sibling = known.find((s) => s.name.toLowerCase() === name.toLowerCase());
+  const { data, error } = await supabase
+    .from("subjects")
+    .insert({
+      name,
+      exam_board: board,
+      is_custom: true,
+      created_by: userId,
+      color_key: sibling?.color_key ?? "media",
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
+}

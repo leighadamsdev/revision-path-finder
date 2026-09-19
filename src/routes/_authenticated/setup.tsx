@@ -857,3 +857,45 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function manualLines(text: string | undefined) {
+  return (text ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function TopicRow({
+  label,
+  detail,
+  on,
+  onClick,
+}: {
+  label: string;
+  detail: string;
+  on: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-start gap-2.5 rounded-[10px] px-2 py-1.5 text-left hover:bg-card"
+    >
+      <span
+        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-[6px] ${
+          on ? "bg-maths" : "ring-1 ring-border"
+        }`}
+      >
+        {on ? <Check className="size-3 text-background" strokeWidth={3} /> : null}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[13px] font-bold">{label}</span>
+        {detail ? (
+          <span className="block text-[12px] font-medium leading-relaxed text-muted-foreground">
+            {detail}
+          </span>
+        ) : null}
+      </span>
+    </button>
+  );
+}

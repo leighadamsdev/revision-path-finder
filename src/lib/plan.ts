@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { generateTopics } from "@/lib/revision.functions";
 import { catalogueSubject } from "@/lib/gcse-subjects";
+import { subjectUnits } from "@/lib/gcse-topics";
 
 export type Subject = {
   id: string;
@@ -196,6 +197,16 @@ async function buildTopics(draft: PlanDraft, slots: Slot[]) {
     const count = slots.filter((s) => s.subjectId === subjectId).length;
     const subject = subjects.find((s) => s.id === subjectId);
     if (!subject || count === 0) continue;
+
+    const documentTopics = subjectUnits(subject.name).flatMap((unit) =>
+      unit.elements.map((element) =>
+        element.detail ? `${element.label}: ${element.detail}` : element.label,
+      ),
+    );
+    if (documentTopics.length) {
+      result[subjectId] = documentTopics;
+      continue;
+    }
 
     if (draft.contentMode === "library") {
       result[subjectId] = await fetchLibraryTopics(subjectId);

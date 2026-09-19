@@ -8,7 +8,8 @@ import { useAuth, ensureProfile } from "@/hooks/useAuth";
 import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
 import { EXAM_BOARDS, SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
-import { subjectElementCount, subjectUnits } from "@/lib/gcse-topics";
+import { subjectUnits } from "@/lib/gcse-topics";
+import { extractTopicsFromDocument } from "@/lib/revision.functions";
 
 function boardLabel(board: string) {
   return board === "WJEC Eduqas" ? "WJEC / Eduqas" : board;
@@ -169,9 +170,48 @@ function SetupPage() {
   function toggleAllTopics(subjectName: string, labels: string[]) {
     setChosen((prev) => {
       const list = prev[subjectName] ?? [];
-      const allOn = labels.every((l) => list.includes(l));
+      const allOn = labels.length > 0 && labels.every((l) => list.includes(l));
       return { ...prev, [subjectName]: allOn ? [] : labels };
     });
+  }
+
+  /** The final topic list for a subject, whatever source the student chose. */
+  function topicsFor(subjectName: string): string[] {
+    const mode = source[subjectName] ?? "dfe";
+    if (mode === "manual") return manualLines(manualText[subjectName]);
+    return chosen[subjectName] ?? [];
+  }
+
+  async function readTopicsFile(subjectName: string, file: File) {
+    setParsing(subjectName);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("Could not read that file."));
+        reader.readAsDataURL(file);
+      });
+      const { topics } = await extractTopicsFromDocument({
+        data: {
+          subject: subjectName,
+          fileName: file.name,
+          mimeType: file.type || "application/pdf",
+          dataUrl,
+        },
+      });
+      if (!topics.length) {
+        toast.error("We couldn't find topics in that document — try typing them instead.");
+        return;
+      }
+      setUploaded((prev) => ({ ...prev, [subjectName]: topics }));
+      setChosen((prev) => ({ ...prev, [subjectName]: topics }));
+      toast.success(`Found ${topics.length} topics — untick anything you don't need.`);
+    } catch (error) {
+      console.error(error);
+      toast.error("We couldn't read that document. Try a clearer file or type your topics.");
+    } finally {
+      setParsing(null);
+    }
   }
 
 
@@ -187,8 +227,8 @@ function SetupPage() {
         const id = await resolveSubjectId(pick.name, pick.board!, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
-        const ticked = chosen[pick.name] ?? [];
-        if (ticked.length) chosenTopics[id] = ticked;
+        const topics = topicsFor(pick.name);
+        if (topics.length) chosenTopics[id] = topics;
       }
       await queryClient.invalidateQueries({ queryKey: ["subjects"] });
 
@@ -223,7 +263,7 @@ function SetupPage() {
   const totalSessions =
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
 
-  const totalChosen = picks.reduce((sum, p) => sum + (chosen[p.name]?.length ?? 0), 0);
+  const totalChosen = picks.reduce((sum, p) => sum + topicsFor(p.name).length, 0);
 
   const canContinue =
     step === 1

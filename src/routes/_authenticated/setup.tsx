@@ -40,15 +40,10 @@ type Pick = { name: string; board: string | null; tier: Tier | null };
 type DayConfig = { sessions: number; minutes: number };
 
 const DEFAULT_DAY: DayConfig = { sessions: 2, minutes: 45 };
-const TOTAL_STEPS = 6;
-const STEP_LABELS = [
-  "Pick subjects",
-  "Exam boards",
-  "Tick topics",
-  "Set timeframe",
-  "Fill topics",
-  "Review",
-];
+const TOTAL_STEPS = 5;
+const STEP_LABELS = ["Pick subjects", "Exam boards", "Choose topics", "Set timeframe", "Review"];
+
+type TopicSource = "dfe" | "manual" | "upload";
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -64,9 +59,14 @@ function SetupPage() {
   const [step, setStep] = useState(1);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");
-  /** Ticked checklist topics, keyed by subject name. */
+  /** Ticked topics, keyed by subject name. */
   const [chosen, setChosen] = useState<Record<string, string[]>>({});
   const [openSubject, setOpenSubject] = useState<string | null>(null);
+  /** How each subject's topics come in: DfE list, typed by hand, or from a document. */
+  const [source, setSource] = useState<Record<string, TopicSource>>({});
+  const [manualText, setManualText] = useState<Record<string, string>>({});
+  const [uploaded, setUploaded] = useState<Record<string, string[]>>({});
+  const [parsing, setParsing] = useState<string | null>(null);
 
   const [customName, setCustomName] = useState("");
 
@@ -78,7 +78,6 @@ function SetupPage() {
     Wednesday: { ...DEFAULT_DAY },
     Thursday: { ...DEFAULT_DAY },
   });
-  const [mode, setMode] = useState<"ai" | "manual" | "library">("ai");
   const [generating, setGenerating] = useState(false);
 
   const studyDays = useMemo(
@@ -243,7 +242,7 @@ function SetupPage() {
             Step {step} of {TOTAL_STEPS}
           </span>
           <div className="flex gap-1">
-            {[1, 2, 3, 4, 5, 6].map((n) => (
+            {[1, 2, 3, 4, 5].map((n) => (
               <span
                 key={n}
                 className={`h-1 w-5 rounded-full ${n <= step ? "bg-maths" : "bg-border"}`}
@@ -689,51 +688,6 @@ function SetupPage() {
 
           {step === 5 ? (
             <>
-              <p className="text-lg font-extrabold tracking-tight">
-                How should topics be filled in?
-              </p>
-              <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                You can still edit or regenerate any single session later.
-              </p>
-              <div className="mt-4 space-y-2">
-                {(
-                  [
-                    [
-                      "ai",
-                      "AI-generated",
-                      "A spread-out sequence of topics per subject, based on your exam board. Weak areas come back later on.",
-                    ],
-                    [
-                      "manual",
-                      "Manual entry",
-                      "Sessions are created empty with just the day and subject — you type each topic yourself.",
-                    ],
-                    [
-                      "library",
-                      "Pre-built library",
-                      "Topics pulled in order from our curated lists for your subject and board.",
-                    ],
-                  ] as const
-                ).map(([key, title, body]) => (
-                  <button
-                    key={key}
-                    onClick={() => setMode(key)}
-                    className={`w-full rounded-[14px] p-4 text-left ring-1 ${
-                      mode === key ? "bg-maths/10 ring-maths/40" : "bg-background ring-border"
-                    }`}
-                  >
-                    <p className="text-[15px] font-extrabold tracking-tight">{title}</p>
-                    <p className="mt-1 text-[13px] font-medium leading-relaxed text-muted-foreground">
-                      {body}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : null}
-
-          {step === 6 ? (
-            <>
               <p className="text-lg font-extrabold tracking-tight">Ready to build your plan</p>
               <div className="mt-4 space-y-2 text-[13px] font-semibold">
                 <Row
@@ -751,26 +705,15 @@ function SetupPage() {
                   />
                 ))}
                 <Row
-                  label="Topics"
-                  value={
-                    mode === "ai"
-                      ? "AI-generated"
-                      : mode === "manual"
-                        ? "Manual"
-                        : "Pre-built library"
-                  }
-                />
-                <Row
-                  label="Ticked topics"
-                  value={totalChosen ? `${totalChosen} from the checklists` : "None — filled for you"}
+                  label="Topics chosen"
+                  value={totalChosen ? `${totalChosen} topics` : "None — filled for you"}
                 />
                 <Row label="Total sessions" value={`${totalSessions}`} />
               </div>
-              {mode === "ai" ? (
-                <p className="mt-3 text-[12px] font-medium text-muted-foreground">
-                  Generating topics takes a few moments — hang on while we write them.
-                </p>
-              ) : null}
+              <p className="mt-3 text-[12px] font-medium text-muted-foreground">
+                Any subject you left blank gets its topics written for you — this takes a few
+                moments.
+              </p>
             </>
           ) : null}
 

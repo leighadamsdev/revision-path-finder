@@ -86,16 +86,14 @@ function SetupPage() {
     return map;
   }, [subjects]);
 
-  /** The national catalogue, plus anything extra already stored in the database. */
+  /** The national GCSE catalogue, grouped. */
   const allNames = useMemo(() => {
     const groups = new Map<string, string[]>();
     for (const group of SUBJECT_GROUPS) groups.set(group, []);
     for (const s of GCSE_SUBJECTS) groups.get(s.group)!.push(s.name);
-    const known = new Set(GCSE_SUBJECTS.map((s) => s.name.toLowerCase()));
-    const extras = Array.from(boardsByName.keys()).filter((n) => !known.has(n.toLowerCase()));
-    if (extras.length) groups.set("Other", [...(groups.get("Other") ?? []), ...extras]);
     return groups;
-  }, [boardsByName]);
+  }, []);
+
 
   const filteredGroups = useMemo(() => {
     const q = search.trim().toLowerCase();

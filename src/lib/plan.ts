@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { generateTopics } from "@/lib/revision.functions";
+import { catalogueSubject } from "@/lib/gcse-subjects";
 
 export type Subject = {
   id: string;
@@ -270,7 +271,7 @@ export async function resolveSubjectId(
       exam_board: board,
       is_custom: true,
       created_by: userId,
-      color_key: sibling?.color_key ?? "media",
+      color_key: sibling?.color_key ?? catalogueSubject(name)?.colorKey ?? "media",
     })
     .select("id")
     .single();

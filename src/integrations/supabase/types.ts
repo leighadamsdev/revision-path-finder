@@ -54,16 +54,19 @@ export type Database = {
           id: string
           plan_id: string
           subject_id: string
+          tier: string | null
         }
         Insert: {
           id?: string
           plan_id: string
           subject_id: string
+          tier?: string | null
         }
         Update: {
           id?: string
           plan_id?: string
           subject_id?: string
+          tier?: string | null
         }
         Relationships: [
           {

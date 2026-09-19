@@ -243,7 +243,7 @@ function SetupPage() {
             Step {step} of {TOTAL_STEPS}
           </span>
           <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
+            {[1, 2, 3, 4, 5, 6].map((n) => (
               <span
                 key={n}
                 className={`h-1 w-5 rounded-full ${n <= step ? "bg-maths" : "bg-border"}`}
@@ -464,6 +464,114 @@ function SetupPage() {
 
           {step === 3 ? (
             <>
+              <p className="text-lg font-extrabold tracking-tight">
+                Which topics do you want to cover?
+              </p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+                These are the official content checklists for your subjects. Tick the elements you
+                want in your timetable, or use Select all for a whole subject. Leave a subject
+                untouched and we'll fill it in for you.
+              </p>
+
+              <div className="mt-4 space-y-2">
+                {picks.map((pick) => {
+                  const units = subjectUnits(pick.name);
+                  const total = subjectElementCount(pick.name);
+                  const labels = units.flatMap((u) => u.elements.map((e) => e.label));
+                  const ticked = chosen[pick.name] ?? [];
+                  const open = openSubject === pick.name;
+                  return (
+                    <div
+                      key={pick.name}
+                      className="rounded-[14px] bg-background ring-1 ring-border"
+                    >
+                      <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
+                        <button
+                          onClick={() => setOpenSubject(open ? null : pick.name)}
+                          className="flex-1 text-left"
+                        >
+                          <span className="text-sm font-extrabold">{pick.name}</span>
+                          <span className="ml-2 text-[12px] font-bold text-muted-foreground">
+                            {total === 0
+                              ? "No checklist yet"
+                              : `${ticked.length} of ${total} ticked`}
+                          </span>
+                        </button>
+                        {total ? (
+                          <button
+                            onClick={() => toggleAllTopics(pick.name, labels)}
+                            className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
+                              ticked.length === total
+                                ? "bg-maths text-background"
+                                : "bg-card text-muted-foreground ring-1 ring-border"
+                            }`}
+                          >
+                            {ticked.length === total ? "Clear all" : "Select all"}
+                          </button>
+                        ) : null}
+                      </div>
+
+                      {open && total ? (
+                        <div className="space-y-3 border-t border-border px-3 py-3">
+                          {units.map((unit) => (
+                            <div key={unit.unit}>
+                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                                {unit.unit}
+                              </p>
+                              <div className="mt-1 space-y-1">
+                                {unit.elements.map((element) => {
+                                  const on = ticked.includes(element.label);
+                                  return (
+                                    <button
+                                      key={element.label}
+                                      onClick={() => toggleTopic(pick.name, element.label)}
+                                      className="flex w-full items-start gap-2.5 rounded-[10px] px-2 py-1.5 text-left hover:bg-card"
+                                    >
+                                      <span
+                                        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-[6px] ${
+                                          on ? "bg-maths" : "ring-1 ring-border"
+                                        }`}
+                                      >
+                                        {on ? (
+                                          <Check
+                                            className="size-3 text-background"
+                                            strokeWidth={3}
+                                          />
+                                        ) : null}
+                                      </span>
+                                      <span className="min-w-0">
+                                        <span className="block text-[13px] font-bold">
+                                          {element.label}
+                                        </span>
+                                        {element.detail ? (
+                                          <span className="block text-[12px] font-medium leading-relaxed text-muted-foreground">
+                                            {element.detail}
+                                          </span>
+                                        ) : null}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p className="mt-3 text-[12px] font-bold text-muted-foreground">
+                {totalChosen
+                  ? `${totalChosen} topic${totalChosen === 1 ? "" : "s"} ticked.`
+                  : "Nothing ticked yet — that's fine, topics will be filled in for you."}
+              </p>
+            </>
+          ) : null}
+
+          {step === 4 ? (
+            <>
               <p className="text-lg font-extrabold tracking-tight">How much time have you got?</p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
                 Be realistic — a plan you can keep up beats a perfect one you abandon. Each day can
@@ -579,7 +687,7 @@ function SetupPage() {
             </>
           ) : null}
 
-          {step === 4 ? (
+          {step === 5 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">
                 How should topics be filled in?
@@ -624,7 +732,7 @@ function SetupPage() {
             </>
           ) : null}
 
-          {step === 5 ? (
+          {step === 6 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">Ready to build your plan</p>
               <div className="mt-4 space-y-2 text-[13px] font-semibold">

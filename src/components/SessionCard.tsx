@@ -60,7 +60,7 @@ export function SessionCard({
   }
 
   return (
-    <div className="rounded-[14px] bg-background/60 p-3 ring-1 ring-black/5">
+    <article className="print-session rounded-[14px] bg-background/60 p-3 ring-1 ring-black/5">
       <div className="mb-2 flex items-center gap-2">
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${style.tag}`}
@@ -73,6 +73,7 @@ export function SessionCard({
         </span>
       </div>
 
+      <p className="print-topic hidden">{topic || "Topic to be decided"}</p>
       <input
         value={topic}
         placeholder="Type the topic for this session…"
@@ -80,7 +81,7 @@ export function SessionCard({
           setTopic(e.target.value);
           queueSave("topic", { topic_text: e.target.value });
         }}
-        className="w-full bg-transparent text-[15px] font-bold placeholder:text-muted-foreground/60 focus:outline-none"
+        className="print-editable w-full bg-transparent text-[15px] font-bold placeholder:text-muted-foreground/60 focus:outline-none"
       />
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -107,14 +108,17 @@ export function SessionCard({
         <button
           onClick={regenerate}
           disabled={regenerating || !subject}
-          className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-50"
+          className="print-action ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground hover:text-foreground disabled:opacity-50"
         >
           <RefreshCw className={`size-3 ${regenerating ? "animate-spin" : ""}`} strokeWidth={2.5} />
           {regenerating ? "Thinking…" : "New topic"}
         </button>
       </div>
 
-      <div className="relative mt-3">
+      <p className="print-notes hidden">
+        <strong>Gaps:</strong> {notes || "—"}
+      </p>
+      <div className="print-editable relative mt-3">
         <input
           value={notes}
           placeholder="Gaps to revisit…"
@@ -134,6 +138,6 @@ export function SessionCard({
           </span>
         ) : null}
       </div>
-    </div>
+    </article>
   );
 }

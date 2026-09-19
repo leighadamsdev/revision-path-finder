@@ -29,7 +29,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      <div className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-sm">
+      <div className="app-header sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-4 pb-3 pt-4 sm:px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -80,9 +80,9 @@ export function AppShell({
         </div>
       </div>
 
-      <main className="mx-auto max-w-5xl px-4 pb-28 pt-6 sm:px-6">{children}</main>
+      <main className="app-main mx-auto max-w-5xl px-4 pb-28 pt-6 sm:px-6">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur-sm">
+      <nav className="app-nav fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="grid grid-cols-4">
             {TABS.map((tab) => (

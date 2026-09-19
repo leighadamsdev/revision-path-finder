@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { SessionCard } from "@/components/SessionCard";
+import { Button } from "@/components/ui/button";
 import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
 import type { SessionRow } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
@@ -111,7 +112,26 @@ function TimetablePage() {
         </div>
       }
     >
-      <section className="mb-7">
+      <div className="mb-5 flex items-center justify-between gap-3 print:hidden">
+        <div>
+          <h1 className="text-xl font-extrabold tracking-tight">Week {week}</h1>
+          <p className="text-[13px] font-semibold text-muted-foreground">{plan.name}</p>
+        </div>
+        <Button type="button" variant="outline" onClick={() => window.print()}>
+          <Printer aria-hidden="true" />
+          Print week
+        </Button>
+      </div>
+
+      <header className="print-week-heading hidden">
+        <div>
+          <p className="print-brand">RevisionPath</p>
+          <h1>{plan.name}</h1>
+        </div>
+        <p>Week {week} of {plan.weeks}</p>
+      </header>
+
+      <section className="mb-7 print:hidden">
         <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
             <div className="min-w-0 flex-1">
@@ -159,15 +179,15 @@ function TimetablePage() {
         </div>
       </section>
 
-      <div key={week} className="week-in grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div key={week} className="print-week-grid week-in grid grid-cols-1 gap-4 md:grid-cols-2">
         {days.map((day) => {
           const daySessions = weekSessions
             .filter((s) => s.day_label === day)
             .sort((a, b) => a.session_slot - b.session_slot);
           if (daySessions.length === 0) return null;
           return (
-            <div key={day} className="rounded-[16px] bg-card p-3 ring-1 ring-black/5 sm:p-4">
-              <div className="mb-2 flex items-center justify-between px-1">
+            <section key={day} className="print-day rounded-[16px] bg-card p-3 ring-1 ring-black/5 sm:p-4">
+              <div className="print-day-heading mb-2 flex items-center justify-between px-1">
                 <p className="text-sm font-extrabold tracking-tight">{day}</p>
                 <p className="text-[11px] font-bold text-muted-foreground">
                   {daySessions.length} {daySessions.length === 1 ? "session" : "sessions"}
@@ -184,7 +204,7 @@ function TimetablePage() {
                   />
                 ))}
               </div>
-            </div>
+            </section>
           );
         })}
       </div>

@@ -104,6 +104,8 @@ export type PlanDraft = {
   subjectIds: string[];
   /** Foundation / Higher per subject id, where the subject is tiered. */
   tiers?: Record<string, string | null>;
+  /** Topics the student ticked from the GCSE checklist, per subject id. */
+  chosenTopics?: Record<string, string[]>;
 };
 
 type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };
@@ -184,10 +186,16 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
 
 async function buildTopics(draft: PlanDraft, slots: Slot[]) {
   const result: Record<string, string[]> = {};
+
+  // Topics ticked from the GCSE checklist always win.
+  for (const [subjectId, topics] of Object.entries(draft.chosenTopics ?? {})) {
+    if (topics.length) result[subjectId] = topics;
+  }
   if (draft.contentMode === "manual") return result;
 
   const subjects = await fetchSubjects();
   for (const subjectId of draft.subjectIds) {
+    if (result[subjectId]?.length) continue;
     const count = slots.filter((s) => s.subjectId === subjectId).length;
     const subject = subjects.find((s) => s.id === subjectId);
     if (!subject || count === 0) continue;

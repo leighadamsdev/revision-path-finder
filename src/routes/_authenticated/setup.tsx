@@ -5,8 +5,7 @@ import { Check, Loader2, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth, ensureProfile } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { createPlan, fetchSubjects, type Subject } from "@/lib/plan";
+import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
 import { parseOptionsBooklet } from "@/lib/revision.functions";
 import { EXAM_BOARDS, SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 
@@ -31,7 +30,14 @@ export const Route = createFileRoute("/_authenticated/setup")({
   component: SetupPage,
 });
 
-type Detected = { subject: string; exam_board: string; subjectId: string | null; keep: boolean };
+type Pick = { name: string; board: string | null };
+type DayConfig = { sessions: number; minutes: number };
+
+const DEFAULT_DAY: DayConfig = { sessions: 2, minutes: 45 };
+
+function lengthLabel(n: number) {
+  return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
+}
 
 function SetupPage() {
   const navigate = useNavigate();
@@ -41,62 +47,76 @@ function SetupPage() {
   const subjects = subjectsQuery.data ?? [];
 
   const [step, setStep] = useState(1);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"manual" | "upload">("manual");
-  const [detected, setDetected] = useState<Detected[] | null>(null);
+  const [detected, setDetected] = useState<(Pick & { keep: boolean })[] | null>(null);
   const [parsing, setParsing] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const [customName, setCustomName] = useState("");
-  const [customBoard, setCustomBoard] = useState<string>(EXAM_BOARDS[0]);
 
   const [name, setName] = useState("Finals plan");
   const [weeks, setWeeks] = useState(6);
-  const [studyDays, setStudyDays] = useState<string[]>([
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-  ]);
-  const [sessionsPerDay, setSessionsPerDay] = useState(2);
-  const [length, setLength] = useState<number>(45);
+  const [dayConfigs, setDayConfigs] = useState<Record<string, DayConfig>>({
+    Monday: { ...DEFAULT_DAY },
+    Tuesday: { ...DEFAULT_DAY },
+    Wednesday: { ...DEFAULT_DAY },
+    Thursday: { ...DEFAULT_DAY },
+  });
   const [mode, setMode] = useState<"ai" | "manual" | "library">("ai");
   const [generating, setGenerating] = useState(false);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const list = q
-      ? subjects.filter((s) => `${s.name} ${s.exam_board}`.toLowerCase().includes(q))
-      : subjects;
-    return list.slice(0, 40);
-  }, [subjects, search]);
+  const studyDays = useMemo(
+    () => WEEK_DAYS.filter((d) => dayConfigs[d]).map((d) => d as string),
+    [dayConfigs],
+  );
 
-  function toggle(id: string) {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  /** Every distinct subject name we stock, with the boards it's offered on. */
+  const boardsByName = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const s of subjects) {
+      const list = map.get(s.name) ?? [];
+      if (!list.includes(s.exam_board)) list.push(s.exam_board);
+      map.set(s.name, list);
+    }
+    return map;
+  }, [subjects]);
+
+  const filteredNames = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const names = Array.from(boardsByName.keys()).sort((a, b) => a.localeCompare(b));
+    return (q ? names.filter((n) => n.toLowerCase().includes(q)) : names).slice(0, 40);
+  }, [boardsByName, search]);
+
+  function boardOptions(subjectName: string) {
+    const known = boardsByName.get(subjectName) ?? [];
+    return Array.from(new Set([...known, ...EXAM_BOARDS]));
   }
 
-  async function addCustom() {
-    if (!user || !customName.trim()) return;
-    const { data, error } = await supabase
-      .from("subjects")
-      .insert({
-        name: customName.trim(),
-        exam_board: customBoard,
-        is_custom: true,
-        created_by: user.id,
-        color_key: "media",
-      })
-      .select("id, name, exam_board, color_key, is_custom")
-      .single();
-    if (error) {
-      toast.error("Couldn't add that subject.");
+  function toggleName(subjectName: string) {
+    setPicks((prev) => {
+      if (prev.some((p) => p.name === subjectName)) {
+        return prev.filter((p) => p.name !== subjectName);
+      }
+      const known = boardsByName.get(subjectName) ?? [];
+      return [...prev, { name: subjectName, board: known.length === 1 ? known[0]! : null }];
+    });
+  }
+
+  function setBoard(subjectName: string, board: string) {
+    setPicks((prev) => prev.map((p) => (p.name === subjectName ? { ...p, board } : p)));
+  }
+
+  function addCustomName() {
+    const trimmed = customName.trim();
+    if (!trimmed) return;
+    if (picks.some((p) => p.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error("That subject is already on your list.");
       return;
     }
-    await queryClient.invalidateQueries({ queryKey: ["subjects"] });
-    setSelected((prev) => [...prev, (data as Subject).id]);
+    setPicks((prev) => [...prev, { name: trimmed, board: null }]);
     setCustomName("");
-    toast.success("Subject added.");
   }
 
   async function handleFile(file: File) {
@@ -122,20 +142,14 @@ function SetupPage() {
 
       setDetected(
         found.map((item) => {
-          const match =
-            subjects.find(
-              (s) =>
-                s.name.toLowerCase() === item.subject.toLowerCase() &&
-                s.exam_board.toLowerCase() === item.exam_board.toLowerCase(),
+          const known = boardsByName.get(item.subject) ?? [];
+          const board =
+            known.find((b) => b.toLowerCase() === item.exam_board.toLowerCase()) ??
+            (EXAM_BOARDS as readonly string[]).find(
+              (b) => b.toLowerCase() === item.exam_board.toLowerCase(),
             ) ??
-            subjects.find((s) => s.name.toLowerCase() === item.subject.toLowerCase()) ??
-            null;
-          return {
-            subject: item.subject,
-            exam_board: item.exam_board || match?.exam_board || "",
-            subjectId: match?.id ?? null,
-            keep: Boolean(match),
-          };
+            (known.length === 1 ? known[0]! : null);
+          return { name: item.subject, board, keep: true };
         }),
       );
     } catch (error) {
@@ -152,11 +166,19 @@ function SetupPage() {
 
   function confirmDetected() {
     if (!detected) return;
-    const ids = detected.filter((d) => d.keep && d.subjectId).map((d) => d.subjectId!);
-    setSelected((prev) => Array.from(new Set([...prev, ...ids])));
+    const keep = detected.filter((d) => d.keep);
+    setPicks((prev) => {
+      const next = [...prev];
+      for (const item of keep) {
+        if (!next.some((p) => p.name.toLowerCase() === item.name.toLowerCase())) {
+          next.push({ name: item.name, board: item.board });
+        }
+      }
+      return next;
+    });
     setDetected(null);
     setTab("manual");
-    toast.success(`${ids.length} subjects added — check the list below.`);
+    toast.success(`${keep.length} subjects added — confirm each exam board below.`);
   }
 
   async function generate() {
@@ -164,14 +186,22 @@ function SetupPage() {
     setGenerating(true);
     try {
       await ensureProfile(user);
+      const subjectIds: string[] = [];
+      for (const pick of picks) {
+        subjectIds.push(await resolveSubjectId(pick.name, pick.board!, user.id, subjects));
+      }
+      await queryClient.invalidateQueries({ queryKey: ["subjects"] });
+
       const planId = await createPlan(user.id, {
         name: name.trim() || "My revision plan",
         weeks,
-        studyDays,
-        sessionsPerDay,
-        sessionLengthMinutes: length,
+        days: studyDays.map((day) => ({
+          day,
+          sessions: dayConfigs[day]?.sessions ?? DEFAULT_DAY.sessions,
+          minutes: dayConfigs[day]?.minutes ?? DEFAULT_DAY.minutes,
+        })),
         contentMode: mode,
-        subjectIds: selected,
+        subjectIds,
       });
       window.localStorage.setItem("revisionpath.activePlan", planId);
       await queryClient.invalidateQueries();
@@ -186,8 +216,16 @@ function SetupPage() {
     }
   }
 
+  const missingBoards = picks.filter((p) => !p.board).length;
+  const totalSessions =
+    weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
+
   const canContinue =
-    step === 1 ? selected.length > 0 : step === 2 ? studyDays.length > 0 && weeks > 0 : true;
+    step === 1
+      ? picks.length > 0 && missingBoards === 0
+      : step === 2
+        ? studyDays.length > 0 && weeks > 0
+        : true;
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
@@ -220,8 +258,8 @@ function SetupPage() {
                 Which subjects are you revising?
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Search and tick each subject with its exam board, or upload your school's options
-                booklet and we'll draft the list.
+                Pick your subjects first, then set the exam board for each one. Or upload your
+                school's options booklet and we'll draft the list.
               </p>
 
               <div className="mt-4 flex gap-1 rounded-full bg-background p-1 ring-1 ring-border">
@@ -235,7 +273,9 @@ function SetupPage() {
                     key={key}
                     onClick={() => setTab(key)}
                     className={`flex-1 rounded-full py-2 text-[13px] font-bold ${
-                      tab === key ? "bg-card text-foreground ring-1 ring-border" : "text-muted-foreground"
+                      tab === key
+                        ? "bg-card text-foreground ring-1 ring-border"
+                        : "text-muted-foreground"
                     }`}
                   >
                     {label}
@@ -253,13 +293,12 @@ function SetupPage() {
                       <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto pr-1">
                         {detected.map((item, index) => (
                           <label
-                            key={`${item.subject}-${index}`}
+                            key={`${item.name}-${index}`}
                             className="flex cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 py-2 hover:bg-background"
                           >
                             <input
                               type="checkbox"
                               checked={item.keep}
-                              disabled={!item.subjectId}
                               onChange={(e) =>
                                 setDetected((prev) =>
                                   (prev ?? []).map((d, i) =>
@@ -269,11 +308,9 @@ function SetupPage() {
                               }
                               className="size-4 accent-maths"
                             />
-                            <span className="text-sm font-bold">{item.subject}</span>
+                            <span className="text-sm font-bold">{item.name}</span>
                             <span className="ml-auto text-[12px] font-semibold text-muted-foreground">
-                              {item.subjectId
-                                ? item.exam_board || "board not stated"
-                                : "not in our list"}
+                              {item.board ?? "board to confirm"}
                             </span>
                           </label>
                         ))}
@@ -339,18 +376,18 @@ function SetupPage() {
                     <input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search subjects and boards…"
+                      placeholder="Search subjects…"
                       className="w-full bg-transparent text-sm font-medium placeholder:text-muted-foreground/60 focus:outline-none"
                     />
                   </div>
 
-                  <div className="mt-3 max-h-64 space-y-1.5 overflow-y-auto pr-1">
-                    {filtered.map((subject) => {
-                      const isOn = selected.includes(subject.id);
+                  <div className="mt-3 max-h-56 space-y-1.5 overflow-y-auto pr-1">
+                    {filteredNames.map((subjectName) => {
+                      const isOn = picks.some((p) => p.name === subjectName);
                       return (
                         <button
-                          key={subject.id}
-                          onClick={() => toggle(subject.id)}
+                          key={subjectName}
+                          onClick={() => toggleName(subjectName)}
                           className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left hover:bg-background"
                         >
                           <span
@@ -362,10 +399,7 @@ function SetupPage() {
                               <Check className="size-3 text-background" strokeWidth={3} />
                             ) : null}
                           </span>
-                          <span className="text-sm font-bold">{subject.name}</span>
-                          <span className="ml-auto text-[12px] font-semibold text-muted-foreground">
-                            {subject.exam_board}
-                          </span>
+                          <span className="text-sm font-bold">{subjectName}</span>
                         </button>
                       );
                     })}
@@ -382,19 +416,8 @@ function SetupPage() {
                         placeholder="Subject name"
                         className="min-w-0 flex-1 rounded-[10px] bg-card px-3 py-2 text-[13px] font-medium ring-1 ring-border focus:outline-none"
                       />
-                      <select
-                        value={customBoard}
-                        onChange={(e) => setCustomBoard(e.target.value)}
-                        className="rounded-[10px] bg-card px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
-                      >
-                        {EXAM_BOARDS.map((board) => (
-                          <option key={board} value={board}>
-                            {board}
-                          </option>
-                        ))}
-                      </select>
                       <button
-                        onClick={() => void addCustom()}
+                        onClick={addCustomName}
                         className="rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground"
                       >
                         Add
@@ -404,9 +427,54 @@ function SetupPage() {
                 </>
               )}
 
-              <p className="mt-3 text-[12px] font-bold text-muted-foreground">
-                {selected.length} subject{selected.length === 1 ? "" : "s"} selected
-              </p>
+              {picks.length ? (
+                <div className="mt-5">
+                  <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                    Your subjects — choose each exam board
+                  </p>
+                  <div className="mt-2 space-y-1.5">
+                    {picks.map((pick) => (
+                      <div
+                        key={pick.name}
+                        className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
+                      >
+                        <span className="text-sm font-bold">{pick.name}</span>
+                        <select
+                          value={pick.board ?? ""}
+                          onChange={(e) => setBoard(pick.name, e.target.value)}
+                          className="ml-auto rounded-[10px] bg-card px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
+                        >
+                          <option value="" disabled>
+                            Choose board
+                          </option>
+                          {boardOptions(pick.name).map((board) => (
+                            <option key={board} value={board}>
+                              {board}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() =>
+                            setPicks((prev) => prev.filter((p) => p.name !== pick.name))
+                          }
+                          className="text-[12px] font-bold text-muted-foreground hover:text-foreground"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {missingBoards ? (
+                    <p className="mt-2 text-[12px] font-bold text-muted-foreground">
+                      {missingBoards} still need an exam board.
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-3 text-[12px] font-bold text-muted-foreground">
+                  No subjects picked yet.
+                </p>
+              )}
             </>
           ) : null}
 
@@ -414,7 +482,8 @@ function SetupPage() {
             <>
               <p className="text-lg font-extrabold tracking-tight">How much time have you got?</p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Be realistic — a plan you can keep up beats a perfect one you abandon.
+                Be realistic — a plan you can keep up beats a perfect one you abandon. Each day can
+                have its own number of sessions and length.
               </p>
 
               <label className="mt-4 block">
@@ -448,18 +517,17 @@ function SetupPage() {
                 </span>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {WEEK_DAYS.map((day) => {
-                    const on = studyDays.includes(day);
+                    const on = Boolean(dayConfigs[day]);
                     return (
                       <button
                         key={day}
                         onClick={() =>
-                          setStudyDays((prev) =>
-                            prev.includes(day)
-                              ? prev.filter((d) => d !== day)
-                              : [...prev, day].sort(
-                                  (a, b) => WEEK_DAYS.indexOf(a as never) - WEEK_DAYS.indexOf(b as never),
-                                ),
-                          )
+                          setDayConfigs((prev) => {
+                            const next = { ...prev };
+                            if (next[day]) delete next[day];
+                            else next[day] = { ...DEFAULT_DAY };
+                            return next;
+                          })
                         }
                         className={`rounded-full px-3 py-2 text-[13px] font-bold ${
                           on
@@ -474,39 +542,55 @@ function SetupPage() {
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                    Sessions per study day
-                  </span>
-                  <select
-                    value={sessionsPerDay}
-                    onChange={(e) => setSessionsPerDay(Number(e.target.value))}
-                    className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-semibold ring-1 ring-border focus:outline-none"
-                  >
-                    {[1, 2, 3, 4].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                    Session length
-                  </span>
-                  <select
-                    value={length}
-                    onChange={(e) => setLength(Number(e.target.value))}
-                    className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-semibold ring-1 ring-border focus:outline-none"
-                  >
-                    {SESSION_LENGTHS.map((n) => (
-                      <option key={n} value={n}>
-                        {n < 60 ? `${n} min` : n === 60 ? "1 hr" : "1 hr 30"}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              <div className="mt-4 space-y-1.5">
+                {studyDays.map((day) => {
+                  const config = dayConfigs[day]!;
+                  return (
+                    <div
+                      key={day}
+                      className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
+                    >
+                      <span className="text-sm font-bold">{day}</span>
+                      <select
+                        value={config.sessions}
+                        onChange={(e) =>
+                          setDayConfigs((prev) => ({
+                            ...prev,
+                            [day]: { ...config, sessions: Number(e.target.value) },
+                          }))
+                        }
+                        className="ml-auto rounded-[10px] bg-card px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
+                      >
+                        {[1, 2, 3, 4, 5, 6].map((n) => (
+                          <option key={n} value={n}>
+                            {n} session{n === 1 ? "" : "s"}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={config.minutes}
+                        onChange={(e) =>
+                          setDayConfigs((prev) => ({
+                            ...prev,
+                            [day]: { ...config, minutes: Number(e.target.value) },
+                          }))
+                        }
+                        className="rounded-[10px] bg-card px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
+                      >
+                        {SESSION_LENGTHS.map((n) => (
+                          <option key={n} value={n}>
+                            {lengthLabel(n)} each
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })}
+                {studyDays.length === 0 ? (
+                  <p className="text-[12px] font-bold text-muted-foreground">
+                    Pick at least one study day.
+                  </p>
+                ) : null}
               </div>
             </>
           ) : null}
@@ -560,23 +644,29 @@ function SetupPage() {
             <>
               <p className="text-lg font-extrabold tracking-tight">Ready to build your plan</p>
               <div className="mt-4 space-y-2 text-[13px] font-semibold">
-                <Row label="Subjects" value={`${selected.length} selected`} />
-                <Row label="Weeks" value={`${weeks}`} />
-                <Row label="Study days" value={studyDays.map((d) => d.slice(0, 3)).join(", ")} />
                 <Row
-                  label="Sessions"
-                  value={`${sessionsPerDay} per day · ${length < 60 ? `${length} min` : `${length / 60} hr`}`}
+                  label="Subjects"
+                  value={picks.map((p) => `${p.name} · ${p.board}`).join(", ")}
                 />
+                <Row label="Weeks" value={`${weeks}`} />
+                {studyDays.map((day) => (
+                  <Row
+                    key={day}
+                    label={day}
+                    value={`${dayConfigs[day]!.sessions} × ${lengthLabel(dayConfigs[day]!.minutes)}`}
+                  />
+                ))}
                 <Row
                   label="Topics"
                   value={
-                    mode === "ai" ? "AI-generated" : mode === "manual" ? "Manual" : "Pre-built library"
+                    mode === "ai"
+                      ? "AI-generated"
+                      : mode === "manual"
+                        ? "Manual"
+                        : "Pre-built library"
                   }
                 />
-                <Row
-                  label="Total sessions"
-                  value={`${weeks * studyDays.length * sessionsPerDay}`}
-                />
+                <Row label="Total sessions" value={`${totalSessions}`} />
               </div>
               {mode === "ai" ? (
                 <p className="mt-3 text-[12px] font-medium text-muted-foreground">
@@ -621,9 +711,9 @@ function SetupPage() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-[10px] bg-background px-3 py-2">
+    <div className="flex items-center justify-between gap-3 rounded-[10px] bg-background px-3 py-2">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-extrabold">{value}</span>
+      <span className="text-right font-extrabold">{value}</span>
     </div>
   );
 }

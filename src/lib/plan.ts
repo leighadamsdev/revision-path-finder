@@ -97,23 +97,22 @@ export async function fetchLibraryTopics(subjectId: string): Promise<string[]> {
 export type PlanDraft = {
   name: string;
   weeks: number;
-  studyDays: string[];
-  sessionsPerDay: number;
-  sessionLengthMinutes: number;
+  /** One entry per study day, each with its own session count and length. */
+  days: DaySetting[];
   contentMode: "ai" | "manual" | "library";
   subjectIds: string[];
 };
 
-type Slot = { week: number; day: string; slot: number; subjectId: string };
+type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };
 
 function buildSlots(draft: PlanDraft): Slot[] {
   const slots: Slot[] = [];
   let index = 0;
   for (let week = 1; week <= draft.weeks; week += 1) {
-    for (const day of draft.studyDays) {
-      for (let slot = 1; slot <= draft.sessionsPerDay; slot += 1) {
+    for (const day of draft.days) {
+      for (let slot = 1; slot <= day.sessions; slot += 1) {
         const subjectId = draft.subjectIds[index % draft.subjectIds.length]!;
-        slots.push({ week, day, slot, subjectId });
+        slots.push({ week, day: day.day, slot, subjectId, minutes: day.minutes });
         index += 1;
       }
     }
@@ -123,16 +122,20 @@ function buildSlots(draft: PlanDraft): Slot[] {
 
 /** Creates the plan, its subject links and every session row. */
 export async function createPlan(profileId: string, draft: PlanDraft) {
+  const maxSessions = Math.max(...draft.days.map((d) => d.sessions), 1);
+  const firstLength = draft.days[0]?.minutes ?? 45;
+
   const { data: plan, error } = await supabase
     .from("plans")
     .insert({
       profile_id: profileId,
       name: draft.name,
       weeks: draft.weeks,
-      days_per_week: draft.studyDays.length,
-      study_days: draft.studyDays,
-      sessions_per_day: draft.sessionsPerDay,
-      session_length_minutes: draft.sessionLengthMinutes,
+      days_per_week: draft.days.length,
+      study_days: draft.days.map((d) => d.day),
+      sessions_per_day: maxSessions,
+      session_length_minutes: firstLength,
+      day_plan: draft.days,
       content_mode: draft.contentMode,
     })
     .select("id")
@@ -161,8 +164,10 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       subject_id: slot.subjectId,
       topic_text: pool.length ? (pool[used % pool.length] ?? "") : "",
       gap_notes: "",
+      length_minutes: slot.minutes,
     };
   });
+
 
   const { error: sessionError } = await supabase.from("sessions").insert(rows);
   if (sessionError) throw sessionError;

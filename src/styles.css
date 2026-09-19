@@ -157,6 +157,13 @@
     border-bottom: 1px solid var(--color-border);
   }
 
+  .print-week-sheet {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+    transform-origin: top left;
+  }
+
   .print-week-heading h1 {
     margin: 0.5mm 0 0;
     font-size: 15pt;

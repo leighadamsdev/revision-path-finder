@@ -38,7 +38,6 @@ export type SessionRow = {
   length_minutes: number | null;
 };
 
-
 export async function fetchSubjects(): Promise<Subject[]> {
   const { data, error } = await supabase
     .from("subjects")
@@ -83,7 +82,6 @@ export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   if (error) throw error;
   return (data ?? []) as SessionRow[];
 }
-
 
 export async function fetchLibraryTopics(subjectId: string): Promise<string[]> {
   const { data, error } = await supabase
@@ -176,7 +174,6 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       length_minutes: slot.minutes,
     };
   });
-
 
   const { error: sessionError } = await supabase.from("sessions").insert(rows);
   if (sessionError) throw sessionError;

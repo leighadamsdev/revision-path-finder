@@ -15,7 +15,6 @@ function boardLabel(board: string) {
   return board === "WJEC Eduqas" ? "WJEC / Eduqas" : board;
 }
 
-
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({
     meta: [
@@ -105,7 +104,6 @@ function SetupPage() {
     return groups;
   }, []);
 
-
   const filteredGroups = useMemo(() => {
     const q = search.trim().toLowerCase();
     const out: { group: string; names: string[] }[] = [];
@@ -117,7 +115,6 @@ function SetupPage() {
     }
     return out;
   }, [allNames, search]);
-
 
   function toggleName(subjectName: string) {
     setPicks((prev) => {
@@ -138,9 +135,7 @@ function SetupPage() {
 
   function setTier(subjectName: string, tier: Tier) {
     setPicks((prev) =>
-      prev.map((p) =>
-        p.name === subjectName ? { ...p, tier: p.tier === tier ? null : tier } : p,
-      ),
+      prev.map((p) => (p.name === subjectName ? { ...p, tier: p.tier === tier ? null : tier } : p)),
     );
   }
 
@@ -160,9 +155,7 @@ function SetupPage() {
       const list = prev[subjectName] ?? [];
       return {
         ...prev,
-        [subjectName]: list.includes(label)
-          ? list.filter((l) => l !== label)
-          : [...list, label],
+        [subjectName]: list.includes(label) ? list.filter((l) => l !== label) : [...list, label],
       };
     });
   }
@@ -213,7 +206,6 @@ function SetupPage() {
       setParsing(null);
     }
   }
-
 
   async function generate() {
     if (!user) return;
@@ -376,7 +368,6 @@ function SetupPage() {
                 ) : null}
               </div>
 
-
               <div className="mt-4 rounded-[12px] bg-background p-3 ring-1 ring-border">
                 <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
                   Not listed?
@@ -501,7 +492,6 @@ function SetupPage() {
             </>
           ) : null}
 
-
           {step === 3 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">
@@ -526,7 +516,10 @@ function SetupPage() {
                   const picked =
                     mode === "manual" ? manualLines(manualText[pick.name]).length : ticked.length;
                   return (
-                    <div key={pick.name} className="rounded-[14px] bg-background ring-1 ring-border">
+                    <div
+                      key={pick.name}
+                      className="rounded-[14px] bg-background ring-1 ring-border"
+                    >
                       <button
                         onClick={() => setOpenSubject(open ? null : pick.name)}
                         className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
@@ -549,9 +542,7 @@ function SetupPage() {
                             ).map(([key, label]) => (
                               <button
                                 key={key}
-                                onClick={() =>
-                                  setSource((prev) => ({ ...prev, [pick.name]: key }))
-                                }
+                                onClick={() => setSource((prev) => ({ ...prev, [pick.name]: key }))}
                                 className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
                                   mode === key
                                     ? "bg-maths text-background"
@@ -570,7 +561,9 @@ function SetupPage() {
                                 setManualText((prev) => ({ ...prev, [pick.name]: e.target.value }))
                               }
                               rows={6}
-                              placeholder={"One topic per line, e.g.\nQuadratic graphs\nCircle theorems"}
+                              placeholder={
+                                "One topic per line, e.g.\nQuadratic graphs\nCircle theorems"
+                              }
                               className="mt-3 w-full rounded-[12px] bg-card p-3 text-[13px] font-medium ring-1 ring-border focus:outline-none"
                             />
                           ) : null}

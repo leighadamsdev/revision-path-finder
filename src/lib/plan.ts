@@ -9,6 +9,8 @@ export type Subject = {
   is_custom: boolean;
 };
 
+export type DaySetting = { day: string; sessions: number; minutes: number };
+
 export type Plan = {
   id: string;
   name: string;
@@ -17,6 +19,7 @@ export type Plan = {
   study_days: string[];
   sessions_per_day: number;
   session_length_minutes: number;
+  day_plan: DaySetting[] | null;
   content_mode: "ai" | "manual" | "library";
   created_at: string;
 };
@@ -31,7 +34,9 @@ export type SessionRow = {
   topic_text: string;
   confidence: number | null;
   gap_notes: string;
+  length_minutes: number | null;
 };
+
 
 export async function fetchSubjects(): Promise<Subject[]> {
   const { data, error } = await supabase

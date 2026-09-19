@@ -14,7 +14,276 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      past_papers: {
+        Row: {
+          free_resource_name: string
+          free_resource_url: string
+          id: string
+          official_portal_url: string
+          spec_code: string
+          subject_id: string
+        }
+        Insert: {
+          free_resource_name: string
+          free_resource_url: string
+          id?: string
+          official_portal_url: string
+          spec_code: string
+          subject_id: string
+        }
+        Update: {
+          free_resource_name?: string
+          free_resource_url?: string
+          id?: string
+          official_portal_url?: string
+          spec_code?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "past_papers_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: true
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_subjects: {
+        Row: {
+          id: string
+          plan_id: string
+          subject_id: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          subject_id: string
+        }
+        Update: {
+          id?: string
+          plan_id?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_subjects_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          content_mode: Database["public"]["Enums"]["content_mode"]
+          created_at: string
+          days_per_week: number
+          id: string
+          name: string
+          profile_id: string
+          session_length_minutes: number
+          sessions_per_day: number
+          study_days: string[]
+          weeks: number
+        }
+        Insert: {
+          content_mode?: Database["public"]["Enums"]["content_mode"]
+          created_at?: string
+          days_per_week?: number
+          id?: string
+          name?: string
+          profile_id: string
+          session_length_minutes?: number
+          sessions_per_day?: number
+          study_days?: string[]
+          weeks?: number
+        }
+        Update: {
+          content_mode?: Database["public"]["Enums"]["content_mode"]
+          created_at?: string
+          days_per_week?: number
+          id?: string
+          name?: string
+          profile_id?: string
+          session_length_minutes?: number
+          sessions_per_day?: number
+          study_days?: string[]
+          weeks?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plans_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      revision_sites: {
+        Row: {
+          description: string
+          id: string
+          site_name: string
+          site_url: string
+          subject_name: string | null
+        }
+        Insert: {
+          description: string
+          id?: string
+          site_name: string
+          site_url: string
+          subject_name?: string | null
+        }
+        Update: {
+          description?: string
+          id?: string
+          site_name?: string
+          site_url?: string
+          subject_name?: string | null
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          confidence: number | null
+          day_label: string
+          gap_notes: string
+          id: string
+          plan_id: string
+          session_slot: number
+          subject_id: string | null
+          topic_text: string
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          confidence?: number | null
+          day_label: string
+          gap_notes?: string
+          id?: string
+          plan_id: string
+          session_slot?: number
+          subject_id?: string | null
+          topic_text?: string
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          confidence?: number | null
+          day_label?: string
+          gap_notes?: string
+          id?: string
+          plan_id?: string
+          session_slot?: number
+          subject_id?: string | null
+          topic_text?: string
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subjects: {
+        Row: {
+          color_key: string
+          created_at: string
+          created_by: string | null
+          exam_board: string
+          id: string
+          is_custom: boolean
+          name: string
+        }
+        Insert: {
+          color_key?: string
+          created_at?: string
+          created_by?: string | null
+          exam_board: string
+          id?: string
+          is_custom?: boolean
+          name: string
+        }
+        Update: {
+          color_key?: string
+          created_at?: string
+          created_by?: string | null
+          exam_board?: string
+          id?: string
+          is_custom?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      topic_library: {
+        Row: {
+          id: string
+          position: number
+          subject_id: string
+          topic: string
+        }
+        Insert: {
+          id?: string
+          position: number
+          subject_id: string
+          topic: string
+        }
+        Update: {
+          id?: string
+          position?: number
+          subject_id?: string
+          topic?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_library_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +292,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      content_mode: "ai" | "manual" | "library"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +419,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      content_mode: ["ai", "manual", "library"],
+    },
   },
 } as const

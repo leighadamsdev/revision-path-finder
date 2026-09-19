@@ -52,11 +52,11 @@ export async function fetchPlans(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("plans")
     .select(
-      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, content_mode, created_at",
+      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at",
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Plan[];
+  return (data ?? []) as unknown as Plan[];
 }
 
 export async function fetchPlanSubjects(planId: string): Promise<Subject[]> {
@@ -74,7 +74,7 @@ export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   const { data, error } = await supabase
     .from("sessions")
     .select(
-      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence, gap_notes",
+      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence, gap_notes, length_minutes",
     )
     .eq("plan_id", planId)
     .order("week_number")
@@ -82,6 +82,7 @@ export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   if (error) throw error;
   return (data ?? []) as SessionRow[];
 }
+
 
 export async function fetchLibraryTopics(subjectId: string): Promise<string[]> {
   const { data, error } = await supabase

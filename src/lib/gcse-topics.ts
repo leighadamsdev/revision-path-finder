@@ -521,6 +521,55 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
       ],
     },
   ],
+  "English Literature": [
+    {
+      unit: "Shakespeare",
+      elements: [
+        { label: "Plot & structure", detail: "Acts, turning points and dramatic structure of the set play." },
+        { label: "Characters & relationships", detail: "Motives, development and how relationships drive the drama." },
+        { label: "Themes", detail: "Power, ambition, love, conflict, fate and other key themes of the play." },
+        { label: "Language & dramatic methods", detail: "Imagery, verse and prose, soliloquy, dramatic irony and staging." },
+        { label: "Context", detail: "Elizabethan or Jacobean beliefs, society and theatre, used to support argument." },
+      ],
+    },
+    {
+      unit: "19th-century novel",
+      elements: [
+        { label: "Plot & narrative structure", detail: "Key events, narrative voice and how the story is shaped." },
+        { label: "Characters", detail: "Central and minor characters and their significance." },
+        { label: "Themes & ideas", detail: "Class, morality, gender, wealth, redemption and social criticism." },
+        { label: "Writer's methods", detail: "Setting, symbolism, motifs, structure and tone." },
+        { label: "Context", detail: "Victorian society, industry, religion and the writer's purpose." },
+      ],
+    },
+    {
+      unit: "Modern text (prose or drama)",
+      elements: [
+        { label: "Plot & structure", detail: "Events, staging or chapter structure of the modern set text." },
+        { label: "Characters & relationships", detail: "How characters are used to carry the writer's ideas." },
+        { label: "Themes & ideas", detail: "Responsibility, conflict, identity, family and society." },
+        { label: "Writer's methods", detail: "Dialogue, stage directions, structure, symbolism and tension." },
+      ],
+    },
+    {
+      unit: "Poetry anthology",
+      elements: [
+        { label: "Individual poems", detail: "Meaning, voice and message of each anthology poem." },
+        { label: "Form & structure", detail: "Stanza form, rhyme, rhythm, enjambment and volta." },
+        { label: "Language & imagery", detail: "Metaphor, simile, personification, diction and sound effects." },
+        { label: "Comparison skills", detail: "Linking two poems by theme, method and effect in one answer." },
+      ],
+    },
+    {
+      unit: "Unseen poetry & exam skills",
+      elements: [
+        { label: "Reading an unseen poem", detail: "Working out meaning, tone and viewpoint quickly under timed conditions." },
+        { label: "Comparing unseen poems", detail: "Method-led comparison of two unfamiliar poems." },
+        { label: "Essay writing & quotations", detail: "Thesis-led argument, embedded quotations and analysis of method." },
+        { label: "Spelling, punctuation & grammar", detail: "Accurate, well-organised writing where SPaG carries marks." },
+      ],
+    },
+  ],
   "Film Studies": [
     {
       unit: "Film Form & Aesthetics",

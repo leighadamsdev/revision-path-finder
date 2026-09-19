@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
@@ -50,6 +50,29 @@ function TimetablePage() {
   const rated = weekSessions.filter((s) => s.confidence != null).length;
   const pct = weekSessions.length ? Math.round((rated / weekSessions.length) * 100) : 0;
   const lowConfidence = sessions.filter((s) => (s.confidence ?? 5) <= 2 && s.confidence != null);
+
+  useEffect(() => {
+    function fitWeekToPage() {
+      const sheet = document.querySelector<HTMLElement>(".print-week-sheet");
+      if (!sheet) return;
+      sheet.style.zoom = "1";
+      const a4ContentHeight = (281 * 96) / 25.4;
+      const scale = Math.min(1, a4ContentHeight / sheet.scrollHeight);
+      sheet.style.zoom = String(scale);
+    }
+
+    function resetPrintScale() {
+      const sheet = document.querySelector<HTMLElement>(".print-week-sheet");
+      if (sheet) sheet.style.removeProperty("zoom");
+    }
+
+    window.addEventListener("beforeprint", fitWeekToPage);
+    window.addEventListener("afterprint", resetPrintScale);
+    return () => {
+      window.removeEventListener("beforeprint", fitWeekToPage);
+      window.removeEventListener("afterprint", resetPrintScale);
+    };
+  }, [week, weekSessions.length]);
 
   function patchSession(id: string, patch: Partial<SessionRow>) {
     queryClient.setQueryData<SessionRow[]>(["sessions", plan?.id], (old) =>
@@ -123,14 +146,6 @@ function TimetablePage() {
         </Button>
       </div>
 
-      <header className="print-week-heading hidden">
-        <div>
-          <p className="print-brand">RevisionPath</p>
-          <h1>{plan.name}</h1>
-        </div>
-        <p>Week {week} of {plan.weeks}</p>
-      </header>
-
       <section className="mb-7 print:hidden">
         <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
@@ -179,8 +194,17 @@ function TimetablePage() {
         </div>
       </section>
 
-      <div key={week} className="print-week-grid week-in grid grid-cols-1 gap-4 md:grid-cols-2">
-        {days.map((day) => {
+      <div className="print-week-sheet">
+        <header className="print-week-heading hidden">
+          <div>
+            <p className="print-brand">RevisionPath</p>
+            <h1>{plan.name}</h1>
+          </div>
+          <p>Week {week} of {plan.weeks}</p>
+        </header>
+
+        <div key={week} className="print-week-grid week-in grid grid-cols-1 gap-4 md:grid-cols-2">
+          {days.map((day) => {
           const daySessions = weekSessions
             .filter((s) => s.day_label === day)
             .sort((a, b) => a.session_slot - b.session_slot);
@@ -206,7 +230,8 @@ function TimetablePage() {
               </div>
             </section>
           );
-        })}
+          })}
+        </div>
       </div>
     </AppShell>
   );

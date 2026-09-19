@@ -119,3 +119,50 @@ export const parseOptionsBooklet = createServerFn({ method: "POST" })
       throw error;
     }
   });
+
+const TopicDocInput = z.object({
+  subject: z.string().min(1),
+  fileName: z.string().min(1),
+  mimeType: z.string().min(1),
+  dataUrl: z.string().min(16),
+});
+
+/** Reads a student's own document (spec, checklist, scheme of work) into a topic list. */
+export const extractTopicsFromDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => TopicDocInput.parse(input))
+  .handler(async ({ data }) => {
+    const { askForJson, AiError } = await import("@/lib/ai.server");
+    const isPdf = data.mimeType === "application/pdf";
+    try {
+      const result = await askForJson<{ topics: string[] }>({
+        instructions:
+          "You read UK GCSE revision documents — specifications, topic checklists, schemes of work, class handouts. Extract every distinct revision topic as a short, concrete title (max 10 words each), in the order they appear. Keep them specific enough to revise from. Ignore page furniture, staff names, dates and assessment admin. Return an empty list if there are no recognisable topics.",
+        schemaName: "document_topics",
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          required: ["topics"],
+          properties: { topics: { type: "array", items: { type: "string" } } },
+        },
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: `Subject: ${data.subject}. Extract the revision topics from this document, reading any text in tables or images carefully.`,
+              },
+              isPdf
+                ? { type: "input_file", filename: data.fileName, file_data: data.dataUrl }
+                : { type: "input_image", image_url: data.dataUrl },
+            ],
+          },
+        ],
+      });
+      return { topics: result.topics.slice(0, 200) };
+    } catch (error) {
+      if (error instanceof AiError) throw new Error(error.message);
+      throw error;
+    }
+  });

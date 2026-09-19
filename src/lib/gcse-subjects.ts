@@ -14,6 +14,7 @@ export const GCSE_SUBJECTS: CatalogueSubject[] = [
   // Core
   { name: "Mathematics", colorKey: "maths", tiered: true, group: "Core" },
   { name: "English Language", colorKey: "eng", group: "Core" },
+  { name: "English Literature", colorKey: "lit", group: "Core" },
   {
     name: "Combined Science (Trilogy / Double Award)",
     colorKey: "sci",

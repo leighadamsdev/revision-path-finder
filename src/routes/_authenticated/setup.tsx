@@ -240,7 +240,8 @@ function SetupPage() {
           sessions: dayConfigs[day]?.sessions ?? DEFAULT_DAY.sessions,
           minutes: dayConfigs[day]?.minutes ?? DEFAULT_DAY.minutes,
         })),
-        contentMode: mode,
+        // Subjects left blank get their topics written for them.
+        contentMode: "ai",
         subjectIds,
         tiers,
         chosenTopics,

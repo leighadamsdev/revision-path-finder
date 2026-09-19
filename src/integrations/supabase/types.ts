@@ -86,6 +86,7 @@ export type Database = {
         Row: {
           content_mode: Database["public"]["Enums"]["content_mode"]
           created_at: string
+          day_plan: Json | null
           days_per_week: number
           id: string
           name: string
@@ -98,6 +99,7 @@ export type Database = {
         Insert: {
           content_mode?: Database["public"]["Enums"]["content_mode"]
           created_at?: string
+          day_plan?: Json | null
           days_per_week?: number
           id?: string
           name?: string
@@ -110,6 +112,7 @@ export type Database = {
         Update: {
           content_mode?: Database["public"]["Enums"]["content_mode"]
           created_at?: string
+          day_plan?: Json | null
           days_per_week?: number
           id?: string
           name?: string
@@ -177,6 +180,7 @@ export type Database = {
           day_label: string
           gap_notes: string
           id: string
+          length_minutes: number | null
           plan_id: string
           session_slot: number
           subject_id: string | null
@@ -189,6 +193,7 @@ export type Database = {
           day_label: string
           gap_notes?: string
           id?: string
+          length_minutes?: number | null
           plan_id: string
           session_slot?: number
           subject_id?: string | null
@@ -201,6 +206,7 @@ export type Database = {
           day_label?: string
           gap_notes?: string
           id?: string
+          length_minutes?: number | null
           plan_id?: string
           session_slot?: number
           subject_id?: string | null

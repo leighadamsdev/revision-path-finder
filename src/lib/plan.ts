@@ -9,6 +9,8 @@ export type Subject = {
   is_custom: boolean;
 };
 
+export type DaySetting = { day: string; sessions: number; minutes: number };
+
 export type Plan = {
   id: string;
   name: string;
@@ -17,6 +19,7 @@ export type Plan = {
   study_days: string[];
   sessions_per_day: number;
   session_length_minutes: number;
+  day_plan: DaySetting[] | null;
   content_mode: "ai" | "manual" | "library";
   created_at: string;
 };
@@ -31,7 +34,9 @@ export type SessionRow = {
   topic_text: string;
   confidence: number | null;
   gap_notes: string;
+  length_minutes: number | null;
 };
+
 
 export async function fetchSubjects(): Promise<Subject[]> {
   const { data, error } = await supabase
@@ -47,11 +52,11 @@ export async function fetchPlans(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("plans")
     .select(
-      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, content_mode, created_at",
+      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at",
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Plan[];
+  return (data ?? []) as unknown as Plan[];
 }
 
 export async function fetchPlanSubjects(planId: string): Promise<Subject[]> {
@@ -69,7 +74,7 @@ export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   const { data, error } = await supabase
     .from("sessions")
     .select(
-      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence, gap_notes",
+      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence, gap_notes, length_minutes",
     )
     .eq("plan_id", planId)
     .order("week_number")
@@ -77,6 +82,7 @@ export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   if (error) throw error;
   return (data ?? []) as SessionRow[];
 }
+
 
 export async function fetchLibraryTopics(subjectId: string): Promise<string[]> {
   const { data, error } = await supabase
@@ -91,23 +97,22 @@ export async function fetchLibraryTopics(subjectId: string): Promise<string[]> {
 export type PlanDraft = {
   name: string;
   weeks: number;
-  studyDays: string[];
-  sessionsPerDay: number;
-  sessionLengthMinutes: number;
+  /** One entry per study day, each with its own session count and length. */
+  days: DaySetting[];
   contentMode: "ai" | "manual" | "library";
   subjectIds: string[];
 };
 
-type Slot = { week: number; day: string; slot: number; subjectId: string };
+type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };
 
 function buildSlots(draft: PlanDraft): Slot[] {
   const slots: Slot[] = [];
   let index = 0;
   for (let week = 1; week <= draft.weeks; week += 1) {
-    for (const day of draft.studyDays) {
-      for (let slot = 1; slot <= draft.sessionsPerDay; slot += 1) {
+    for (const day of draft.days) {
+      for (let slot = 1; slot <= day.sessions; slot += 1) {
         const subjectId = draft.subjectIds[index % draft.subjectIds.length]!;
-        slots.push({ week, day, slot, subjectId });
+        slots.push({ week, day: day.day, slot, subjectId, minutes: day.minutes });
         index += 1;
       }
     }
@@ -117,16 +122,20 @@ function buildSlots(draft: PlanDraft): Slot[] {
 
 /** Creates the plan, its subject links and every session row. */
 export async function createPlan(profileId: string, draft: PlanDraft) {
+  const maxSessions = Math.max(...draft.days.map((d) => d.sessions), 1);
+  const firstLength = draft.days[0]?.minutes ?? 45;
+
   const { data: plan, error } = await supabase
     .from("plans")
     .insert({
       profile_id: profileId,
       name: draft.name,
       weeks: draft.weeks,
-      days_per_week: draft.studyDays.length,
-      study_days: draft.studyDays,
-      sessions_per_day: draft.sessionsPerDay,
-      session_length_minutes: draft.sessionLengthMinutes,
+      days_per_week: draft.days.length,
+      study_days: draft.days.map((d) => d.day),
+      sessions_per_day: maxSessions,
+      session_length_minutes: firstLength,
+      day_plan: draft.days,
       content_mode: draft.contentMode,
     })
     .select("id")
@@ -155,8 +164,10 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       subject_id: slot.subjectId,
       topic_text: pool.length ? (pool[used % pool.length] ?? "") : "",
       gap_notes: "",
+      length_minutes: slot.minutes,
     };
   });
+
 
   const { error: sessionError } = await supabase.from("sessions").insert(rows);
   if (sessionError) throw sessionError;
@@ -229,4 +240,34 @@ export async function regenerateSessionTopic(session: SessionRow, subject: Subje
     .eq("id", session.id);
   if (error) throw error;
   return topic;
+}
+
+/** Finds the subject row for a name + board pair, creating a custom one if we don't stock it. */
+export async function resolveSubjectId(
+  name: string,
+  board: string,
+  userId: string,
+  known: Subject[],
+): Promise<string> {
+  const match = known.find(
+    (s) =>
+      s.name.toLowerCase() === name.toLowerCase() &&
+      s.exam_board.toLowerCase() === board.toLowerCase(),
+  );
+  if (match) return match.id;
+
+  const sibling = known.find((s) => s.name.toLowerCase() === name.toLowerCase());
+  const { data, error } = await supabase
+    .from("subjects")
+    .insert({
+      name,
+      exam_board: board,
+      is_custom: true,
+      created_by: userId,
+      color_key: sibling?.color_key ?? "media",
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
 }

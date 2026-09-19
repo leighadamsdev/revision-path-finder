@@ -1,14 +1,18 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
-import { Check, Loader2, Search, Upload } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth, ensureProfile } from "@/hooks/useAuth";
 import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
-import { parseOptionsBooklet } from "@/lib/revision.functions";
 import { EXAM_BOARDS, SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
+
+function boardLabel(board: string) {
+  return board === "WJEC Eduqas" ? "WJEC / Eduqas" : board;
+}
+
 
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({
@@ -52,12 +56,6 @@ function SetupPage() {
   const [step, setStep] = useState(1);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");
-  const [boardSource, setBoardSource] = useState<"manual" | "upload" | null>(null);
-  const [detected, setDetected] = useState<{ name: string; board: string | null; keep: boolean }[] | null>(
-    null,
-  );
-  const [parsing, setParsing] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const [customName, setCustomName] = useState("");
 
@@ -88,16 +86,14 @@ function SetupPage() {
     return map;
   }, [subjects]);
 
-  /** The national catalogue, plus anything extra already stored in the database. */
+  /** The national GCSE catalogue, grouped. */
   const allNames = useMemo(() => {
     const groups = new Map<string, string[]>();
     for (const group of SUBJECT_GROUPS) groups.set(group, []);
     for (const s of GCSE_SUBJECTS) groups.get(s.group)!.push(s.name);
-    const known = new Set(GCSE_SUBJECTS.map((s) => s.name.toLowerCase()));
-    const extras = Array.from(boardsByName.keys()).filter((n) => !known.has(n.toLowerCase()));
-    if (extras.length) groups.set("Other", [...(groups.get("Other") ?? []), ...extras]);
     return groups;
-  }, [boardsByName]);
+  }, []);
+
 
   const filteredGroups = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -111,10 +107,6 @@ function SetupPage() {
     return out;
   }, [allNames, search]);
 
-  function boardOptions(subjectName: string) {
-    const known = boardsByName.get(subjectName) ?? [];
-    return Array.from(new Set([...known, ...EXAM_BOARDS]));
-  }
 
   function toggleName(subjectName: string) {
     setPicks((prev) => {
@@ -152,80 +144,6 @@ function SetupPage() {
     setCustomName("");
   }
 
-  async function handleFile(file: File) {
-    setParsing(true);
-    setDetected(null);
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Couldn't read that file."));
-        reader.readAsDataURL(file);
-      });
-
-      const { detected: found } = await parseOptionsBooklet({
-        data: { fileName: file.name, mimeType: file.type || "application/pdf", dataUrl },
-      });
-
-      if (!found.length) {
-        toast.error("We couldn't find any exam boards in that file — set them by hand instead.");
-        setBoardSource("manual");
-        return;
-      }
-
-      setDetected(
-        found.map((item) => {
-          const known = boardsByName.get(item.subject) ?? [];
-          const board =
-            known.find((b) => b.toLowerCase() === item.exam_board.toLowerCase()) ??
-            (EXAM_BOARDS as readonly string[]).find(
-              (b) => b.toLowerCase() === item.exam_board.toLowerCase(),
-            ) ??
-            (known.length === 1 ? known[0]! : null);
-          return { name: item.subject, board, keep: true };
-        }),
-      );
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "That file couldn't be read — set your exam boards by hand instead.",
-      );
-      setBoardSource("manual");
-    } finally {
-      setParsing(false);
-    }
-  }
-
-  /** Applies detected boards to existing picks, and adds any subject we missed. */
-  function confirmDetected() {
-    if (!detected) return;
-    const keep = detected.filter((d) => d.keep);
-    let matched = 0;
-    setPicks((prev) => {
-      const next = prev.map((p) => {
-        const hit = keep.find((d) => d.name.toLowerCase() === p.name.toLowerCase());
-        if (hit?.board) {
-          matched += 1;
-          return { ...p, board: hit.board };
-        }
-        return p;
-      });
-      for (const item of keep) {
-        if (!next.some((p) => p.name.toLowerCase() === item.name.toLowerCase())) {
-          next.push({ name: item.name, board: item.board, tier: null });
-        }
-      }
-      return next;
-    });
-    setDetected(null);
-    setBoardSource("manual");
-    toast.success(
-      matched
-        ? `${matched} exam boards filled in — check them below.`
-        : "Boards added — check each one below.",
-    );
-  }
 
   async function generate() {
     if (!user) return;
@@ -321,48 +239,55 @@ function SetupPage() {
                 />
               </div>
 
-              <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
-                {filteredGroups.map(({ group, names }) => (
-                  <div key={group}>
-                    <p className="px-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                      {group}
-                    </p>
-                    <div className="mt-1 space-y-1">
-                      {names.map((subjectName) => {
-                        const isOn = picks.some((p) => p.name === subjectName);
-                        return (
-                          <button
-                            key={subjectName}
-                            onClick={() => toggleName(subjectName)}
-                            className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left hover:bg-background"
-                          >
-                            <span
-                              className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
-                                isOn ? "bg-maths" : "ring-1 ring-border"
-                              }`}
+              {search.trim() ? (
+                <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
+                  {filteredGroups.map(({ group, names }) => (
+                    <div key={group}>
+                      <p className="px-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                        {group}
+                      </p>
+                      <div className="mt-1 space-y-1">
+                        {names.map((subjectName) => {
+                          const isOn = picks.some((p) => p.name === subjectName);
+                          return (
+                            <button
+                              key={subjectName}
+                              onClick={() => toggleName(subjectName)}
+                              className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left hover:bg-background"
                             >
-                              {isOn ? (
-                                <Check className="size-3 text-background" strokeWidth={3} />
-                              ) : null}
-                            </span>
-                            <span className="text-sm font-bold">{subjectName}</span>
-                            {isTiered(subjectName) ? (
-                              <span className="ml-auto text-[11px] font-bold text-muted-foreground">
-                                tiered
+                              <span
+                                className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
+                                  isOn ? "bg-maths" : "ring-1 ring-border"
+                                }`}
+                              >
+                                {isOn ? (
+                                  <Check className="size-3 text-background" strokeWidth={3} />
+                                ) : null}
                               </span>
-                            ) : null}
-                          </button>
-                        );
-                      })}
+                              <span className="text-sm font-bold">{subjectName}</span>
+                              {isTiered(subjectName) ? (
+                                <span className="ml-auto text-[11px] font-bold text-muted-foreground">
+                                  tiered
+                                </span>
+                              ) : null}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
-                {filteredGroups.length === 0 ? (
-                  <p className="text-[12px] font-bold text-muted-foreground">
-                    Nothing matched — add it as a custom subject below.
-                  </p>
-                ) : null}
-              </div>
+                  ))}
+                  {filteredGroups.length === 0 ? (
+                    <p className="text-[12px] font-bold text-muted-foreground">
+                      Nothing matched — add it as a custom subject below.
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-3 text-[12px] font-medium text-muted-foreground">
+                  Start typing a subject name to find it, then tap to add it to your list.
+                </p>
+              )}
+
 
               <div className="mt-4 rounded-[12px] bg-background p-3 ring-1 ring-border">
                 <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
@@ -444,180 +369,50 @@ function SetupPage() {
             <>
               <p className="text-lg font-extrabold tracking-tight">Which exam boards?</p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Set the board for each subject yourself, or upload your school's options booklet and
-                we'll fill them in for you to check.
+                Choose the board for each of your subjects.
               </p>
 
-              {boardSource === null ? (
-                <div className="mt-4 space-y-2">
-                  <button
-                    onClick={() => setBoardSource("manual")}
-                    className="w-full rounded-[14px] bg-background p-4 text-left ring-1 ring-border"
-                  >
-                    <p className="text-[15px] font-extrabold tracking-tight">Set them myself</p>
-                    <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                      Choose a board from a dropdown for each of your subjects.
-                    </p>
-                  </button>
-                  <button
-                    onClick={() => setBoardSource("upload")}
-                    className="w-full rounded-[14px] bg-background p-4 text-left ring-1 ring-border"
-                  >
-                    <p className="text-[15px] font-extrabold tracking-tight">
-                      Use my options booklet
-                    </p>
-                    <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                      Upload the PDF or a photo — we'll read the boards and show them for you to
-                      confirm.
-                    </p>
-                  </button>
-                </div>
-              ) : null}
-
-              {boardSource === "upload" ? (
-                <div className="mt-4">
-                  {detected ? (
-                    <div>
-                      <p className="text-[13px] font-bold">
-                        We found these — untick anything wrong, then confirm.
-                      </p>
-                      <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto pr-1">
-                        {detected.map((item, index) => (
-                          <label
-                            key={`${item.name}-${index}`}
-                            className="flex cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 py-2 hover:bg-background"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={item.keep}
-                              onChange={(e) =>
-                                setDetected((prev) =>
-                                  (prev ?? []).map((d, i) =>
-                                    i === index ? { ...d, keep: e.target.checked } : d,
-                                  ),
-                                )
-                              }
-                              className="size-4 accent-maths"
-                            />
-                            <span className="text-sm font-bold">{item.name}</span>
-                            <span className="ml-auto text-[12px] font-semibold text-muted-foreground">
-                              {item.board ?? "board to confirm"}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                      <div className="mt-3 flex gap-2">
-                        <button
-                          onClick={confirmDetected}
-                          className="flex-1 rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground"
-                        >
-                          Use these boards
-                        </button>
-                        <button
-                          onClick={() => setDetected(null)}
-                          className="rounded-full px-4 py-3 text-sm font-bold text-muted-foreground"
-                        >
-                          Start again
-                        </button>
-                      </div>
-                      <p className="mt-2 text-[11px] font-medium text-muted-foreground">
-                        Booklets vary a lot, so treat this as a quick draft — you can change any
-                        board afterwards.
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => fileInput.current?.click()}
-                        disabled={parsing}
-                        className="flex w-full items-center gap-3 rounded-[12px] border border-dashed border-border px-3 py-4 text-left"
+              <div className="mt-4">
+                <div className="space-y-1.5">
+                  {picks.map((pick) => (
+                    <div
+                      key={pick.name}
+                      className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
+                    >
+                      <span className="text-sm font-bold">
+                        {pick.name}
+                        {pick.tier ? (
+                          <span className="ml-1.5 text-[11px] font-bold text-muted-foreground">
+                            {pick.tier}
+                          </span>
+                        ) : null}
+                      </span>
+                      <select
+                        value={pick.board ?? ""}
+                        onChange={(e) => setBoard(pick.name, e.target.value)}
+                        className="ml-auto rounded-[10px] bg-card px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
                       >
-                        <div className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-background text-muted-foreground">
-                          {parsing ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Upload className="size-4" strokeWidth={2.5} />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-[13px] font-bold">
-                            {parsing ? "Reading your booklet…" : "Upload options booklet"}
-                          </p>
-                          <p className="text-[11px] font-medium text-muted-foreground">
-                            PDF or a photo of the pages
-                          </p>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => setBoardSource("manual")}
-                        className="mt-2 text-[12px] font-bold text-muted-foreground hover:text-foreground"
-                      >
-                        I'll set the boards myself instead
-                      </button>
-                    </>
-                  )}
-                  <input
-                    ref={fileInput}
-                    type="file"
-                    accept="application/pdf,image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void handleFile(file);
-                      e.target.value = "";
-                    }}
-                  />
-                </div>
-              ) : null}
-
-              {boardSource === "manual" ? (
-                <div className="mt-4">
-                  <div className="space-y-1.5">
-                    {picks.map((pick) => (
-                      <div
-                        key={pick.name}
-                        className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
-                      >
-                        <span className="text-sm font-bold">
-                          {pick.name}
-                          {pick.tier ? (
-                            <span className="ml-1.5 text-[11px] font-bold text-muted-foreground">
-                              {pick.tier}
-                            </span>
-                          ) : null}
-                        </span>
-                        <select
-                          value={pick.board ?? ""}
-                          onChange={(e) => setBoard(pick.name, e.target.value)}
-                          className="ml-auto rounded-[10px] bg-card px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
-                        >
-                          <option value="" disabled>
-                            Choose board
+                        <option value="" disabled>
+                          Choose board
+                        </option>
+                        {EXAM_BOARDS.map((board) => (
+                          <option key={board} value={board}>
+                            {boardLabel(board)}
                           </option>
-                          {boardOptions(pick.name).map((board) => (
-                            <option key={board} value={board}>
-                              {board}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                  {missingBoards ? (
-                    <p className="mt-2 text-[12px] font-bold text-muted-foreground">
-                      {missingBoards} still need an exam board.
-                    </p>
-                  ) : null}
-                  <button
-                    onClick={() => setBoardSource("upload")}
-                    className="mt-3 text-[12px] font-bold text-muted-foreground hover:text-foreground"
-                  >
-                    Use my options booklet instead
-                  </button>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
                 </div>
-              ) : null}
+                {missingBoards ? (
+                  <p className="mt-2 text-[12px] font-bold text-muted-foreground">
+                    {missingBoards} still need an exam board.
+                  </p>
+                ) : null}
+              </div>
             </>
           ) : null}
+
 
           {step === 3 ? (
             <>

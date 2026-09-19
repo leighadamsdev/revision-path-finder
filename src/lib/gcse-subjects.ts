@@ -15,17 +15,16 @@ export const GCSE_SUBJECTS: CatalogueSubject[] = [
   { name: "Maths", colorKey: "maths", tiered: true, group: "Core" },
   { name: "English Language", colorKey: "eng", group: "Core" },
   { name: "English Literature", colorKey: "lit", group: "Core" },
-  { name: "Combined Science: Trilogy", colorKey: "sci", tiered: true, group: "Core" },
-  { name: "Combined Science: Synergy", colorKey: "sci", tiered: true, group: "Core" },
+  { name: "Science - Single", colorKey: "sci", tiered: true, group: "Core" },
+  { name: "Science - Double", colorKey: "sci", tiered: true, group: "Core" },
+  { name: "Science - Triple", colorKey: "sci", tiered: true, group: "Core" },
 
   // Sciences
-  { name: "Biology", colorKey: "sci", tiered: true, group: "Sciences" },
-  { name: "Chemistry", colorKey: "chem", tiered: true, group: "Sciences" },
-  { name: "Physics", colorKey: "phys", tiered: true, group: "Sciences" },
   { name: "Astronomy", colorKey: "phys", group: "Sciences" },
   { name: "Psychology", colorKey: "sci", group: "Sciences" },
   { name: "Environmental Science", colorKey: "sci", group: "Sciences" },
   { name: "Statistics", colorKey: "maths", tiered: true, group: "Sciences" },
+
 
   // Humanities
   { name: "History", colorKey: "hist", group: "Humanities" },

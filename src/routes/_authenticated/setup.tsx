@@ -8,7 +8,7 @@ import { useAuth, ensureProfile } from "@/hooks/useAuth";
 import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
 import { EXAM_BOARDS, SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
-import { subjectUnits } from "@/lib/gcse-topics";
+import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
 
 function boardLabel(board: string) {
@@ -172,7 +172,8 @@ function SetupPage() {
   function topicsFor(subjectName: string): string[] {
     const mode = source[subjectName] ?? "dfe";
     if (mode === "manual") return manualLines(manualText[subjectName]);
-    return chosen[subjectName] ?? [];
+    const topics = chosen[subjectName] ?? [];
+    return mode === "dfe" ? topics.map((topic) => detailedTopicText(subjectName, topic)) : topics;
   }
 
   async function readTopicsFile(subjectName: string, file: File) {

@@ -3037,3 +3037,11 @@ export function subjectUnits(subjectName: string): SubjectUnit[] {
 export function subjectElementCount(subjectName: string): number {
   return subjectUnits(subjectName).reduce((sum, unit) => sum + unit.elements.length, 0);
 }
+
+/** Turns a document checklist label into the full text used for a revision session. */
+export function detailedTopicText(subjectName: string, label: string): string {
+  const element = subjectUnits(subjectName)
+    .flatMap((unit) => unit.elements)
+    .find((topic) => topic.label === label);
+  return element?.detail ? `${element.label}: ${element.detail}` : label;
+}

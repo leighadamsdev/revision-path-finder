@@ -3,6 +3,7 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { detailedTopicText } from "@/lib/gcse-topics";
 import { regenerateSessionTopic, type SessionRow, type Subject } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
 
@@ -18,13 +19,18 @@ export function SessionCard({
   onChanged: (patch: Partial<SessionRow>) => void;
 }) {
   const style = subjectStyle(subject?.color_key);
-  const [topic, setTopic] = useState(session.topic_text);
+  const [topic, setTopic] = useState(() =>
+    detailedTopicText(subject?.name ?? "", session.topic_text),
+  );
   const [notes, setNotes] = useState(session.gap_notes);
   const [savedAt, setSavedAt] = useState(0);
   const [regenerating, setRegenerating] = useState(false);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-  useEffect(() => setTopic(session.topic_text), [session.topic_text]);
+  useEffect(
+    () => setTopic(detailedTopicText(subject?.name ?? "", session.topic_text)),
+    [session.topic_text, subject?.name],
+  );
 
   async function save(patch: Partial<SessionRow>) {
     const { error } = await supabase
@@ -74,14 +80,15 @@ export function SessionCard({
       </div>
 
       <p className="print-topic hidden">{topic || "Topic to be decided"}</p>
-      <input
+      <textarea
         value={topic}
         placeholder="Type the topic for this session…"
+        rows={2}
         onChange={(e) => {
           setTopic(e.target.value);
           queueSave("topic", { topic_text: e.target.value });
         }}
-        className="print-editable w-full bg-transparent text-[15px] font-bold placeholder:text-muted-foreground/60 focus:outline-none"
+        className="print-editable w-full resize-none bg-transparent text-[15px] font-bold leading-snug placeholder:text-muted-foreground/60 focus:outline-none"
       />
 
       <div className="mt-3 flex flex-wrap items-center gap-2">

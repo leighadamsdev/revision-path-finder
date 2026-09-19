@@ -183,10 +183,13 @@ function SetupPage() {
       await ensureProfile(user);
       const subjectIds: string[] = [];
       const tiers: Record<string, string | null> = {};
+      const chosenTopics: Record<string, string[]> = {};
       for (const pick of picks) {
         const id = await resolveSubjectId(pick.name, pick.board!, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
+        const ticked = chosen[pick.name] ?? [];
+        if (ticked.length) chosenTopics[id] = ticked;
       }
       await queryClient.invalidateQueries({ queryKey: ["subjects"] });
 
@@ -201,6 +204,7 @@ function SetupPage() {
         contentMode: mode,
         subjectIds,
         tiers,
+        chosenTopics,
       });
       window.localStorage.setItem("revisionpath.activePlan", planId);
       await queryClient.invalidateQueries();
@@ -220,12 +224,14 @@ function SetupPage() {
   const totalSessions =
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
 
+  const totalChosen = picks.reduce((sum, p) => sum + (chosen[p.name]?.length ?? 0), 0);
+
   const canContinue =
     step === 1
       ? picks.length > 0 && missingTiers === 0
       : step === 2
         ? missingBoards === 0
-        : step === 3
+        : step === 4
           ? studyDays.length > 0 && weeks > 0
           : true;
 

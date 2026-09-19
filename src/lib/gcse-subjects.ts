@@ -72,7 +72,6 @@ export const GCSE_SUBJECTS: CatalogueSubject[] = [
   { name: "Music", colorKey: "media", group: "Arts & media" },
 
   // Other
-  { name: "English Literature", colorKey: "lit", group: "Other" },
   { name: "Physical Education (Full Course)", colorKey: "pe", group: "Other" },
   { name: "Physical Education (Short Course)", colorKey: "pe", group: "Other" },
 ];

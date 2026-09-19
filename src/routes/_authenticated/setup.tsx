@@ -760,6 +760,10 @@ function SetupPage() {
                         : "Pre-built library"
                   }
                 />
+                <Row
+                  label="Ticked topics"
+                  value={totalChosen ? `${totalChosen} from the checklists` : "None — filled for you"}
+                />
                 <Row label="Total sessions" value={`${totalSessions}`} />
               </div>
               {mode === "ai" ? (

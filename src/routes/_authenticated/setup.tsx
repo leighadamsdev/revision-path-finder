@@ -239,21 +239,21 @@ function SetupPage() {
                 />
               </div>
 
-              {search.trim() ? (
-                <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
-                  {filteredGroups.map(({ group, names }) => (
-                    <div key={group}>
-                      <p className="px-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                        {group}
-                      </p>
-                      <div className="mt-1 space-y-1">
-                        {names.map((subjectName) => {
-                          const isOn = picks.some((p) => p.name === subjectName);
-                          return (
+              <div className="mt-3 max-h-[26rem] space-y-3 overflow-y-auto pr-1">
+                {filteredGroups.map(({ group, names }) => (
+                  <div key={group}>
+                    <p className="px-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                      {group}
+                    </p>
+                    <div className="mt-1 space-y-1">
+                      {names.map((subjectName) => {
+                        const pick = picks.find((p) => p.name === subjectName);
+                        const isOn = Boolean(pick);
+                        return (
+                          <div key={subjectName} className="rounded-[10px] hover:bg-background">
                             <button
-                              key={subjectName}
                               onClick={() => toggleName(subjectName)}
-                              className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left hover:bg-background"
+                              className="flex w-full items-center gap-2.5 px-2.5 py-2 text-left"
                             >
                               <span
                                 className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
@@ -265,28 +265,39 @@ function SetupPage() {
                                 ) : null}
                               </span>
                               <span className="text-sm font-bold">{subjectName}</span>
-                              {isTiered(subjectName) ? (
-                                <span className="ml-auto text-[11px] font-bold text-muted-foreground">
-                                  tiered
-                                </span>
-                              ) : null}
                             </button>
-                          );
-                        })}
-                      </div>
+                            {isOn && isTiered(subjectName) ? (
+                              <div className="flex flex-wrap items-center gap-1 px-2.5 pb-2 pl-10">
+                                <span className="mr-1 text-[11px] font-bold text-muted-foreground">
+                                  Tier
+                                </span>
+                                {(["Foundation", "Higher"] as const).map((tier) => (
+                                  <button
+                                    key={tier}
+                                    onClick={() => setTier(subjectName, tier)}
+                                    className={`rounded-full px-3 py-1 text-[12px] font-bold ${
+                                      pick?.tier === tier
+                                        ? "bg-maths text-background"
+                                        : "bg-card text-muted-foreground ring-1 ring-border"
+                                    }`}
+                                  >
+                                    {tier}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                  {filteredGroups.length === 0 ? (
-                    <p className="text-[12px] font-bold text-muted-foreground">
-                      Nothing matched — add it as a custom subject below.
-                    </p>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="mt-3 text-[12px] font-medium text-muted-foreground">
-                  Start typing a subject name to find it, then tap to add it to your list.
-                </p>
-              )}
+                  </div>
+                ))}
+                {filteredGroups.length === 0 ? (
+                  <p className="text-[12px] font-bold text-muted-foreground">
+                    Nothing matched — add it as a custom subject below.
+                  </p>
+                ) : null}
+              </div>
 
 
               <div className="mt-4 rounded-[12px] bg-background p-3 ring-1 ring-border">

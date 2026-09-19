@@ -1,14 +1,18 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
-import { Check, Loader2, Search, Upload } from "lucide-react";
+import { Check, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth, ensureProfile } from "@/hooks/useAuth";
 import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
-import { parseOptionsBooklet } from "@/lib/revision.functions";
 import { EXAM_BOARDS, SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
+
+function boardLabel(board: string) {
+  return board === "WJEC Eduqas" ? "WJEC / Eduqas" : board;
+}
+
 
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({

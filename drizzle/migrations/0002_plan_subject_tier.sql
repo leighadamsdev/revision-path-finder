@@ -1,0 +1,1 @@
+ALTER TABLE public.plan_subjects ADD COLUMN IF NOT EXISTS tier text;

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { generateTopics } from "@/lib/revision.functions";
+import { catalogueSubject } from "@/lib/gcse-subjects";
 
 export type Subject = {
   id: string;
@@ -101,6 +102,8 @@ export type PlanDraft = {
   days: DaySetting[];
   contentMode: "ai" | "manual" | "library";
   subjectIds: string[];
+  /** Foundation / Higher per subject id, where the subject is tiered. */
+  tiers?: Record<string, string | null>;
 };
 
 type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };
@@ -143,9 +146,13 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
   if (error) throw error;
   const planId = plan.id as string;
 
-  const { error: linkError } = await supabase
-    .from("plan_subjects")
-    .insert(draft.subjectIds.map((subjectId) => ({ plan_id: planId, subject_id: subjectId })));
+  const { error: linkError } = await supabase.from("plan_subjects").insert(
+    draft.subjectIds.map((subjectId) => ({
+      plan_id: planId,
+      subject_id: subjectId,
+      tier: draft.tiers?.[subjectId] ?? null,
+    })),
+  );
   if (linkError) throw linkError;
 
   const slots = buildSlots(draft);
@@ -264,7 +271,7 @@ export async function resolveSubjectId(
       exam_board: board,
       is_custom: true,
       created_by: userId,
-      color_key: sibling?.color_key ?? "media",
+      color_key: sibling?.color_key ?? catalogueSubject(name)?.colorKey ?? "media",
     })
     .select("id")
     .single();

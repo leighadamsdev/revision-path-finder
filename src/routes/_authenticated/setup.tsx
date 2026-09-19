@@ -8,6 +8,7 @@ import { useAuth, ensureProfile } from "@/hooks/useAuth";
 import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
 import { parseOptionsBooklet } from "@/lib/revision.functions";
 import { EXAM_BOARDS, SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
+import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
 
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({
@@ -16,12 +17,12 @@ export const Route = createFileRoute("/_authenticated/setup")({
       {
         name: "description",
         content:
-          "Add your GCSE subjects and exam boards, set how many weeks and days you can study, and choose how topics get filled in.",
+          "Choose your GCSE subjects and tier, add your exam boards, set how many weeks and days you can study, and choose how topics get filled in.",
       },
       { property: "og:title", content: "Set up your plan — RevisionPath" },
       {
         property: "og:description",
-        content: "Add subjects, set your timeframe, and generate your revision timetable.",
+        content: "Pick subjects and tiers, add exam boards, and generate your revision timetable.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,10 +31,12 @@ export const Route = createFileRoute("/_authenticated/setup")({
   component: SetupPage,
 });
 
-type Pick = { name: string; board: string | null };
+type Pick = { name: string; board: string | null; tier: Tier | null };
 type DayConfig = { sessions: number; minutes: number };
 
 const DEFAULT_DAY: DayConfig = { sessions: 2, minutes: 45 };
+const TOTAL_STEPS = 5;
+const STEP_LABELS = ["Pick subjects", "Exam boards", "Set timeframe", "Choose topics", "Review"];
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -49,8 +52,10 @@ function SetupPage() {
   const [step, setStep] = useState(1);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<"manual" | "upload">("manual");
-  const [detected, setDetected] = useState<(Pick & { keep: boolean })[] | null>(null);
+  const [boardSource, setBoardSource] = useState<"manual" | "upload" | null>(null);
+  const [detected, setDetected] = useState<{ name: string; board: string | null; keep: boolean }[] | null>(
+    null,
+  );
   const [parsing, setParsing] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -72,7 +77,7 @@ function SetupPage() {
     [dayConfigs],
   );
 
-  /** Every distinct subject name we stock, with the boards it's offered on. */
+  /** Boards each stocked subject name is offered on. */
   const boardsByName = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const s of subjects) {
@@ -83,11 +88,28 @@ function SetupPage() {
     return map;
   }, [subjects]);
 
-  const filteredNames = useMemo(() => {
+  /** The national catalogue, plus anything extra already stored in the database. */
+  const allNames = useMemo(() => {
+    const groups = new Map<string, string[]>();
+    for (const group of SUBJECT_GROUPS) groups.set(group, []);
+    for (const s of GCSE_SUBJECTS) groups.get(s.group)!.push(s.name);
+    const known = new Set(GCSE_SUBJECTS.map((s) => s.name.toLowerCase()));
+    const extras = Array.from(boardsByName.keys()).filter((n) => !known.has(n.toLowerCase()));
+    if (extras.length) groups.set("Other", [...(groups.get("Other") ?? []), ...extras]);
+    return groups;
+  }, [boardsByName]);
+
+  const filteredGroups = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const names = Array.from(boardsByName.keys()).sort((a, b) => a.localeCompare(b));
-    return (q ? names.filter((n) => n.toLowerCase().includes(q)) : names).slice(0, 40);
-  }, [boardsByName, search]);
+    const out: { group: string; names: string[] }[] = [];
+    for (const [group, names] of allNames) {
+      const list = (q ? names.filter((n) => n.toLowerCase().includes(q)) : names).sort((a, b) =>
+        a.localeCompare(b),
+      );
+      if (list.length) out.push({ group, names: list });
+    }
+    return out;
+  }, [allNames, search]);
 
   function boardOptions(subjectName: string) {
     const known = boardsByName.get(subjectName) ?? [];
@@ -100,12 +122,23 @@ function SetupPage() {
         return prev.filter((p) => p.name !== subjectName);
       }
       const known = boardsByName.get(subjectName) ?? [];
-      return [...prev, { name: subjectName, board: known.length === 1 ? known[0]! : null }];
+      return [
+        ...prev,
+        { name: subjectName, board: known.length === 1 ? known[0]! : null, tier: null },
+      ];
     });
   }
 
   function setBoard(subjectName: string, board: string) {
     setPicks((prev) => prev.map((p) => (p.name === subjectName ? { ...p, board } : p)));
+  }
+
+  function setTier(subjectName: string, tier: Tier) {
+    setPicks((prev) =>
+      prev.map((p) =>
+        p.name === subjectName ? { ...p, tier: p.tier === tier ? null : tier } : p,
+      ),
+    );
   }
 
   function addCustomName() {
@@ -115,7 +148,7 @@ function SetupPage() {
       toast.error("That subject is already on your list.");
       return;
     }
-    setPicks((prev) => [...prev, { name: trimmed, board: null }]);
+    setPicks((prev) => [...prev, { name: trimmed, board: null, tier: null }]);
     setCustomName("");
   }
 
@@ -135,8 +168,8 @@ function SetupPage() {
       });
 
       if (!found.length) {
-        toast.error("We couldn't find any subjects in that file — pick them manually instead.");
-        setTab("manual");
+        toast.error("We couldn't find any exam boards in that file — set them by hand instead.");
+        setBoardSource("manual");
         return;
       }
 
@@ -156,29 +189,42 @@ function SetupPage() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "That file couldn't be read — pick your subjects manually instead.",
+          : "That file couldn't be read — set your exam boards by hand instead.",
       );
-      setTab("manual");
+      setBoardSource("manual");
     } finally {
       setParsing(false);
     }
   }
 
+  /** Applies detected boards to existing picks, and adds any subject we missed. */
   function confirmDetected() {
     if (!detected) return;
     const keep = detected.filter((d) => d.keep);
+    let matched = 0;
     setPicks((prev) => {
-      const next = [...prev];
+      const next = prev.map((p) => {
+        const hit = keep.find((d) => d.name.toLowerCase() === p.name.toLowerCase());
+        if (hit?.board) {
+          matched += 1;
+          return { ...p, board: hit.board };
+        }
+        return p;
+      });
       for (const item of keep) {
         if (!next.some((p) => p.name.toLowerCase() === item.name.toLowerCase())) {
-          next.push({ name: item.name, board: item.board });
+          next.push({ name: item.name, board: item.board, tier: null });
         }
       }
       return next;
     });
     setDetected(null);
-    setTab("manual");
-    toast.success(`${keep.length} subjects added — confirm each exam board below.`);
+    setBoardSource("manual");
+    toast.success(
+      matched
+        ? `${matched} exam boards filled in — check them below.`
+        : "Boards added — check each one below.",
+    );
   }
 
   async function generate() {
@@ -187,8 +233,11 @@ function SetupPage() {
     try {
       await ensureProfile(user);
       const subjectIds: string[] = [];
+      const tiers: Record<string, string | null> = {};
       for (const pick of picks) {
-        subjectIds.push(await resolveSubjectId(pick.name, pick.board!, user.id, subjects));
+        const id = await resolveSubjectId(pick.name, pick.board!, user.id, subjects);
+        subjectIds.push(id);
+        tiers[id] = pick.tier;
       }
       await queryClient.invalidateQueries({ queryKey: ["subjects"] });
 
@@ -202,6 +251,7 @@ function SetupPage() {
         })),
         contentMode: mode,
         subjectIds,
+        tiers,
       });
       window.localStorage.setItem("revisionpath.activePlan", planId);
       await queryClient.invalidateQueries();
@@ -216,24 +266,29 @@ function SetupPage() {
     }
   }
 
+  const missingTiers = picks.filter((p) => isTiered(p.name) && !p.tier).length;
   const missingBoards = picks.filter((p) => !p.board).length;
   const totalSessions =
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
 
   const canContinue =
     step === 1
-      ? picks.length > 0 && missingBoards === 0
+      ? picks.length > 0 && missingTiers === 0
       : step === 2
-        ? studyDays.length > 0 && weeks > 0
-        : true;
+        ? missingBoards === 0
+        : step === 3
+          ? studyDays.length > 0 && weeks > 0
+          : true;
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
       <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
         <div className="mb-5 flex items-center gap-2">
-          <span className="text-[11px] font-extrabold text-muted-foreground">Step {step} of 4</span>
+          <span className="text-[11px] font-extrabold text-muted-foreground">
+            Step {step} of {TOTAL_STEPS}
+          </span>
           <div className="flex gap-1">
-            {[1, 2, 3, 4].map((n) => (
+            {[1, 2, 3, 4, 5].map((n) => (
               <span
                 key={n}
                 className={`h-1 w-5 rounded-full ${n <= step ? "bg-maths" : "bg-border"}`}
@@ -241,13 +296,7 @@ function SetupPage() {
             ))}
           </div>
           <span className="ml-auto text-[11px] font-bold text-muted-foreground">
-            {step === 1
-              ? "Add subjects"
-              : step === 2
-                ? "Set timeframe"
-                : step === 3
-                  ? "Choose topics"
-                  : "Review"}
+            {STEP_LABELS[step - 1]}
           </span>
         </div>
 
@@ -258,32 +307,174 @@ function SetupPage() {
                 Which subjects are you revising?
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Pick your subjects first, then set the exam board for each one. Or upload your
-                school's options booklet and we'll draft the list.
+                Search the full GCSE list and tick everything you're sitting. For tiered subjects,
+                tell us whether you're on Foundation or Higher papers.
               </p>
 
-              <div className="mt-4 flex gap-1 rounded-full bg-background p-1 ring-1 ring-border">
-                {(
-                  [
-                    ["manual", "Pick manually"],
-                    ["upload", "Upload booklet"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <button
-                    key={key}
-                    onClick={() => setTab(key)}
-                    className={`flex-1 rounded-full py-2 text-[13px] font-bold ${
-                      tab === key
-                        ? "bg-card text-foreground ring-1 ring-border"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+              <div className="mt-4 flex items-center gap-2 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border">
+                <Search className="size-4 text-muted-foreground" strokeWidth={2.5} />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search subjects…"
+                  className="w-full bg-transparent text-sm font-medium placeholder:text-muted-foreground/60 focus:outline-none"
+                />
               </div>
 
-              {tab === "upload" ? (
+              <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
+                {filteredGroups.map(({ group, names }) => (
+                  <div key={group}>
+                    <p className="px-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                      {group}
+                    </p>
+                    <div className="mt-1 space-y-1">
+                      {names.map((subjectName) => {
+                        const isOn = picks.some((p) => p.name === subjectName);
+                        return (
+                          <button
+                            key={subjectName}
+                            onClick={() => toggleName(subjectName)}
+                            className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left hover:bg-background"
+                          >
+                            <span
+                              className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
+                                isOn ? "bg-maths" : "ring-1 ring-border"
+                              }`}
+                            >
+                              {isOn ? (
+                                <Check className="size-3 text-background" strokeWidth={3} />
+                              ) : null}
+                            </span>
+                            <span className="text-sm font-bold">{subjectName}</span>
+                            {isTiered(subjectName) ? (
+                              <span className="ml-auto text-[11px] font-bold text-muted-foreground">
+                                tiered
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {filteredGroups.length === 0 ? (
+                  <p className="text-[12px] font-bold text-muted-foreground">
+                    Nothing matched — add it as a custom subject below.
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="mt-4 rounded-[12px] bg-background p-3 ring-1 ring-border">
+                <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                  Not listed?
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <input
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="Subject name"
+                    className="min-w-0 flex-1 rounded-[10px] bg-card px-3 py-2 text-[13px] font-medium ring-1 ring-border focus:outline-none"
+                  />
+                  <button
+                    onClick={addCustomName}
+                    className="rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {picks.length ? (
+                <div className="mt-5">
+                  <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                    Your subjects
+                  </p>
+                  <div className="mt-2 space-y-1.5">
+                    {picks.map((pick) => (
+                      <div
+                        key={pick.name}
+                        className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
+                      >
+                        <span className="text-sm font-bold">{pick.name}</span>
+                        {isTiered(pick.name) ? (
+                          <div className="ml-auto flex gap-1">
+                            {(["Foundation", "Higher"] as const).map((tier) => (
+                              <button
+                                key={tier}
+                                onClick={() => setTier(pick.name, tier)}
+                                className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
+                                  pick.tier === tier
+                                    ? "bg-maths text-background"
+                                    : "bg-card text-muted-foreground ring-1 ring-border"
+                                }`}
+                              >
+                                {tier}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                        <button
+                          onClick={() =>
+                            setPicks((prev) => prev.filter((p) => p.name !== pick.name))
+                          }
+                          className={`text-[12px] font-bold text-muted-foreground hover:text-foreground ${
+                            isTiered(pick.name) ? "" : "ml-auto"
+                          }`}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {missingTiers ? (
+                    <p className="mt-2 text-[12px] font-bold text-muted-foreground">
+                      {missingTiers} still need a tier — pick Foundation or Higher.
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-3 text-[12px] font-bold text-muted-foreground">
+                  No subjects picked yet.
+                </p>
+              )}
+            </>
+          ) : null}
+
+          {step === 2 ? (
+            <>
+              <p className="text-lg font-extrabold tracking-tight">Which exam boards?</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+                Set the board for each subject yourself, or upload your school's options booklet and
+                we'll fill them in for you to check.
+              </p>
+
+              {boardSource === null ? (
+                <div className="mt-4 space-y-2">
+                  <button
+                    onClick={() => setBoardSource("manual")}
+                    className="w-full rounded-[14px] bg-background p-4 text-left ring-1 ring-border"
+                  >
+                    <p className="text-[15px] font-extrabold tracking-tight">Set them myself</p>
+                    <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+                      Choose a board from a dropdown for each of your subjects.
+                    </p>
+                  </button>
+                  <button
+                    onClick={() => setBoardSource("upload")}
+                    className="w-full rounded-[14px] bg-background p-4 text-left ring-1 ring-border"
+                  >
+                    <p className="text-[15px] font-extrabold tracking-tight">
+                      Use my options booklet
+                    </p>
+                    <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+                      Upload the PDF or a photo — we'll read the boards and show them for you to
+                      confirm.
+                    </p>
+                  </button>
+                </div>
+              ) : null}
+
+              {boardSource === "upload" ? (
                 <div className="mt-4">
                   {detected ? (
                     <div>
@@ -320,7 +511,7 @@ function SetupPage() {
                           onClick={confirmDetected}
                           className="flex-1 rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground"
                         >
-                          Add these subjects
+                          Use these boards
                         </button>
                         <button
                           onClick={() => setDetected(null)}
@@ -330,32 +521,40 @@ function SetupPage() {
                         </button>
                       </div>
                       <p className="mt-2 text-[11px] font-medium text-muted-foreground">
-                        Booklets vary a lot, so treat this as a quick draft — you can add anything
-                        missed on the manual tab.
+                        Booklets vary a lot, so treat this as a quick draft — you can change any
+                        board afterwards.
                       </p>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => fileInput.current?.click()}
-                      disabled={parsing}
-                      className="flex w-full items-center gap-3 rounded-[12px] border border-dashed border-border px-3 py-4 text-left"
-                    >
-                      <div className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-background text-muted-foreground">
-                        {parsing ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <Upload className="size-4" strokeWidth={2.5} />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-[13px] font-bold">
-                          {parsing ? "Reading your booklet…" : "Upload options booklet"}
-                        </p>
-                        <p className="text-[11px] font-medium text-muted-foreground">
-                          PDF or a photo of the pages
-                        </p>
-                      </div>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => fileInput.current?.click()}
+                        disabled={parsing}
+                        className="flex w-full items-center gap-3 rounded-[12px] border border-dashed border-border px-3 py-4 text-left"
+                      >
+                        <div className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-background text-muted-foreground">
+                          {parsing ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Upload className="size-4" strokeWidth={2.5} />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[13px] font-bold">
+                            {parsing ? "Reading your booklet…" : "Upload options booklet"}
+                          </p>
+                          <p className="text-[11px] font-medium text-muted-foreground">
+                            PDF or a photo of the pages
+                          </p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setBoardSource("manual")}
+                        className="mt-2 text-[12px] font-bold text-muted-foreground hover:text-foreground"
+                      >
+                        I'll set the boards myself instead
+                      </button>
+                    </>
                   )}
                   <input
                     ref={fileInput}
@@ -369,76 +568,24 @@ function SetupPage() {
                     }}
                   />
                 </div>
-              ) : (
-                <>
-                  <div className="mt-4 flex items-center gap-2 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border">
-                    <Search className="size-4 text-muted-foreground" strokeWidth={2.5} />
-                    <input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search subjects…"
-                      className="w-full bg-transparent text-sm font-medium placeholder:text-muted-foreground/60 focus:outline-none"
-                    />
-                  </div>
+              ) : null}
 
-                  <div className="mt-3 max-h-56 space-y-1.5 overflow-y-auto pr-1">
-                    {filteredNames.map((subjectName) => {
-                      const isOn = picks.some((p) => p.name === subjectName);
-                      return (
-                        <button
-                          key={subjectName}
-                          onClick={() => toggleName(subjectName)}
-                          className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left hover:bg-background"
-                        >
-                          <span
-                            className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
-                              isOn ? "bg-maths" : "ring-1 ring-border"
-                            }`}
-                          >
-                            {isOn ? (
-                              <Check className="size-3 text-background" strokeWidth={3} />
-                            ) : null}
-                          </span>
-                          <span className="text-sm font-bold">{subjectName}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-4 rounded-[12px] bg-background p-3 ring-1 ring-border">
-                    <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                      Not listed?
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <input
-                        value={customName}
-                        onChange={(e) => setCustomName(e.target.value)}
-                        placeholder="Subject name"
-                        className="min-w-0 flex-1 rounded-[10px] bg-card px-3 py-2 text-[13px] font-medium ring-1 ring-border focus:outline-none"
-                      />
-                      <button
-                        onClick={addCustomName}
-                        className="rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {picks.length ? (
-                <div className="mt-5">
-                  <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                    Your subjects — choose each exam board
-                  </p>
-                  <div className="mt-2 space-y-1.5">
+              {boardSource === "manual" ? (
+                <div className="mt-4">
+                  <div className="space-y-1.5">
                     {picks.map((pick) => (
                       <div
                         key={pick.name}
                         className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
                       >
-                        <span className="text-sm font-bold">{pick.name}</span>
+                        <span className="text-sm font-bold">
+                          {pick.name}
+                          {pick.tier ? (
+                            <span className="ml-1.5 text-[11px] font-bold text-muted-foreground">
+                              {pick.tier}
+                            </span>
+                          ) : null}
+                        </span>
                         <select
                           value={pick.board ?? ""}
                           onChange={(e) => setBoard(pick.name, e.target.value)}
@@ -453,14 +600,6 @@ function SetupPage() {
                             </option>
                           ))}
                         </select>
-                        <button
-                          onClick={() =>
-                            setPicks((prev) => prev.filter((p) => p.name !== pick.name))
-                          }
-                          className="text-[12px] font-bold text-muted-foreground hover:text-foreground"
-                        >
-                          Remove
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -469,16 +608,18 @@ function SetupPage() {
                       {missingBoards} still need an exam board.
                     </p>
                   ) : null}
+                  <button
+                    onClick={() => setBoardSource("upload")}
+                    className="mt-3 text-[12px] font-bold text-muted-foreground hover:text-foreground"
+                  >
+                    Use my options booklet instead
+                  </button>
                 </div>
-              ) : (
-                <p className="mt-3 text-[12px] font-bold text-muted-foreground">
-                  No subjects picked yet.
-                </p>
-              )}
+              ) : null}
             </>
           ) : null}
 
-          {step === 2 ? (
+          {step === 3 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">How much time have you got?</p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
@@ -595,7 +736,7 @@ function SetupPage() {
             </>
           ) : null}
 
-          {step === 3 ? (
+          {step === 4 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">
                 How should topics be filled in?
@@ -640,13 +781,15 @@ function SetupPage() {
             </>
           ) : null}
 
-          {step === 4 ? (
+          {step === 5 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">Ready to build your plan</p>
               <div className="mt-4 space-y-2 text-[13px] font-semibold">
                 <Row
                   label="Subjects"
-                  value={picks.map((p) => `${p.name} · ${p.board}`).join(", ")}
+                  value={picks
+                    .map((p) => `${p.name}${p.tier ? ` (${p.tier})` : ""} · ${p.board}`)
+                    .join(", ")}
                 />
                 <Row label="Weeks" value={`${weeks}`} />
                 {studyDays.map((day) => (
@@ -685,9 +828,11 @@ function SetupPage() {
                 Back
               </button>
             ) : null}
-            {step < 4 ? (
+            {step < TOTAL_STEPS ? (
               <button
-                onClick={() => setStep(step + 1)}
+                onClick={() => {
+                  setStep(step + 1);
+                }}
                 disabled={!canContinue}
                 className="flex-1 rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-50"
               >

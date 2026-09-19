@@ -831,7 +831,6 @@ function SetupPage() {
             {step < TOTAL_STEPS ? (
               <button
                 onClick={() => {
-                  if (step === 1 && boardSource === null) setBoardSource(null);
                   setStep(step + 1);
                 }}
                 disabled={!canContinue}

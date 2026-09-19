@@ -121,3 +121,143 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  html,
+  body {
+    width: 210mm;
+    min-height: 297mm;
+    background: var(--color-card);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .app-header,
+  .app-nav {
+    display: none;
+  }
+
+  .app-main {
+    width: auto;
+    max-width: none;
+    padding: 0;
+  }
+
+  .print-week-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 4mm;
+    padding-bottom: 2.5mm;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .print-week-heading h1 {
+    margin: 0.5mm 0 0;
+    font-size: 15pt;
+    line-height: 1.1;
+    font-weight: 800;
+  }
+
+  .print-week-heading > p,
+  .print-brand {
+    margin: 0;
+    font-size: 8pt;
+    line-height: 1;
+    font-weight: 800;
+    color: var(--color-muted-foreground);
+  }
+
+  .print-week-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3mm;
+    animation: none;
+  }
+
+  .print-day {
+    break-inside: avoid;
+    border: 1px solid var(--color-border);
+    border-radius: 2mm;
+    padding: 2.5mm;
+    box-shadow: none;
+  }
+
+  .print-day-heading {
+    margin-bottom: 1.5mm;
+    padding: 0;
+  }
+
+  .print-day-heading p:first-child {
+    font-size: 10pt;
+  }
+
+  .print-day-heading p:last-child {
+    font-size: 7pt;
+  }
+
+  .print-day > div:last-child {
+    display: grid;
+    gap: 1.5mm;
+  }
+
+  .print-session {
+    break-inside: avoid;
+    border: 1px solid var(--color-border);
+    border-radius: 1.5mm;
+    padding: 2mm;
+    box-shadow: none;
+  }
+
+  .print-session > div:first-child {
+    margin-bottom: 1mm;
+  }
+
+  .print-session > div:first-child span {
+    padding: 0.7mm 1.5mm;
+    font-size: 6.5pt;
+  }
+
+  .print-topic,
+  .print-notes {
+    display: block;
+    margin: 0;
+  }
+
+  .print-topic {
+    font-size: 8.5pt;
+    line-height: 1.2;
+    font-weight: 800;
+  }
+
+  .print-notes {
+    margin-top: 1mm;
+    font-size: 7pt;
+    line-height: 1.2;
+    color: var(--color-muted-foreground);
+  }
+
+  .print-editable,
+  .print-action {
+    display: none;
+  }
+
+  .print-session > div:nth-of-type(2) {
+    margin-top: 1.5mm;
+    gap: 1.5mm;
+  }
+
+  .print-session > div:nth-of-type(2) > span {
+    font-size: 6pt;
+  }
+
+  .print-session > div:nth-of-type(2) button {
+    width: 4mm;
+    height: 4mm;
+  }
+}

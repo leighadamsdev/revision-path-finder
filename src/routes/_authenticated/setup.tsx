@@ -109,10 +109,6 @@ function SetupPage() {
     return out;
   }, [allNames, search]);
 
-  function boardOptions(subjectName: string) {
-    const known = boardsByName.get(subjectName) ?? [];
-    return Array.from(new Set([...known, ...EXAM_BOARDS]));
-  }
 
   function toggleName(subjectName: string) {
     setPicks((prev) => {

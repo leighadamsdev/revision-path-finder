@@ -23,12 +23,17 @@ export function AppShell({
   headerCentre?: ReactNode;
 }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { plan, plans, setActive } = useActivePlan();
+  const { isAdmin } = useIsAdmin();
 
   async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/" });
+    navigate({ to: "/auth", replace: true });
   }
+
 
   return (
     <div className="app-shell min-h-screen bg-background font-sans text-foreground">

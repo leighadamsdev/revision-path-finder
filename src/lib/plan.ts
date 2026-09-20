@@ -24,6 +24,7 @@ export type Plan = {
   day_plan: DaySetting[] | null;
   content_mode: "ai" | "manual" | "library";
   created_at: string;
+  start_date: string | null;
 };
 
 export type SessionRow = {
@@ -54,7 +55,7 @@ export async function fetchPlans(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("plans")
     .select(
-      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at",
+      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date",
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -97,6 +98,7 @@ export async function fetchLibraryTopics(subjectId: string): Promise<string[]> {
 
 export type PlanDraft = {
   name: string;
+  startDate: string;
   weeks: number;
   /** One entry per study day, each with its own session count and length. */
   days: DaySetting[];
@@ -144,6 +146,7 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       session_length_minutes: firstLength,
       day_plan: draft.days,
       content_mode: draft.contentMode,
+      start_date: draft.startDate,
     })
     .select("id")
     .single();
@@ -279,29 +282,31 @@ export async function regenerateSessionTopic(session: SessionRow, subject: Subje
 /** Finds the subject row for a name + board pair, creating a custom one if we don't stock it. */
 export async function resolveSubjectId(
   name: string,
-  board: string,
   userId: string,
   known: Subject[],
 ): Promise<string> {
-  const match = known.find(
-    (s) =>
-      s.name.toLowerCase() === name.toLowerCase() &&
-      s.exam_board.toLowerCase() === board.toLowerCase(),
-  );
+  const match = known.find((s) => s.name.toLowerCase() === name.toLowerCase());
   if (match) return match.id;
 
-  const sibling = known.find((s) => s.name.toLowerCase() === name.toLowerCase());
   const { data, error } = await supabase
     .from("subjects")
     .insert({
       name,
-      exam_board: board,
+      exam_board: "Not specified",
       is_custom: true,
       created_by: userId,
-      color_key: sibling?.color_key ?? catalogueSubject(name)?.colorKey ?? "media",
+      color_key: catalogueSubject(name)?.colorKey ?? "media",
     })
     .select("id")
     .single();
   if (error) throw error;
   return data.id as string;
+}
+
+export async function updatePlanDetails(planId: string, name: string, startDate: string) {
+  const { error } = await supabase
+    .from("plans")
+    .update({ name: name.trim() || "My revision plan", start_date: startDate })
+    .eq("id", planId);
+  if (error) throw error;
 }

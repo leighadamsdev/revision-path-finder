@@ -105,7 +105,7 @@ function ProgressPage() {
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${style.tag}`}
               >
                 <span className={`size-1.5 rounded-full ${style.dot}`} />
-                {subject.name} · {subject.exam_board}
+                {subject.name}
               </span>
               <div className="mt-3 flex items-baseline gap-4">
                 <p className="text-[13px] font-semibold text-muted-foreground">

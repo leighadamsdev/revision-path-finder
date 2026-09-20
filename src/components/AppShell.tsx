@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { CalendarRange, CircleGauge, FileText, Sparkles } from "lucide-react";
+import { CalendarRange, CircleGauge, FileText, Pencil, Sparkles } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useActivePlan } from "@/hooks/useActivePlan";
@@ -63,6 +63,16 @@ export function AppShell({
             {headerCentre}
 
             <div className="flex shrink-0 items-center gap-1">
+              {plan ? (
+                <Link
+                  to="/edit-plan"
+                  aria-label="Edit plan"
+                  title="Edit plan"
+                  className="grid size-9 place-items-center rounded-full text-muted-foreground hover:bg-card"
+                >
+                  <Pencil className="size-4" />
+                </Link>
+              ) : null}
               <Link
                 to="/setup"
                 className="hidden rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground sm:inline-flex"

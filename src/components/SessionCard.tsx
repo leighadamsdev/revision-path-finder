@@ -72,7 +72,7 @@ export function SessionCard({
           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${style.tag}`}
         >
           <span className={`size-1.5 rounded-full ${style.dot}`} />
-          {subject ? `${subject.name} · ${subject.exam_board}` : "Subject removed"}
+          {subject?.name ?? "Subject removed"}
         </span>
         <span className="ml-auto text-[11px] font-bold text-muted-foreground">
           {minutes < 60 ? `${minutes} min` : `${minutes / 60} hr`}

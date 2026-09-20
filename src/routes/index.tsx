@@ -68,8 +68,8 @@ function Landing() {
         <p className="mt-4 max-w-[52ch] text-base font-medium text-muted-foreground">
           1. Tell rev.plan the subjects and tiers you are studying
           2. Choose the topics from a pre-populated list (or you can upload your own)
-          3. lock in how many weeks you have until exam day
-          4. let rev.plan build you a week-by-week, session by session plan.
+          3. Lock in how many weeks you have until exam day
+          4. Let rev.plan build you a week-by-week, session by session plan.
           5. Print it out or follow it online, it is up to you.{"\u00a0"}
         </p>
         <div className="mt-7 flex flex-wrap items-center gap-3">

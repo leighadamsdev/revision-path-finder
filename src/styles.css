@@ -139,6 +139,12 @@
     -webkit-print-color-adjust: exact;
   }
 
+  .app-shell {
+    min-height: 0;
+    height: auto;
+    overflow: hidden;
+  }
+
   .app-header,
   .app-nav {
     display: none;

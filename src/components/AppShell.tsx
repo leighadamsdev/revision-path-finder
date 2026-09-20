@@ -28,7 +28,7 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground">
+    <div className="app-shell min-h-screen bg-background font-sans text-foreground">
       <div className="app-header sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-sm">
         <div className="mx-auto max-w-5xl px-4 pb-3 pt-4 sm:px-6">
           <div className="flex items-center justify-between gap-3">

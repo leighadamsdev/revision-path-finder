@@ -63,6 +63,32 @@ function ProgressPage() {
         </p>
       </div>
 
+      <div className="mt-4 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+        <p className="text-sm font-extrabold tracking-tight">Improvement</p>
+        {paired.length === 0 ? (
+          <p className="mt-2 text-[13px] font-medium text-muted-foreground">
+            Rate a session before you revise and again afterwards to see your improvement here.
+          </p>
+        ) : (
+          <>
+            <div className="mt-3 flex items-baseline gap-3">
+              <p className="text-2xl font-extrabold tabular-nums">{avgBefore.toFixed(1)}</p>
+              <span className="text-sm font-bold text-muted-foreground">→</span>
+              <p className="text-2xl font-extrabold tabular-nums text-sci">
+                {avgAfter.toFixed(1)}
+              </p>
+              <p className="ml-auto text-sm font-extrabold tabular-nums">
+                {avgAfter - avgBefore >= 0 ? "+" : ""}
+                {(avgAfter - avgBefore).toFixed(1)} avg
+              </p>
+            </div>
+            <p className="mt-2 text-[13px] font-medium text-muted-foreground">
+              {improvedCount} of {paired.length} sessions improved after revising
+            </p>
+          </>
+        )}
+      </div>
+
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {subjects.map((subject) => {
           const own = sessions.filter((s) => s.subject_id === subject.id);

@@ -24,7 +24,7 @@ export const Route = createFileRoute("/")({
 
 const HOW_STEPS = [
   "Tell rev.plan the subjects and tiers you are studying",
-  "Choose the topics from a pre-populated list",
+  "Choose the exact topics from a pre-populated list",
   "Lock in how many weeks you have until exam day",
   "Let rev.plan build you a week-by-week, session by session plan.",
   "Print it out or follow it online, it is up to you.",

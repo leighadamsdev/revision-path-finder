@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
@@ -50,36 +50,6 @@ function TimetablePage() {
   const rated = weekSessions.filter((s) => s.confidence != null).length;
   const pct = weekSessions.length ? Math.round((rated / weekSessions.length) * 100) : 0;
   const lowConfidence = sessions.filter((s) => (s.confidence ?? 5) <= 2 && s.confidence != null);
-
-  useEffect(() => {
-    function fitWeekToPage() {
-      const sheet = document.querySelector<HTMLElement>(".print-week-sheet");
-      if (!sheet) return;
-      sheet.style.zoom = "1";
-      const pixelsPerMillimetre = 96 / 25.4;
-      // A4 landscape with an extra safety margin for browser print headers and rounding.
-      const printableWidth = 277 * pixelsPerMillimetre;
-      const printableHeight = 188 * pixelsPerMillimetre;
-      const scale = Math.min(
-        1,
-        printableWidth / sheet.scrollWidth,
-        printableHeight / sheet.scrollHeight,
-      );
-      sheet.style.zoom = String(scale);
-    }
-
-    function resetPrintScale() {
-      const sheet = document.querySelector<HTMLElement>(".print-week-sheet");
-      if (sheet) sheet.style.removeProperty("zoom");
-    }
-
-    window.addEventListener("beforeprint", fitWeekToPage);
-    window.addEventListener("afterprint", resetPrintScale);
-    return () => {
-      window.removeEventListener("beforeprint", fitWeekToPage);
-      window.removeEventListener("afterprint", resetPrintScale);
-    };
-  }, [week, weekSessions.length]);
 
   function patchSession(id: string, patch: Partial<SessionRow>) {
     queryClient.setQueryData<SessionRow[]>(["sessions", plan?.id], (old) =>
@@ -147,16 +117,11 @@ function TimetablePage() {
           <h1 className="text-xl font-extrabold tracking-tight">Week {week}</h1>
           <p className="text-[13px] font-semibold text-muted-foreground">{plan.name}</p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            window.dispatchEvent(new Event("beforeprint"));
-            window.print();
-          }}
-        >
-          <Printer aria-hidden="true" />
-          Print week
+        <Button asChild variant="outline">
+          <Link to="/print-plan" search={{ week }} target="_blank">
+            <Printer aria-hidden="true" />
+            Print this week / Export as PDF
+          </Link>
         </Button>
       </div>
 

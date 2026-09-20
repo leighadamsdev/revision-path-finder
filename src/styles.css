@@ -122,164 +122,196 @@
   }
 }
 
+.print-preview-shell {
+  min-height: 100vh;
+  background: white;
+  color: black;
+  padding: 2rem 1rem 4rem;
+}
+
+.print-preview-actions,
+.print-plan-week {
+  width: min(100%, 52rem);
+  margin-inline: auto;
+}
+
+.print-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.print-plan-week {
+  background: white;
+  color: black;
+  font-size: 12pt;
+  line-height: 1.45;
+}
+
+.print-plan-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid black;
+}
+
+.print-plan-heading p,
+.print-plan-heading h1 {
+  margin: 0;
+}
+
+.print-plan-heading p {
+  font-size: 10pt;
+  font-weight: 800;
+}
+
+.print-plan-heading h1 {
+  margin-top: 0.2rem;
+  font-size: 20pt;
+  line-height: 1.15;
+}
+
+.print-plan-heading > strong {
+  font-size: 12pt;
+  white-space: nowrap;
+}
+
+.print-plan-days {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.print-plan-day {
+  border: 1px solid black;
+  padding: 0.75rem;
+}
+
+.print-plan-day h2 {
+  margin: 0 0 0.6rem;
+  font-size: 15pt;
+  line-height: 1.2;
+}
+
+.print-plan-session {
+  padding: 0.65rem 0;
+  border-top: 1px solid black;
+}
+
+.print-plan-session:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.print-plan-session:last-child {
+  padding-bottom: 0;
+}
+
+.print-plan-session-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 10.5pt;
+}
+
+.print-plan-session-meta span {
+  white-space: nowrap;
+}
+
+.print-plan-session h3 {
+  margin: 0.35rem 0;
+  font-size: 12pt;
+  line-height: 1.4;
+}
+
+.print-plan-session p {
+  margin: 0.35rem 0 0;
+  font-size: 11pt;
+}
+
+.print-plan-ratings {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  font-size: 10.5pt;
+  font-weight: 700;
+}
+
+.print-confidence-dots {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.print-confidence-dots > span {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1.5px solid black;
+  border-radius: 999px;
+  background: white;
+}
+
+.print-confidence-dots > .is-filled {
+  background: black;
+}
+
+.print-loading {
+  padding: 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
 @media print {
   @page {
-    size: A4 landscape;
-    margin: 8mm;
+    size: A4;
+    margin: 1.5cm;
   }
 
   html,
   body {
-    width: auto;
-    height: 194mm;
-    min-height: 194mm;
-    max-height: 194mm;
     margin: 0;
-    overflow: hidden;
-    background: var(--color-card);
+    background: white;
+    color: black;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
 
-  .app-shell {
-    min-height: 0;
-    height: 194mm;
-    max-height: 194mm;
-    overflow: hidden;
-  }
-
   .app-header,
-  .app-nav {
-    display: none;
-  }
-
-  .app-main {
-    width: auto;
-    max-width: none;
-    padding: 0;
-  }
-
-  .print-week-heading {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 4mm;
-    padding-bottom: 2.5mm;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .print-week-sheet {
-    width: 280mm;
-    max-width: 280mm;
-    max-height: 193mm;
-    overflow: hidden;
-    break-inside: avoid;
-    page-break-inside: avoid;
-    page-break-after: avoid;
-    transform-origin: top left;
-  }
-
-  .print-week-heading h1 {
-    margin: 0.5mm 0 0;
-    font-size: 15pt;
-    line-height: 1.1;
-    font-weight: 800;
-  }
-
-  .print-week-heading > p,
-  .print-brand {
-    margin: 0;
-    font-size: 8pt;
-    line-height: 1;
-    font-weight: 800;
-    color: var(--color-muted-foreground);
-  }
-
-  .print-week-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 3mm;
-    animation: none;
-  }
-
-  .print-day {
-    break-inside: avoid;
-    border: 1px solid var(--color-border);
-    border-radius: 2mm;
-    padding: 2.5mm;
-    box-shadow: none;
-  }
-
-  .print-day-heading {
-    margin-bottom: 1.5mm;
-    padding: 0;
-  }
-
-  .print-day-heading p:first-child {
-    font-size: 10pt;
-  }
-
-  .print-day-heading p:last-child {
-    font-size: 7pt;
-  }
-
-  .print-day > div:last-child {
-    display: grid;
-    gap: 1.5mm;
-  }
-
-  .print-session {
-    break-inside: avoid;
-    border: 1px solid var(--color-border);
-    border-radius: 1.5mm;
-    padding: 2mm;
-    box-shadow: none;
-  }
-
-  .print-session > div:first-child {
-    margin-bottom: 1mm;
-  }
-
-  .print-session > div:first-child span {
-    padding: 0.7mm 1.5mm;
-    font-size: 6.5pt;
-  }
-
-  .print-topic,
-  .print-notes {
-    display: block;
-    margin: 0;
-  }
-
-  .print-topic {
-    font-size: 8.5pt;
-    line-height: 1.2;
-    font-weight: 800;
-  }
-
-  .print-notes {
-    margin-top: 1mm;
-    font-size: 7pt;
-    line-height: 1.2;
-    color: var(--color-muted-foreground);
-  }
-
+  .app-nav,
+  .print-preview-actions,
+  .saved-flash,
   .print-editable,
   .print-action {
     display: none;
   }
 
-  .print-session > div:nth-of-type(2) {
-    margin-top: 1.5mm;
-    gap: 1.5mm;
+  .print-preview-shell {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: white;
+    color: black;
   }
 
-  .print-session > div:nth-of-type(2) > span {
-    font-size: 6pt;
+  .print-plan-week {
+    break-before: page;
+    page-break-before: always;
   }
 
-  .print-session > div:nth-of-type(2) button {
-    width: 4mm;
-    height: 4mm;
+  .print-plan-week:first-of-type {
+    break-before: auto;
+    page-break-before: auto;
+  }
+
+  .print-plan-day,
+  .print-plan-session {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

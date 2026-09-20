@@ -1,9 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { CalendarRange, CircleGauge, FileText, Pencil, Sparkles } from "lucide-react";
+import { CalendarRange, CircleGauge, FileText, Pencil, Settings, Sparkles } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useActivePlan } from "@/hooks/useActivePlan";
+import { useIsAdmin } from "@/hooks/useRole";
+
 
 const TABS = [
   { to: "/plan", label: "Timetable", icon: CalendarRange },
@@ -20,12 +23,17 @@ export function AppShell({
   headerCentre?: ReactNode;
 }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { plan, plans, setActive } = useActivePlan();
+  const { isAdmin } = useIsAdmin();
 
   async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/" });
+    navigate({ to: "/auth", replace: true });
   }
+
 
   return (
     <div className="app-shell min-h-screen bg-background font-sans text-foreground">
@@ -63,6 +71,16 @@ export function AppShell({
             {headerCentre}
 
             <div className="flex shrink-0 items-center gap-1">
+              {isAdmin ? (
+                <Link
+                  to="/admin"
+                  aria-label="Shared content admin"
+                  title="Shared content admin"
+                  className="grid size-9 place-items-center rounded-full text-structure-foreground/75 hover:bg-structure-foreground/10"
+                >
+                  <Settings className="size-4" />
+                </Link>
+              ) : null}
               {plan ? (
                 <Link
                   to="/edit-plan"
@@ -73,6 +91,7 @@ export function AppShell({
                   <Pencil className="size-4" />
                 </Link>
               ) : null}
+
               <Link
                 to="/setup"
                 className="hidden rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground sm:inline-flex"

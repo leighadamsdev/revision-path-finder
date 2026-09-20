@@ -29,19 +29,40 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
       void ensureProfile(user)
         .catch(() => undefined)
-        .then(() => navigate({ to: "/plan" }));
+        .then(async () => {
+          const { data } = await supabase.from("plans").select("id").limit(1);
+          navigate({ to: data && data.length > 0 ? "/plan" : "/setup" });
+        });
     }
   }, [loading, user, navigate]);
+
+  async function handleReset(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "We couldn't send that email.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -113,7 +134,61 @@ function AuthPage() {
                 Back to sign in
               </button>
             </div>
+          ) : mode === "forgot" ? (
+            <div>
+              <p className="text-lg font-extrabold tracking-tight">Reset your password</p>
+              {resetSent ? (
+                <>
+                  <p className="mt-2 text-[13px] font-medium leading-relaxed text-muted-foreground">
+                    We've emailed a reset link to {email}. Open it and you can choose a new password.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setResetSent(false);
+                      setMode("signin");
+                    }}
+                    className="mt-5 w-full rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground"
+                  >
+                    Back to sign in
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+                    Enter your email and we'll send you a link to set a new password.
+                  </p>
+                  <form onSubmit={handleReset} className="mt-5 space-y-3">
+                    <label className="block">
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                        Email
+                      </span>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring"
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      className="w-full rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-60"
+                    >
+                      {busy ? "Sending…" : "Email me a reset link"}
+                    </button>
+                  </form>
+                  <button
+                    onClick={() => setMode("signin")}
+                    className="mt-4 w-full text-center text-[13px] font-bold text-muted-foreground"
+                  >
+                    Back to sign in
+                  </button>
+                </>
+              )}
+            </div>
           ) : (
+
             <>
               <p className="text-lg font-extrabold tracking-tight">
                 {mode === "signin" ? "Welcome back" : "Create your account"}
@@ -183,8 +258,21 @@ function AuthPage() {
                   ? "New here? Create an account"
                   : "Already have an account? Sign in"}
               </button>
+
+              {mode === "signin" ? (
+                <button
+                  onClick={() => {
+                    setResetSent(false);
+                    setMode("forgot");
+                  }}
+                  className="mt-2 w-full text-center text-[13px] font-bold text-muted-foreground underline"
+                >
+                  Forgot password?
+                </button>
+              ) : null}
             </>
           )}
+
         </div>
       </main>
     </div>

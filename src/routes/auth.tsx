@@ -204,8 +204,21 @@ function AuthPage() {
                   ? "New here? Create an account"
                   : "Already have an account? Sign in"}
               </button>
+
+              {mode === "signin" ? (
+                <button
+                  onClick={() => {
+                    setResetSent(false);
+                    setMode("forgot");
+                  }}
+                  className="mt-2 w-full text-center text-[13px] font-bold text-muted-foreground underline"
+                >
+                  Forgot password?
+                </button>
+              ) : null}
             </>
           )}
+
         </div>
       </main>
     </div>

@@ -112,12 +112,12 @@ function TimetablePage() {
         </div>
       }
     >
-      <div className="mb-5 flex items-center justify-between gap-3 print:hidden">
+      <div className="mb-5 flex flex-col items-start justify-between gap-3 print:hidden sm:flex-row sm:items-center">
         <div>
           <h1 className="text-xl font-extrabold tracking-tight">Week {week}</h1>
           <p className="text-[13px] font-semibold text-muted-foreground">{plan.name}</p>
         </div>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="w-full sm:w-auto">
           <Link to="/print-plan" search={{ week }} target="_blank">
             <Printer aria-hidden="true" />
             Print this week / Export as PDF

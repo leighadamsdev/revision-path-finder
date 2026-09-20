@@ -10,13 +10,13 @@ import { subjectStyle } from "@/lib/subjects";
 export const Route = createFileRoute("/_authenticated/papers")({
   head: () => ({
     meta: [
-      { title: "Past papers — RevisionPath" },
+      { title: "Past papers — rev.plan" },
       {
         name: "description",
         content:
           "Spec codes, official past-paper portals and free topic question banks for every subject in your revision plan.",
       },
-      { property: "og:title", content: "Past papers — RevisionPath" },
+      { property: "og:title", content: "Past papers — rev.plan" },
       {
         property: "og:description",
         content: "Official past papers and free question banks for your subjects.",

@@ -22,6 +22,14 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+const HOW_STEPS = [
+  "Tell rev.plan the subjects and tiers you are studying",
+  "Choose the topics from a pre-populated list",
+  "Lock in how many weeks you have until exam day",
+  "Let rev.plan build you a week-by-week, session by session plan.",
+  "Print it out or follow it online, it is up to you.",
+];
+
 const POINTS = [
   {
     title: "Your subjects and topics",
@@ -65,13 +73,32 @@ function Landing() {
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
           A bespoke timetable, designed around the time you've got and what you need to revise
         </h1>
-        <p className="mt-4 max-w-[52ch] text-base font-medium text-muted-foreground">
-          1. Tell rev.plan the subjects and tiers you are studying
-          2. Choose the topics from a pre-populated list (or you can upload your own)
-          3. Lock in how many weeks you have until exam day
-          4. Let rev.plan build you a week-by-week, session by session plan.
-          5. Print it out or follow it online, it is up to you.{"\u00a0"}
-        </p>
+        <div className="relative mt-8 w-full max-w-xl">
+          <div
+            aria-hidden="true"
+            className="absolute left-[26px] bottom-6 top-6 hidden w-1 rounded-full bg-primary/40 sm:block"
+          />
+          <ol className="space-y-6">
+            {HOW_STEPS.map((step, i) => (
+              <li key={step} className="relative flex items-start">
+                <div className="z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-structure text-xl font-bold text-primary ring-4 ring-primary sm:flex">
+                  {i + 1}
+                </div>
+                <div className="w-full rounded-r-[24px] border-l-4 border-primary bg-structure p-5 text-lg font-medium leading-relaxed text-structure-foreground shadow-lg sm:ml-8 sm:p-6">
+                  <span className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground sm:hidden">
+                    {i + 1}
+                  </span>
+                  {step}
+                  {i === 1 ? (
+                    <span className="mt-1 block text-sm opacity-80">
+                      (or you can upload your own)
+                    </span>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link
             to="/auth"

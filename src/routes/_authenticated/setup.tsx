@@ -61,6 +61,8 @@ function SetupPage() {
   const [search, setSearch] = useState("");
   /** Ticked topics, keyed by subject name. */
   const [chosen, setChosen] = useState<Record<string, string[]>>({});
+  /** Up to three selected topics per subject to schedule first. */
+  const [priorities, setPriorities] = useState<Record<string, string[]>>({});
   const [openSubject, setOpenSubject] = useState<string | null>(null);
   /** How each subject's topics come in: DfE list, typed by hand, or from a document. */
   const [source, setSource] = useState<Record<string, TopicSource>>({});
@@ -176,6 +178,27 @@ function SetupPage() {
     return mode === "dfe" ? topics.map((topic) => detailedTopicText(subjectName, topic)) : topics;
   }
 
+  function prioritiesFor(subjectName: string): string[] {
+    const topics = topicsFor(subjectName);
+    return (priorities[subjectName] ?? []).filter((topic) => topics.includes(topic)).slice(0, 3);
+  }
+
+  function togglePriority(subjectName: string, topic: string) {
+    setPriorities((prev) => {
+      const current = (prev[subjectName] ?? []).filter((item) =>
+        topicsFor(subjectName).includes(item),
+      );
+      if (current.includes(topic)) {
+        return { ...prev, [subjectName]: current.filter((item) => item !== topic) };
+      }
+      if (current.length >= 3) {
+        toast.error("Choose up to 3 priority topics for each subject.");
+        return prev;
+      }
+      return { ...prev, [subjectName]: [...current, topic] };
+    });
+  }
+
   async function readTopicsFile(subjectName: string, file: File) {
     setParsing(subjectName);
     try {
@@ -216,12 +239,15 @@ function SetupPage() {
       const subjectIds: string[] = [];
       const tiers: Record<string, string | null> = {};
       const chosenTopics: Record<string, string[]> = {};
+      const priorityTopics: Record<string, string[]> = {};
       for (const pick of picks) {
         const id = await resolveSubjectId(pick.name, pick.board!, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
         const topics = topicsFor(pick.name);
         if (topics.length) chosenTopics[id] = topics;
+        const priority = prioritiesFor(pick.name);
+        if (priority.length) priorityTopics[id] = priority;
       }
       await queryClient.invalidateQueries({ queryKey: ["subjects"] });
 
@@ -238,6 +264,7 @@ function SetupPage() {
         subjectIds,
         tiers,
         chosenTopics,
+        priorityTopics,
       });
       window.localStorage.setItem("revisionpath.activePlan", planId);
       await queryClient.invalidateQueries();
@@ -258,6 +285,7 @@ function SetupPage() {
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
 
   const totalChosen = picks.reduce((sum, p) => sum + topicsFor(p.name).length, 0);
+  const totalPriorities = picks.reduce((sum, p) => sum + prioritiesFor(p.name).length, 0);
 
   const canContinue =
     step === 1
@@ -516,6 +544,8 @@ function SetupPage() {
                       : units.flatMap((u) => u.elements.map((e) => e.label));
                   const picked =
                     mode === "manual" ? manualLines(manualText[pick.name]).length : ticked.length;
+                   const finalTopics = topicsFor(pick.name);
+                   const subjectPriorities = prioritiesFor(pick.name);
                   return (
                     <div
                       key={pick.name}
@@ -645,6 +675,52 @@ function SetupPage() {
                             <p className="mt-3 text-[12px] font-bold text-muted-foreground">
                               No DfE list for this subject yet — type your own or upload a document.
                             </p>
+                          ) : null}
+
+                          {finalTopics.length ? (
+                            <div className="mt-4 border-t border-border pt-3">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                                  Priority topics
+                                </p>
+                                <p className="text-[11px] font-bold text-muted-foreground">
+                                  {subjectPriorities.length} of 3
+                                </p>
+                              </div>
+                              <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+                                Choose up to three to place in the earliest weeks.
+                              </p>
+                              <div className="mt-2 space-y-1">
+                                {finalTopics.map((topic) => {
+                                  const priority = subjectPriorities.includes(topic);
+                                  const disabled = !priority && subjectPriorities.length >= 3;
+                                  return (
+                                    <button
+                                      key={topic}
+                                      type="button"
+                                      onClick={() => togglePriority(pick.name, topic)}
+                                      disabled={disabled}
+                                      className={`flex w-full items-start gap-2.5 rounded-[10px] px-2 py-1.5 text-left disabled:opacity-45 ${
+                                        priority ? "bg-card" : "hover:bg-card"
+                                      }`}
+                                    >
+                                      <span
+                                        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-extrabold ${
+                                          priority
+                                            ? "bg-biz text-background"
+                                            : "ring-1 ring-border"
+                                        }`}
+                                      >
+                                        {priority ? subjectPriorities.indexOf(topic) + 1 : ""}
+                                      </span>
+                                      <span className="line-clamp-2 text-[12px] font-bold leading-relaxed">
+                                        {topic}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           ) : null}
                         </div>
                       ) : null}
@@ -799,6 +875,10 @@ function SetupPage() {
                 <Row
                   label="Topics chosen"
                   value={totalChosen ? `${totalChosen} topics` : "None — filled for you"}
+                />
+                <Row
+                  label="Priority topics"
+                  value={totalPriorities ? `${totalPriorities} prioritised` : "None"}
                 />
                 <Row label="Total sessions" value={`${totalSessions}`} />
               </div>

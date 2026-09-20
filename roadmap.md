@@ -2,3 +2,6 @@
 - [x] Show calculated dates in timetables and print/PDF views
 - [x] Allow existing plans to be edited after generation or printing
 - [x] Remove the requirement and setup step for selecting exam boards
+- [x] Add admin role, gated /admin area and admin write policies
+- [x] Add password reset (forgot link + reset page)
+- [x] Send new sign-ups straight into the setup wizard

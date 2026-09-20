@@ -25,6 +25,7 @@ export type Plan = {
   content_mode: "ai" | "manual" | "library";
   created_at: string;
   start_date: string;
+  share_token: string | null;
 };
 
 export type SessionRow = {

@@ -123,7 +123,7 @@ function SubjectsPanel() {
     const { error } = await supabase
       .from("subjects")
       .insert({ name: name.trim(), exam_board: board, color_key: colorKey, is_custom: false });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setName("");
     toast.success("Subject added");
     void qc.invalidateQueries({ queryKey: ["admin-subjects"] });
@@ -131,15 +131,15 @@ function SubjectsPanel() {
   }
 
   async function saveRow(id: string, patch: Record<string, string>) {
-    const { error } = await supabase.from("subjects").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    const { error } = await supabase.from("subjects").update(patch as never).eq("id", id);
+    if (error) { toast.error(error.message); return; }
     toast.success("Saved");
     void qc.invalidateQueries({ queryKey: ["admin-subjects"] });
   }
 
   async function remove(id: string) {
     const { error } = await supabase.from("subjects").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Subject removed");
     void qc.invalidateQueries({ queryKey: ["admin-subjects"] });
   }
@@ -250,7 +250,7 @@ function TopicsPanel() {
     const { error } = await supabase
       .from("topic_library")
       .insert({ subject_id: subjectId, topic: topic.trim(), position: nextPosition });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setTopic("");
     void qc.invalidateQueries({ queryKey: ["admin-topic-library", subjectId] });
   }
@@ -289,13 +289,13 @@ function TopicsPanel() {
                   .from("topic_library")
                   .update({ topic: patch["topic"], position: Number(patch["position"]) })
                   .eq("id", row.id);
-                if (error) return toast.error(error.message);
+                if (error) { toast.error(error.message); return; }
                 toast.success("Saved");
                 void qc.invalidateQueries({ queryKey: ["admin-topic-library", subjectId] });
               }}
               onDelete={async () => {
                 const { error } = await supabase.from("topic_library").delete().eq("id", row.id);
-                if (error) return toast.error(error.message);
+                if (error) { toast.error(error.message); return; }
                 void qc.invalidateQueries({ queryKey: ["admin-topic-library", subjectId] });
               }}
             />
@@ -345,7 +345,7 @@ function PapersPanel() {
   async function add() {
     if (!subjectId) return;
     const { error } = await supabase.from("past_papers").insert({ subject_id: subjectId, ...form });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setForm({
       spec_code: "",
       official_portal_url: "",
@@ -407,14 +407,14 @@ function PapersPanel() {
               { key: "free_resource_url", label: "Bank link", value: row.free_resource_url },
             ]}
             onSave={async (patch) => {
-              const { error } = await supabase.from("past_papers").update(patch).eq("id", row.id);
-              if (error) return toast.error(error.message);
+              const { error } = await supabase.from("past_papers").update(patch as never).eq("id", row.id);
+              if (error) { toast.error(error.message); return; }
               toast.success("Saved");
               void qc.invalidateQueries({ queryKey: ["admin-past-papers"] });
             }}
             onDelete={async () => {
               const { error } = await supabase.from("past_papers").delete().eq("id", row.id);
-              if (error) return toast.error(error.message);
+              if (error) { toast.error(error.message); return; }
               void qc.invalidateQueries({ queryKey: ["admin-past-papers"] });
             }}
           />
@@ -453,7 +453,7 @@ function SitesPanel() {
       site_url: form.site_url.trim(),
       description: form.description.trim(),
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setForm({ subject_name: "", site_name: "", site_url: "", description: "" });
     toast.success("Site added");
     void qc.invalidateQueries({ queryKey: ["admin-revision-sites"] });
@@ -506,15 +506,15 @@ function SitesPanel() {
             onSave={async (patch) => {
               const { error } = await supabase
                 .from("revision_sites")
-                .update({ ...patch, subject_name: patch["subject_name"] || null })
+                .update({ ...patch, subject_name: patch["subject_name"] || null } as never)
                 .eq("id", row.id);
-              if (error) return toast.error(error.message);
+              if (error) { toast.error(error.message); return; }
               toast.success("Saved");
               void qc.invalidateQueries({ queryKey: ["admin-revision-sites"] });
             }}
             onDelete={async () => {
               const { error } = await supabase.from("revision_sites").delete().eq("id", row.id);
-              if (error) return toast.error(error.message);
+              if (error) { toast.error(error.message); return; }
               void qc.invalidateQueries({ queryKey: ["admin-revision-sites"] });
             }}
           />

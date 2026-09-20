@@ -48,7 +48,7 @@ function Landing() {
           <div className="grid size-8 place-items-center rounded-[10px] bg-structure">
             <span className="text-sm font-extrabold text-structure-foreground">R</span>
           </div>
-          <p className="text-[15px] font-extrabold tracking-tight">RevisionPath</p>
+          <p className="text-[15px] font-extrabold tracking-tight">RevisionTrax</p>
         </div>
         <Link
           to="/auth"

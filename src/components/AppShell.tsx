@@ -29,12 +29,12 @@ export function AppShell({
 
   return (
     <div className="app-shell min-h-screen bg-background font-sans text-foreground">
-      <div className="app-header sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-sm">
+      <div className="app-header sticky top-0 z-20 border-b border-structure bg-structure text-structure-foreground">
         <div className="mx-auto max-w-5xl px-4 pb-3 pt-4 sm:px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <div className="grid size-8 shrink-0 place-items-center rounded-[10px] bg-maths">
-                <span className="text-sm font-extrabold text-background">R</span>
+              <div className="grid size-8 shrink-0 place-items-center rounded-[10px] bg-primary">
+                <span className="text-sm font-extrabold text-primary-foreground">R</span>
               </div>
               <div className="min-w-0 leading-none">
                 <p className="text-[15px] font-extrabold tracking-tight">RevisionPath</p>
@@ -43,7 +43,7 @@ export function AppShell({
                     <select
                       value={plan.id}
                       onChange={(e) => setActive(e.target.value)}
-                      className="mt-1 max-w-[150px] truncate bg-transparent text-[11px] font-semibold text-muted-foreground focus:outline-none"
+                      className="mt-1 max-w-[150px] truncate bg-transparent text-[11px] font-semibold text-structure-foreground/75 focus:outline-none"
                     >
                       {plans.map((p) => (
                         <option key={p.id} value={p.id}>
@@ -52,7 +52,7 @@ export function AppShell({
                       ))}
                     </select>
                   ) : (
-                    <p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground">
+                    <p className="mt-1 truncate text-[11px] font-semibold text-structure-foreground/75">
                       {plan.name} · {plan.weeks} weeks
                     </p>
                   )
@@ -68,7 +68,7 @@ export function AppShell({
                   to="/edit-plan"
                   aria-label="Edit plan"
                   title="Edit plan"
-                  className="grid size-9 place-items-center rounded-full text-muted-foreground hover:bg-card"
+                  className="grid size-9 place-items-center rounded-full text-structure-foreground/75 hover:bg-structure-foreground/10"
                 >
                   <Pencil className="size-4" />
                 </Link>
@@ -81,7 +81,7 @@ export function AppShell({
               </Link>
               <button
                 onClick={signOut}
-                className="rounded-full px-3 py-2 text-[13px] font-bold text-muted-foreground hover:bg-card"
+                className="rounded-full px-3 py-2 text-[13px] font-bold text-structure-foreground/75 hover:bg-structure-foreground/10"
               >
                 Sign out
               </button>
@@ -92,20 +92,20 @@ export function AppShell({
 
       <main className="app-main mx-auto max-w-5xl px-4 pb-28 pt-6 sm:px-6">{children}</main>
 
-      <nav className="app-nav fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur-sm">
+      <nav className="app-nav fixed inset-x-0 bottom-0 z-20 border-t border-structure bg-structure text-structure-foreground">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="grid grid-cols-4">
             {TABS.map((tab) => (
               <Link
                 key={tab.to}
                 to={tab.to}
-                className="flex flex-col items-center gap-1 py-2.5 text-muted-foreground"
-                activeProps={{ className: "text-maths" }}
+                className="flex flex-col items-center gap-1 py-2.5 text-structure-foreground/70"
+                activeProps={{ className: "text-primary" }}
               >
                 {({ isActive }) => (
                   <>
                     <span
-                      className={`grid size-6 place-items-center rounded-full ${isActive ? "bg-maths/10" : ""}`}
+                      className={`grid size-6 place-items-center rounded-full ${isActive ? "bg-primary/15" : ""}`}
                     >
                       <tab.icon className="size-4" strokeWidth={2.5} />
                     </span>

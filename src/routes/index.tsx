@@ -63,10 +63,14 @@ function Landing() {
           GCSE revision planner
         </p>
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          A topic focused revision timetable, designed around the time you've got.
+          A bespoke timetable, designed around the time you've got and what you need to revise
         </h1>
         <p className="mt-4 max-w-[52ch] text-base font-medium text-muted-foreground">
-          Tell rev.plan your subjects, how many weeks you have until exam day and what topics you need to study. rev.plan builds a week-by-week plan of study sessions — one topic at a time, no spreadsheet required.
+          1. Tell rev.plan the subjects and tiers you are studying
+          2. Choose the topics from a pre-populated list (or you can upload your own)
+          3. lock in how many weeks you have until exam day
+          4. let rev.plan build you a week-by-week, session by session plan.
+          5. Print it out or follow it online, it is up to you.{"\u00a0"}
         </p>
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link

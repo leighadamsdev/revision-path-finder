@@ -7,7 +7,7 @@ import { detailedTopicText } from "@/lib/gcse-topics";
 
 export const Route = createFileRoute("/_authenticated/print-plan")({
   validateSearch: (search: Record<string, unknown>) => ({
-    week: Math.max(1, Number(search.week) || 1),
+    week: Math.max(1, Number(search["week"]) || 1),
   }),
   head: () => ({
     meta: [

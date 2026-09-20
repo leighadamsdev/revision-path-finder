@@ -180,6 +180,7 @@ export type Database = {
       sessions: {
         Row: {
           confidence: number | null
+          confidence_before: number | null
           day_label: string
           gap_notes: string
           id: string
@@ -193,6 +194,7 @@ export type Database = {
         }
         Insert: {
           confidence?: number | null
+          confidence_before?: number | null
           day_label: string
           gap_notes?: string
           id?: string
@@ -206,6 +208,7 @@ export type Database = {
         }
         Update: {
           confidence?: number | null
+          confidence_before?: number | null
           day_label?: string
           gap_notes?: string
           id?: string

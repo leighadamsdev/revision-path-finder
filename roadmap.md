@@ -1,4 +1,4 @@
-- [ ] Add a start date to new plans and calculate each study date
-- [ ] Show calculated dates in timetables and print/PDF views
-- [ ] Allow existing plans to be edited after generation or printing
-- [ ] Remove the requirement and setup step for selecting exam boards
+- [x] Add a start date to new plans and calculate each study date
+- [x] Show calculated dates in timetables and print/PDF views
+- [x] Allow existing plans to be edited after generation or printing
+- [x] Remove the requirement and setup step for selecting exam boards

@@ -35,7 +35,7 @@ function EditPlanPage() {
   useEffect(() => {
     if (!plan) return;
     setName(plan.name);
-    setStartDate(plan.start_date ?? format(new Date(plan.created_at), "yyyy-MM-dd"));
+    setStartDate(plan.start_date || format(new Date(plan.created_at), "yyyy-MM-dd"));
   }, [plan]);
 
   async function save() {

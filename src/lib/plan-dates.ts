@@ -10,7 +10,7 @@ const DAY_INDEX: Record<string, number> = {
   Saturday: 6,
 };
 
-export function planDayDate(startDate: string | null, week: number, day: string) {
+export function planDayDate(startDate: string | null | undefined, week: number, day: string) {
   if (!startDate) return null;
   const start = parseISO(startDate);
   if (Number.isNaN(start.getTime())) return null;
@@ -20,12 +20,12 @@ export function planDayDate(startDate: string | null, week: number, day: string)
   return addDays(start, firstOccurrence + (week - 1) * 7);
 }
 
-export function planDayLabel(startDate: string | null, week: number, day: string) {
+export function planDayLabel(startDate: string | null | undefined, week: number, day: string) {
   const date = planDayDate(startDate, week, day);
   return date ? format(date, "EEE d MMM") : day;
 }
 
-export function sortPlanDays(startDate: string | null, week: number, days: string[]) {
+export function sortPlanDays(startDate: string | null | undefined, week: number, days: string[]) {
   return [...days].sort((a, b) => {
     const aDate = planDayDate(startDate, week, a)?.getTime() ?? 0;
     const bDate = planDayDate(startDate, week, b)?.getTime() ?? 0;

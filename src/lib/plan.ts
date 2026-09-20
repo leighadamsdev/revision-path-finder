@@ -24,7 +24,7 @@ export type Plan = {
   day_plan: DaySetting[] | null;
   content_mode: "ai" | "manual" | "library";
   created_at: string;
-  start_date: string | null;
+  start_date: string;
 };
 
 export type SessionRow = {

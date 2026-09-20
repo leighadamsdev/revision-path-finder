@@ -56,11 +56,25 @@ export async function fetchPlans(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("plans")
     .select(
-      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date",
+      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date, share_token",
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as Plan[];
+}
+
+/** Turns sharing on for a plan and returns the new share token. */
+export async function enablePlanShare(planId: string): Promise<string> {
+  const token = crypto.randomUUID();
+  const { error } = await supabase.from("plans").update({ share_token: token }).eq("id", planId);
+  if (error) throw error;
+  return token;
+}
+
+/** Turns sharing off — the old link immediately stops working. */
+export async function disablePlanShare(planId: string) {
+  const { error } = await supabase.from("plans").update({ share_token: null }).eq("id", planId);
+  if (error) throw error;
 }
 
 export async function fetchPlanSubjects(planId: string): Promise<Subject[]> {

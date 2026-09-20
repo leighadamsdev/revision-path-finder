@@ -71,6 +71,16 @@ export function AppShell({
             {headerCentre}
 
             <div className="flex shrink-0 items-center gap-1">
+              {isAdmin ? (
+                <Link
+                  to="/admin"
+                  aria-label="Shared content admin"
+                  title="Shared content admin"
+                  className="grid size-9 place-items-center rounded-full text-structure-foreground/75 hover:bg-structure-foreground/10"
+                >
+                  <Settings className="size-4" />
+                </Link>
+              ) : null}
               {plan ? (
                 <Link
                   to="/edit-plan"
@@ -81,6 +91,7 @@ export function AppShell({
                   <Pencil className="size-4" />
                 </Link>
               ) : null}
+
               <Link
                 to="/setup"
                 className="hidden rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground sm:inline-flex"

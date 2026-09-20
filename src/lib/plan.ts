@@ -106,6 +106,8 @@ export type PlanDraft = {
   tiers?: Record<string, string | null>;
   /** Topics the student ticked from the GCSE checklist, per subject id. */
   chosenTopics?: Record<string, string[]>;
+  /** Up to three chosen topics per subject to place in the earliest available sessions. */
+  priorityTopics?: Record<string, string[]>;
 };
 
 type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };
@@ -188,7 +190,15 @@ async function buildTopics(draft: PlanDraft, slots: Slot[]) {
 
   // Topics ticked from the GCSE checklist always win.
   for (const [subjectId, topics] of Object.entries(draft.chosenTopics ?? {})) {
-    if (topics.length) result[subjectId] = topics;
+    if (topics.length) {
+      const priorities = (draft.priorityTopics?.[subjectId] ?? []).filter((topic) =>
+        topics.includes(topic),
+      );
+      result[subjectId] = [
+        ...priorities,
+        ...topics.filter((topic) => !priorities.includes(topic)),
+      ];
+    }
   }
   if (draft.contentMode === "manual") return result;
 

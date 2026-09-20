@@ -57,8 +57,9 @@ function TimetablePage() {
       if (!sheet) return;
       sheet.style.zoom = "1";
       const pixelsPerMillimetre = 96 / 25.4;
-      const printableWidth = 190 * pixelsPerMillimetre;
-      const printableHeight = 270 * pixelsPerMillimetre;
+      // A4 landscape with an extra safety margin for browser print headers and rounding.
+      const printableWidth = 277 * pixelsPerMillimetre;
+      const printableHeight = 188 * pixelsPerMillimetre;
       const scale = Math.min(
         1,
         printableWidth / sheet.scrollWidth,

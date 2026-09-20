@@ -25,17 +25,17 @@ export const Route = createFileRoute("/")({
 const POINTS = [
   {
     title: "Your subjects and topics",
-    body: "Search for each subject and add the topics you want to focus on. Alternatively upload your school's options booklet and revision guide and let rev.plan draft the list for you.",
+    body: "Search for each subject and add the sub-topics you want to focus on. Alternatively upload your school's options booklet and revision guide and let rev.plan draft the list for you.",
     dot: "bg-maths",
   },
   {
-    title: "A week at a time",
+    title: "One week at a time",
     body: "Sessions are laid out by week and day, so you only ever look at what's next — not the whole mountain.",
     dot: "bg-sci",
   },
   {
     title: "Honest confidence ratings",
-    body: "Rate each session 1–5 and jot down gaps. Low-rated topics can come back around before the exams.",
+    body: "Rate each topic 1–5 and jot down gaps. Low-rated topics can come back around before the exams.",
     dot: "bg-hist",
   },
 ];

@@ -45,8 +45,8 @@ function Landing() {
     <div className="min-h-screen bg-background font-sans text-foreground">
       <header className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-2.5">
-          <div className="grid size-8 place-items-center rounded-[10px] bg-maths">
-            <span className="text-sm font-extrabold text-background">R</span>
+          <div className="grid size-8 place-items-center rounded-[10px] bg-structure">
+            <span className="text-sm font-extrabold text-structure-foreground">R</span>
           </div>
           <p className="text-[15px] font-extrabold tracking-tight">RevisionPath</p>
         </div>

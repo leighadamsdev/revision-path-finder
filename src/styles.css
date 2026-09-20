@@ -4,7 +4,7 @@
 
 /*
  * RevisionPath design system — "soft rounded planner".
- * Warm cream paper, ink-brown text, one saturated hue per subject.
+ * Cream canvas, slate structure, and sparing gold actions.
  * All colour values are oklch. Never hardcode colours in components.
  */
 
@@ -22,6 +22,8 @@
   --color-biz: oklch(0.4809 0.0961 43.59);
   --color-media: oklch(0.5211 0.0636 246.13);
   --color-pe: oklch(0.4796 0.109 303.93);
+  --color-structure: oklch(0.3717 0.03916 257.29);
+  --color-structure-foreground: oklch(0.97196 0.02552 94.73);
 }
 
 @theme inline {
@@ -58,25 +60,25 @@
 
 :root {
   --radius: 0.875rem;
-  --background: oklch(0.962 0.0115 84.58);
-  --foreground: oklch(0.3268 0.0133 81.72);
-  --card: oklch(0.9942 0.0069 88.64);
-  --card-foreground: oklch(0.3268 0.0133 81.72);
-  --popover: oklch(0.9942 0.0069 88.64);
-  --popover-foreground: oklch(0.3268 0.0133 81.72);
-  --primary: oklch(0.3268 0.0133 81.72);
-  --primary-foreground: oklch(0.962 0.0115 84.58);
-  --secondary: oklch(0.915 0.0178 81.33);
-  --secondary-foreground: oklch(0.3268 0.0133 81.72);
-  --muted: oklch(0.915 0.0178 81.33);
-  --muted-foreground: oklch(0.6126 0.0196 81.3);
-  --accent: oklch(0.915 0.0178 81.33);
-  --accent-foreground: oklch(0.3268 0.0133 81.72);
+  --background: oklch(0.97196 0.02552 94.73);
+  --foreground: oklch(0.3717 0.03916 257.29);
+  --card: oklch(0.991 0.009 94.73);
+  --card-foreground: oklch(0.3717 0.03916 257.29);
+  --popover: oklch(0.991 0.009 94.73);
+  --popover-foreground: oklch(0.3717 0.03916 257.29);
+  --primary: oklch(0.83409 0.14099 85.43);
+  --primary-foreground: oklch(0.3717 0.03916 257.29);
+  --secondary: oklch(0.914 0.025 94.73);
+  --secondary-foreground: oklch(0.3717 0.03916 257.29);
+  --muted: oklch(0.914 0.025 94.73);
+  --muted-foreground: oklch(0.515 0.032 257.29);
+  --accent: oklch(0.83409 0.14099 85.43);
+  --accent-foreground: oklch(0.3717 0.03916 257.29);
   --destructive: oklch(0.5915 0.1371 9.92);
   --destructive-foreground: oklch(0.9942 0.0069 88.64);
-  --border: oklch(0.915 0.0178 81.33);
-  --input: oklch(0.915 0.0178 81.33);
-  --ring: oklch(0.5076 0.086 226.21);
+  --border: oklch(0.84 0.022 94.73);
+  --input: oklch(0.84 0.022 94.73);
+  --ring: oklch(0.83409 0.14099 85.43);
 }
 
 @keyframes fadeSaved {

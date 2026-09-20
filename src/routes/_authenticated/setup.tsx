@@ -285,7 +285,7 @@ function SetupPage() {
             {[1, 2, 3, 4].map((n) => (
               <span
                 key={n}
-                className={`h-1 w-5 rounded-full ${n <= step ? "bg-maths" : "bg-border"}`}
+                className={`h-1 w-5 rounded-full ${n <= step ? "bg-primary" : "bg-border"}`}
               />
             ))}
           </div>
@@ -333,11 +333,11 @@ function SetupPage() {
                             >
                               <span
                                 className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
-                                  isOn ? "bg-maths" : "ring-1 ring-border"
+                                  isOn ? "bg-structure" : "ring-1 ring-border"
                                 }`}
                               >
                                 {isOn ? (
-                                  <Check className="size-3 text-background" strokeWidth={3} />
+                                  <Check className="size-3 text-structure-foreground" strokeWidth={3} />
                                 ) : null}
                               </span>
                               <span className="text-sm font-bold">{subjectName}</span>
@@ -353,7 +353,7 @@ function SetupPage() {
                                     onClick={() => setTier(subjectName, tier)}
                                     className={`rounded-full px-3 py-1 text-[12px] font-bold ${
                                       pick?.tier === tier
-                                        ? "bg-maths text-background"
+                                        ? "bg-structure text-structure-foreground"
                                         : "bg-card text-muted-foreground ring-1 ring-border"
                                     }`}
                                   >
@@ -415,7 +415,7 @@ function SetupPage() {
                                 onClick={() => setTier(pick.name, tier)}
                                 className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
                                   pick.tier === tier
-                                    ? "bg-maths text-background"
+                                    ? "bg-structure text-structure-foreground"
                                     : "bg-card text-muted-foreground ring-1 ring-border"
                                 }`}
                               >
@@ -506,7 +506,7 @@ function SetupPage() {
                                 onClick={() => setSource((prev) => ({ ...prev, [pick.name]: key }))}
                                 className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
                                   mode === key
-                                    ? "bg-maths text-background"
+                                    ? "bg-structure text-structure-foreground"
                                     : "bg-card text-muted-foreground ring-1 ring-border"
                                 }`}
                               >
@@ -557,7 +557,7 @@ function SetupPage() {
                                 onClick={() => toggleAllTopics(pick.name, options)}
                                 className={`mt-3 rounded-full px-3 py-1.5 text-[12px] font-bold ${
                                   ticked.length === options.length
-                                    ? "bg-maths text-background"
+                                    ? "bg-structure text-structure-foreground"
                                     : "bg-card text-muted-foreground ring-1 ring-border"
                                 }`}
                               >
@@ -732,7 +732,7 @@ function SetupPage() {
                         }
                         className={`rounded-full px-3 py-2 text-[13px] font-bold ${
                           on
-                            ? "bg-maths text-background"
+                            ? "bg-structure text-structure-foreground"
                             : "bg-background text-muted-foreground ring-1 ring-border"
                         }`}
                       >
@@ -902,7 +902,7 @@ function TopicRow({
     >
       <span
         className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-[6px] ${
-          on ? "bg-maths" : "ring-1 ring-border"
+          on ? "bg-structure" : "ring-1 ring-border"
         }`}
       >
         {on ? <Check className="size-3 text-background" strokeWidth={3} /> : null}

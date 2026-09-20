@@ -29,6 +29,13 @@
       "when": 1789897666357,
       "tag": "0003_session_confidence_before",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789901312036,
+      "tag": "0004_add_plan_start_date",
+      "breakpoints": true
     }
   ]
 }

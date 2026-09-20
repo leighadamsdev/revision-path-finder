@@ -3,13 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "RevisionPath — a calm GCSE revision timetable" },
+      { title: "rev.plan — a calm GCSE revision timetable" },
       {
         name: "description",
         content:
-          "Pick your subjects and exam boards, say how much time you have, and RevisionPath builds a week-by-week GCSE revision timetable you can actually follow.",
+          "Pick your subjects and exam boards, say how much time you have, and rev.plan builds a week-by-week GCSE revision timetable you can actually follow.",
       },
-      { property: "og:title", content: "RevisionPath — a calm GCSE revision timetable" },
+      { property: "og:title", content: "rev.plan — a calm GCSE revision timetable" },
       {
         property: "og:description",
         content:
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
 const POINTS = [
   {
     title: "Your subjects and topics",
-    body: "Search for each subject and add the topics you want to focus on. Alternatively upload your school's options booklet and revision guide and let RevisionPath draft the list for you.",
+    body: "Search for each subject and add the topics you want to focus on. Alternatively upload your school's options booklet and revision guide and let rev.plan draft the list for you.",
     dot: "bg-maths",
   },
   {
@@ -48,7 +48,7 @@ function Landing() {
           <div className="grid size-8 place-items-center rounded-[10px] bg-structure">
             <span className="text-sm font-extrabold text-structure-foreground">R</span>
           </div>
-          <p className="text-[15px] font-extrabold tracking-tight">RevisionTrax</p>
+          <p className="text-[15px] font-extrabold tracking-tight">rev.plan</p>
         </div>
         <Link
           to="/auth"
@@ -66,7 +66,7 @@ function Landing() {
           A revision timetable that fits the time you've actually got.
         </h1>
         <p className="mt-4 max-w-[52ch] text-base font-medium text-muted-foreground">
-          Tell RevisionPath your subjects, how many weeks you have until exam day and what topics you need to study. RevisionTrax builds a week-by-week plan of study sessions — one topic at a time, no spreadsheet required.
+          Tell rev.plan your subjects, how many weeks you have until exam day and what topics you need to study. rev.plan builds a week-by-week plan of study sessions — one topic at a time, no spreadsheet required.
         </p>
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link

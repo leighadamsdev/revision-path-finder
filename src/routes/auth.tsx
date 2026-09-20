@@ -9,15 +9,15 @@ import { ensureProfile, useAuth } from "@/hooks/useAuth";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — RevisionPath" },
+      { title: "Sign in — rev.plan" },
       {
         name: "description",
-        content: "Sign in or create your RevisionPath account to build your GCSE revision plan.",
+        content: "Sign in or create your rev.plan account to build your GCSE revision plan.",
       },
-      { property: "og:title", content: "Sign in — RevisionPath" },
+      { property: "og:title", content: "Sign in — rev.plan" },
       {
         property: "og:description",
-        content: "Sign in or create a RevisionPath account to build your GCSE revision plan.",
+        content: "Sign in or create a rev.plan account to build your GCSE revision plan.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -111,7 +111,7 @@ function AuthPage() {
           <div className="grid size-8 place-items-center rounded-[10px] bg-structure">
             <span className="text-sm font-extrabold text-structure-foreground">R</span>
           </div>
-          <p className="text-[15px] font-extrabold tracking-tight">RevisionPath</p>
+          <p className="text-[15px] font-extrabold tracking-tight">rev.plan</p>
         </Link>
       </header>
 

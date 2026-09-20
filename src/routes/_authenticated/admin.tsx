@@ -11,16 +11,16 @@ import { EXAM_BOARDS } from "@/lib/subjects";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Shared content admin — RevisionPath" },
+      { title: "Shared content admin — rev.plan" },
       {
         name: "description",
         content:
-          "Maintain the shared RevisionPath content: subjects, topic lists, past paper links and revision sites.",
+          "Maintain the shared rev.plan content: subjects, topic lists, past paper links and revision sites.",
       },
-      { property: "og:title", content: "Shared content admin — RevisionPath" },
+      { property: "og:title", content: "Shared content admin — rev.plan" },
       {
         property: "og:description",
-        content: "Maintain shared RevisionPath subjects, topics, past papers and revision sites.",
+        content: "Maintain shared rev.plan subjects, topics, past papers and revision sites.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -47,7 +47,7 @@ export function AppShell({
                 <span className="text-sm font-extrabold text-primary-foreground">R</span>
               </div>
               <div className="min-w-0 leading-none">
-                <p className="text-[15px] font-extrabold tracking-tight">RevisionPath</p>
+                <p className="text-[15px] font-extrabold tracking-tight">rev.plan</p>
                 {plan ? (
                   plans.length > 1 ? (
                     <select

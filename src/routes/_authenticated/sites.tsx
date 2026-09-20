@@ -10,13 +10,13 @@ import { subjectStyle } from "@/lib/subjects";
 export const Route = createFileRoute("/_authenticated/sites")({
   head: () => ({
     meta: [
-      { title: "Revision sites — RevisionPath" },
+      { title: "Revision sites — rev.plan" },
       {
         name: "description",
         content:
           "Free revision websites and YouTube channels worth using, grouped by the subjects in your own GCSE plan.",
       },
-      { property: "og:title", content: "Revision sites — RevisionPath" },
+      { property: "og:title", content: "Revision sites — rev.plan" },
       {
         property: "og:description",
         content: "Free revision sites and channels for your GCSE subjects.",

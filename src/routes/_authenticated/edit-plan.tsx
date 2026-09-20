@@ -13,9 +13,9 @@ import { updatePlanDetails } from "@/lib/plan";
 export const Route = createFileRoute("/_authenticated/edit-plan")({
   head: () => ({
     meta: [
-      { title: "Edit revision plan — RevisionPath" },
+      { title: "Edit revision plan — rev.plan" },
       { name: "description", content: "Update your revision plan name and start date." },
-      { property: "og:title", content: "Edit revision plan — RevisionPath" },
+      { property: "og:title", content: "Edit revision plan — rev.plan" },
       { property: "og:description", content: "Update your revision plan without losing your progress." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

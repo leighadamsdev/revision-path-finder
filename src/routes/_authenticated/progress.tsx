@@ -7,13 +7,13 @@ import { subjectStyle } from "@/lib/subjects";
 export const Route = createFileRoute("/_authenticated/progress")({
   head: () => ({
     meta: [
-      { title: "Progress — RevisionPath" },
+      { title: "Progress — rev.plan" },
       {
         name: "description",
         content:
           "See how much of your GCSE revision plan you've rated and which topics you flagged as low confidence.",
       },
-      { property: "og:title", content: "Progress — RevisionPath" },
+      { property: "og:title", content: "Progress — rev.plan" },
       {
         property: "og:description",
         content: "How much of your revision plan you've rated, and what still needs work.",

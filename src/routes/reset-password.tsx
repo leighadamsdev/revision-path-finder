@@ -8,15 +8,15 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Choose a new password — RevisionPath" },
+      { title: "Choose a new password — rev.plan" },
       {
         name: "description",
-        content: "Set a new password for your RevisionPath account and get back to your revision plan.",
+        content: "Set a new password for your rev.plan account and get back to your revision plan.",
       },
-      { property: "og:title", content: "Choose a new password — RevisionPath" },
+      { property: "og:title", content: "Choose a new password — rev.plan" },
       {
         property: "og:description",
-        content: "Set a new password for your RevisionPath account.",
+        content: "Set a new password for your rev.plan account.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -61,7 +61,7 @@ function ResetPasswordPage() {
           <div className="grid size-8 place-items-center rounded-[10px] bg-structure">
             <span className="text-sm font-extrabold text-structure-foreground">R</span>
           </div>
-          <p className="text-[15px] font-extrabold tracking-tight">RevisionPath</p>
+          <p className="text-[15px] font-extrabold tracking-tight">rev.plan</p>
         </Link>
       </header>
 

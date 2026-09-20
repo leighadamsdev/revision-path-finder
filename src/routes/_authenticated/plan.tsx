@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
 import type { SessionRow } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
-import { planDayLabel } from "@/lib/plan-dates";
+import { planDayLabel, sortPlanDays } from "@/lib/plan-dates";
 
 export const Route = createFileRoute("/_authenticated/plan")({
   head: () => ({
@@ -47,7 +47,7 @@ function TimetablePage() {
     [sessions, week],
   );
 
-  const days = plan?.study_days ?? [];
+  const days = plan ? sortPlanDays(plan.start_date, week, plan.study_days) : [];
   const rated = weekSessions.filter((s) => s.confidence != null).length;
   const pct = weekSessions.length ? Math.round((rated / weekSessions.length) * 100) : 0;
   const lowConfidence = sessions.filter((s) => (s.confidence ?? 5) <= 2 && s.confidence != null);

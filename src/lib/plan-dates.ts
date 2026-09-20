@@ -24,3 +24,11 @@ export function planDayLabel(startDate: string | null, week: number, day: string
   const date = planDayDate(startDate, week, day);
   return date ? format(date, "EEE d MMM") : day;
 }
+
+export function sortPlanDays(startDate: string | null, week: number, days: string[]) {
+  return [...days].sort((a, b) => {
+    const aDate = planDayDate(startDate, week, a)?.getTime() ?? 0;
+    const bDate = planDayDate(startDate, week, b)?.getTime() ?? 0;
+    return aDate - bDate;
+  });
+}

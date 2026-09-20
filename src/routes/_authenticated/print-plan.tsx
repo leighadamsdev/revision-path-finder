@@ -4,7 +4,7 @@ import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
 import { detailedTopicText } from "@/lib/gcse-topics";
-import { planDayLabel } from "@/lib/plan-dates";
+import { planDayLabel, sortPlanDays } from "@/lib/plan-dates";
 
 export const Route = createFileRoute("/_authenticated/print-plan")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -86,7 +86,7 @@ function PrintablePlanPage() {
         </header>
 
         <div className="print-plan-days">
-          {plan.study_days.map((day) => {
+          {sortPlanDays(plan.start_date, week, plan.study_days).map((day) => {
             const daySessions = sessions
               .filter((session) => session.day_label === day)
               .sort((a, b) => a.session_slot - b.session_slot);

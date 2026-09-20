@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { useAuth, ensureProfile } from "@/hooks/useAuth";
 import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
-import { EXAM_BOARDS, SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
+import { SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
@@ -271,7 +271,7 @@ function SetupPage() {
     step === 1
       ? picks.length > 0 && missingTiers === 0
       : step === 3
-          ? studyDays.length > 0 && weeks > 0
+          ? studyDays.length > 0 && weeks > 0 && Boolean(startDate)
           : true;
 
   return (

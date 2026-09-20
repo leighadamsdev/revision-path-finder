@@ -287,7 +287,7 @@ function TopicsPanel() {
               onSave={async (patch) => {
                 const { error } = await supabase
                   .from("topic_library")
-                  .update({ topic: patch["topic"], position: Number(patch["position"]) })
+                  .update({ topic: patch["topic"] ?? "", position: Number(patch["position"]) })
                   .eq("id", row.id);
                 if (error) { toast.error(error.message); return; }
                 toast.success("Saved");

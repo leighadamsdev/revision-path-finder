@@ -96,7 +96,7 @@ export type Database = {
           profile_id: string
           session_length_minutes: number
           sessions_per_day: number
-          start_date: string | null
+          start_date: string
           study_days: string[]
           weeks: number
         }
@@ -110,7 +110,7 @@ export type Database = {
           profile_id: string
           session_length_minutes?: number
           sessions_per_day?: number
-          start_date?: string | null
+          start_date?: string
           study_days?: string[]
           weeks?: number
         }
@@ -124,7 +124,7 @@ export type Database = {
           profile_id?: string
           session_length_minutes?: number
           sessions_per_day?: number
-          start_date?: string | null
+          start_date?: string
           study_days?: string[]
           weeks?: number
         }

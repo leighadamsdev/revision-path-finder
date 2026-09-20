@@ -1,9 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { CalendarRange, CircleGauge, FileText, Pencil, Sparkles } from "lucide-react";
+import { CalendarRange, CircleGauge, FileText, Pencil, Settings, Sparkles } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useActivePlan } from "@/hooks/useActivePlan";
+import { useIsAdmin } from "@/hooks/useRole";
+
 
 const TABS = [
   { to: "/plan", label: "Timetable", icon: CalendarRange },

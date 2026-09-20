@@ -1,13 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Pencil, Printer } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Link2,
+  Pencil,
+  Printer,
+  Share2,
+  X,
+} from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { SessionCard } from "@/components/SessionCard";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
 import type { SessionRow } from "@/lib/plan";
+import { disablePlanShare, enablePlanShare } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
 import { planDayLabel, sortPlanDays } from "@/lib/plan-dates";
 
@@ -35,6 +54,9 @@ export const Route = createFileRoute("/_authenticated/plan")({
 function TimetablePage() {
   const { plan, isLoading } = useActivePlan();
   const [week, setWeek] = useState(1);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
   const subjectsQuery = usePlanSubjects(plan?.id);
   const sessionsQuery = usePlanSessions(plan?.id);
   const queryClient = useQueryClient();
@@ -56,6 +78,50 @@ function TimetablePage() {
     queryClient.setQueryData<SessionRow[]>(["sessions", plan?.id], (old) =>
       (old ?? []).map((s) => (s.id === id ? { ...s, ...patch } : s)),
     );
+  }
+
+  const shareUrl = plan?.share_token
+    ? `${window.location.origin}/share/${plan.share_token}`
+    : null;
+
+  async function handleStartSharing() {
+    if (!plan) return;
+    setShareBusy(true);
+    try {
+      await enablePlanShare(plan.id);
+      await queryClient.invalidateQueries({ queryKey: ["plans"] });
+      setCopied(false);
+      toast.success("Sharing is on — copy the link to send it.");
+    } catch {
+      toast.error("Couldn't start sharing — try again.");
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
+  async function handleCopyLink() {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success("Link copied.");
+    } catch {
+      toast.error("Couldn't copy — select the link and copy it manually.");
+    }
+  }
+
+  async function handleStopSharing() {
+    if (!plan) return;
+    setShareBusy(true);
+    try {
+      await disablePlanShare(plan.id);
+      await queryClient.invalidateQueries({ queryKey: ["plans"] });
+      toast.success("Sharing is off — the old link no longer works.");
+    } catch {
+      toast.error("Couldn't stop sharing — try again.");
+    } finally {
+      setShareBusy(false);
+    }
   }
 
   if (isLoading) {
@@ -124,6 +190,10 @@ function TimetablePage() {
               <Pencil aria-hidden="true" />
               Edit plan
             </Link>
+          </Button>
+          <Button variant="outline" onClick={() => setShareOpen(true)}>
+            <Share2 aria-hidden="true" />
+            Share
           </Button>
           <Button asChild variant="outline">
             <Link to="/print-plan" search={{ week }} target="_blank">
@@ -223,6 +293,46 @@ function TimetablePage() {
           })}
         </div>
       </div>
+
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share this plan</DialogTitle>
+            <DialogDescription>
+              Send a read-only copy of the timetable to a parent, friend or teacher. They can see
+              your weeks, topics, confidence ratings and gaps — but can't change anything.
+            </DialogDescription>
+          </DialogHeader>
+          {shareUrl ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 rounded-[12px] bg-background p-2 ring-1 ring-border">
+                <Link2 className="ml-1 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <p className="min-w-0 flex-1 truncate text-[12px] font-semibold">{shareUrl}</p>
+              </div>
+              <DialogFooter className="sm:justify-between">
+                <Button variant="ghost" onClick={handleStopSharing} disabled={shareBusy}>
+                  <X aria-hidden="true" />
+                  Stop sharing
+                </Button>
+                <Button onClick={handleCopyLink} disabled={shareBusy}>
+                  {copied ? <Check aria-hidden="true" /> : <Link2 aria-hidden="true" />}
+                  {copied ? "Link copied" : "Copy link"}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="ghost" onClick={() => setShareOpen(false)} disabled={shareBusy}>
+                Not now
+              </Button>
+              <Button onClick={handleStartSharing} disabled={shareBusy}>
+                <Link2 aria-hidden="true" />
+                Turn on sharing
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

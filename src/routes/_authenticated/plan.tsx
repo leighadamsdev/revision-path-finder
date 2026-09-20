@@ -293,6 +293,46 @@ function TimetablePage() {
           })}
         </div>
       </div>
+
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share this plan</DialogTitle>
+            <DialogDescription>
+              Send a read-only copy of the timetable to a parent, friend or teacher. They can see
+              your weeks, topics, confidence ratings and gaps — but can't change anything.
+            </DialogDescription>
+          </DialogHeader>
+          {shareUrl ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 rounded-[12px] bg-background p-2 ring-1 ring-border">
+                <Link2 className="ml-1 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <p className="min-w-0 flex-1 truncate text-[12px] font-semibold">{shareUrl}</p>
+              </div>
+              <DialogFooter className="sm:justify-between">
+                <Button variant="ghost" onClick={handleStopSharing} disabled={shareBusy}>
+                  <X aria-hidden="true" />
+                  Stop sharing
+                </Button>
+                <Button onClick={handleCopyLink} disabled={shareBusy}>
+                  {copied ? <Check aria-hidden="true" /> : <Link2 aria-hidden="true" />}
+                  {copied ? "Link copied" : "Copy link"}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="ghost" onClick={() => setShareOpen(false)} disabled={shareBusy}>
+                Not now
+              </Button>
+              <Button onClick={handleStartSharing} disabled={shareBusy}>
+                <Link2 aria-hidden="true" />
+                Turn on sharing
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

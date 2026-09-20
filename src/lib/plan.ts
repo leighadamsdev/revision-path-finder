@@ -34,6 +34,7 @@ export type SessionRow = {
   session_slot: number;
   subject_id: string | null;
   topic_text: string;
+  confidence_before: number | null;
   confidence: number | null;
   gap_notes: string;
   length_minutes: number | null;
@@ -75,7 +76,7 @@ export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   const { data, error } = await supabase
     .from("sessions")
     .select(
-      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence, gap_notes, length_minutes",
+      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence_before, confidence, gap_notes, length_minutes",
     )
     .eq("plan_id", planId)
     .order("week_number")

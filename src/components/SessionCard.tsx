@@ -91,27 +91,46 @@ export function SessionCard({
         className="print-editable w-full resize-none bg-transparent text-[15px] font-bold leading-snug placeholder:text-muted-foreground/60 focus:outline-none"
       />
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-          Confidence
-        </span>
-        <div className="flex items-center gap-1.5">
-          {[1, 2, 3, 4, 5].map((value) => {
-            const filled = (session.confidence ?? 0) >= value;
-            return (
-              <button
-                key={value}
-                aria-label={`Confidence ${value} of 5`}
-                onClick={() =>
-                  void save({ confidence: session.confidence === value ? null : value })
-                }
-                className={`size-6 rounded-full transition-colors ${
-                  filled ? style.fill : `ring-1 ${style.ring}`
-                }`}
-              />
-            );
-          })}
+      {([
+        { key: "confidence_before" as const, label: "Before", value: session.confidence_before },
+        { key: "confidence" as const, label: "After", value: session.confidence },
+      ]).map((row) => (
+        <div key={row.key} className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="w-[52px] text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            {row.label}
+          </span>
+          <div className="flex items-center gap-1.5">
+            {[1, 2, 3, 4, 5].map((value) => {
+              const filled = (row.value ?? 0) >= value;
+              return (
+                <button
+                  key={value}
+                  aria-label={`${row.label} confidence ${value} of 5`}
+                  onClick={() => void save({ [row.key]: row.value === value ? null : value })}
+                  className={`size-6 rounded-full transition-colors ${
+                    filled ? style.fill : `ring-1 ${style.ring}`
+                  }`}
+                />
+              );
+            })}
+          </div>
+          {row.key === "confidence" &&
+          session.confidence_before != null &&
+          session.confidence != null ? (
+            <span className="text-[11px] font-extrabold tabular-nums text-muted-foreground">
+              {session.confidence - session.confidence_before >= 0 ? "+" : ""}
+              {session.confidence - session.confidence_before}
+            </span>
+          ) : null}
         </div>
+      ))}
+
+      <p className="print-notes hidden">
+        <strong>Confidence:</strong> before {session.confidence_before ?? "—"} / after{" "}
+        {session.confidence ?? "—"}
+      </p>
+
+      <div className="mt-3 flex items-center">
         <button
           onClick={regenerate}
           disabled={regenerating || !subject}

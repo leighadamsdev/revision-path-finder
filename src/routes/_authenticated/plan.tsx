@@ -80,6 +80,50 @@ function TimetablePage() {
     );
   }
 
+  const shareUrl = plan?.share_token
+    ? `${window.location.origin}/share/${plan.share_token}`
+    : null;
+
+  async function handleStartSharing() {
+    if (!plan) return;
+    setShareBusy(true);
+    try {
+      await enablePlanShare(plan.id);
+      await queryClient.invalidateQueries({ queryKey: ["plans"] });
+      setCopied(false);
+      toast.success("Sharing is on — copy the link to send it.");
+    } catch {
+      toast.error("Couldn't start sharing — try again.");
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
+  async function handleCopyLink() {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success("Link copied.");
+    } catch {
+      toast.error("Couldn't copy — select the link and copy it manually.");
+    }
+  }
+
+  async function handleStopSharing() {
+    if (!plan) return;
+    setShareBusy(true);
+    try {
+      await disablePlanShare(plan.id);
+      await queryClient.invalidateQueries({ queryKey: ["plans"] });
+      toast.success("Sharing is off — the old link no longer works.");
+    } catch {
+      toast.error("Couldn't stop sharing — try again.");
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <AppShell>
@@ -146,6 +190,10 @@ function TimetablePage() {
               <Pencil aria-hidden="true" />
               Edit plan
             </Link>
+          </Button>
+          <Button variant="outline" onClick={() => setShareOpen(true)}>
+            <Share2 aria-hidden="true" />
+            Share
           </Button>
           <Button asChild variant="outline">
             <Link to="/print-plan" search={{ week }} target="_blank">

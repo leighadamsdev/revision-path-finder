@@ -34,6 +34,15 @@ function ProgressPage() {
   const pct = sessions.length ? Math.round((rated.length / sessions.length) * 100) : 0;
   const low = rated.filter((s) => (s.confidence ?? 5) <= 2);
 
+  const paired = sessions.filter((s) => s.confidence_before != null && s.confidence != null);
+  const avgBefore = paired.length
+    ? paired.reduce((sum, s) => sum + (s.confidence_before ?? 0), 0) / paired.length
+    : 0;
+  const avgAfter = paired.length
+    ? paired.reduce((sum, s) => sum + (s.confidence ?? 0), 0) / paired.length
+    : 0;
+  const improvedCount = paired.filter((s) => (s.confidence ?? 0) > (s.confidence_before ?? 0)).length;
+
   return (
     <AppShell>
       <h1 className="text-2xl font-extrabold tracking-tight">Progress</h1>

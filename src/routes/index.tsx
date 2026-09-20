@@ -89,6 +89,11 @@ function Landing() {
                     {i + 1}
                   </span>
                   {step}
+                  {i === 1 ? (
+                    <span className="mt-1 block text-sm opacity-80">
+                      (or you can upload your own)
+                    </span>
+                  ) : null}
                 </div>
               </li>
             ))}

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
 import { Route as AuthenticatedPapersRouteImport } from './routes/_authenticated/papers'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
@@ -32,6 +33,11 @@ const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedEditPlanRoute = AuthenticatedEditPlanRouteImport.update({
+  id: '/edit-plan',
+  path: '/edit-plan',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPapersRoute = AuthenticatedPapersRouteImport.update({
   id: '/papers',
@@ -67,6 +73,7 @@ const AuthenticatedSitesRoute = AuthenticatedSitesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
   '/_authenticated/papers': typeof AuthenticatedPapersRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/edit-plan'
     | '/papers'
     | '/plan'
     | '/print-plan'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/edit-plan'
     | '/papers'
     | '/plan'
     | '/print-plan'
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/edit-plan'
     | '/_authenticated/papers'
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
@@ -158,6 +170,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/edit-plan': {
+      id: '/_authenticated/edit-plan'
+      path: '/edit-plan'
+      fullPath: '/edit-plan'
+      preLoaderRoute: typeof AuthenticatedEditPlanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/papers': {
       id: '/_authenticated/papers'
@@ -205,6 +224,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedEditPlanRoute: typeof AuthenticatedEditPlanRoute
   AuthenticatedPapersRoute: typeof AuthenticatedPapersRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
@@ -214,6 +234,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedEditPlanRoute: AuthenticatedEditPlanRoute,
   AuthenticatedPapersRoute: AuthenticatedPapersRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,

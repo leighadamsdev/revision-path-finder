@@ -1,19 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { format } from "date-fns";
 import { Check, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth, ensureProfile } from "@/hooks/useAuth";
 import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
-import { EXAM_BOARDS, SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
+import { SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
-
-function boardLabel(board: string) {
-  return board === "WJEC Eduqas" ? "WJEC / Eduqas" : board;
-}
+import { DatePicker } from "@/components/DatePicker";
 
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({
@@ -22,12 +20,12 @@ export const Route = createFileRoute("/_authenticated/setup")({
       {
         name: "description",
         content:
-          "Choose your GCSE subjects and tier, add your exam boards, set how many weeks and days you can study, and choose how topics get filled in.",
+          "Choose your GCSE subjects and tier, select topics, and set when and how often you can study.",
       },
       { property: "og:title", content: "Set up your plan — RevisionPath" },
       {
         property: "og:description",
-        content: "Pick subjects and tiers, add exam boards, and generate your revision timetable.",
+        content: "Pick subjects and tiers, choose topics, and generate your dated revision timetable.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -36,12 +34,12 @@ export const Route = createFileRoute("/_authenticated/setup")({
   component: SetupPage,
 });
 
-type Pick = { name: string; board: string | null; tier: Tier | null };
+type Pick = { name: string; tier: Tier | null };
 type DayConfig = { sessions: number; minutes: number };
 
 const DEFAULT_DAY: DayConfig = { sessions: 2, minutes: 45 };
-const TOTAL_STEPS = 5;
-const STEP_LABELS = ["Pick subjects", "Exam boards", "Choose topics", "Set timeframe", "Review"];
+const TOTAL_STEPS = 4;
+const STEP_LABELS = ["Pick subjects", "Choose topics", "Set timeframe", "Review"];
 
 type TopicSource = "dfe" | "manual" | "upload";
 
@@ -73,6 +71,7 @@ function SetupPage() {
   const [customName, setCustomName] = useState("");
 
   const [name, setName] = useState("Finals plan");
+  const [startDate, setStartDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [weeks, setWeeks] = useState(6);
   const [dayConfigs, setDayConfigs] = useState<Record<string, DayConfig>>({
     Monday: { ...DEFAULT_DAY },
@@ -86,17 +85,6 @@ function SetupPage() {
     () => WEEK_DAYS.filter((d) => dayConfigs[d]).map((d) => d as string),
     [dayConfigs],
   );
-
-  /** Boards each stocked subject name is offered on. */
-  const boardsByName = useMemo(() => {
-    const map = new Map<string, string[]>();
-    for (const s of subjects) {
-      const list = map.get(s.name) ?? [];
-      if (!list.includes(s.exam_board)) list.push(s.exam_board);
-      map.set(s.name, list);
-    }
-    return map;
-  }, [subjects]);
 
   /** The national GCSE catalogue, grouped. */
   const allNames = useMemo(() => {
@@ -123,16 +111,8 @@ function SetupPage() {
       if (prev.some((p) => p.name === subjectName)) {
         return prev.filter((p) => p.name !== subjectName);
       }
-      const known = boardsByName.get(subjectName) ?? [];
-      return [
-        ...prev,
-        { name: subjectName, board: known.length === 1 ? known[0]! : null, tier: null },
-      ];
+      return [...prev, { name: subjectName, tier: null }];
     });
-  }
-
-  function setBoard(subjectName: string, board: string) {
-    setPicks((prev) => prev.map((p) => (p.name === subjectName ? { ...p, board } : p)));
   }
 
   function setTier(subjectName: string, tier: Tier) {
@@ -148,7 +128,7 @@ function SetupPage() {
       toast.error("That subject is already on your list.");
       return;
     }
-    setPicks((prev) => [...prev, { name: trimmed, board: null, tier: null }]);
+    setPicks((prev) => [...prev, { name: trimmed, tier: null }]);
     setCustomName("");
   }
 
@@ -241,7 +221,7 @@ function SetupPage() {
       const chosenTopics: Record<string, string[]> = {};
       const priorityTopics: Record<string, string[]> = {};
       for (const pick of picks) {
-        const id = await resolveSubjectId(pick.name, pick.board!, user.id, subjects);
+        const id = await resolveSubjectId(pick.name, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
         const topics = topicsFor(pick.name);
@@ -253,6 +233,7 @@ function SetupPage() {
 
       const planId = await createPlan(user.id, {
         name: name.trim() || "My revision plan",
+        startDate,
         weeks,
         days: studyDays.map((day) => ({
           day,
@@ -280,7 +261,6 @@ function SetupPage() {
   }
 
   const missingTiers = picks.filter((p) => isTiered(p.name) && !p.tier).length;
-  const missingBoards = picks.filter((p) => !p.board).length;
   const totalSessions =
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
 
@@ -290,10 +270,8 @@ function SetupPage() {
   const canContinue =
     step === 1
       ? picks.length > 0 && missingTiers === 0
-      : step === 2
-        ? missingBoards === 0
-        : step === 4
-          ? studyDays.length > 0 && weeks > 0
+      : step === 3
+          ? studyDays.length > 0 && weeks > 0 && Boolean(startDate)
           : true;
 
   return (
@@ -304,7 +282,7 @@ function SetupPage() {
             Step {step} of {TOTAL_STEPS}
           </span>
           <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
+            {[1, 2, 3, 4].map((n) => (
               <span
                 key={n}
                 className={`h-1 w-5 rounded-full ${n <= step ? "bg-maths" : "bg-border"}`}
@@ -474,54 +452,6 @@ function SetupPage() {
           ) : null}
 
           {step === 2 ? (
-            <>
-              <p className="text-lg font-extrabold tracking-tight">Which exam boards?</p>
-              <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Choose the board for each of your subjects.
-              </p>
-
-              <div className="mt-4">
-                <div className="space-y-1.5">
-                  {picks.map((pick) => (
-                    <div
-                      key={pick.name}
-                      className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
-                    >
-                      <span className="text-sm font-bold">
-                        {pick.name}
-                        {pick.tier ? (
-                          <span className="ml-1.5 text-[11px] font-bold text-muted-foreground">
-                            {pick.tier}
-                          </span>
-                        ) : null}
-                      </span>
-                      <select
-                        value={pick.board ?? ""}
-                        onChange={(e) => setBoard(pick.name, e.target.value)}
-                        className="ml-auto rounded-[10px] bg-card px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
-                      >
-                        <option value="" disabled>
-                          Choose board
-                        </option>
-                        {EXAM_BOARDS.map((board) => (
-                          <option key={board} value={board}>
-                            {boardLabel(board)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ))}
-                </div>
-                {missingBoards ? (
-                  <p className="mt-2 text-[12px] font-bold text-muted-foreground">
-                    {missingBoards} still need an exam board.
-                  </p>
-                ) : null}
-              </div>
-            </>
-          ) : null}
-
-          {step === 3 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">
                 Which topics do you want to cover?
@@ -737,7 +667,7 @@ function SetupPage() {
             </>
           ) : null}
 
-          {step === 4 ? (
+          {step === 3 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">How much time have you got?</p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
@@ -755,6 +685,18 @@ function SetupPage() {
                   className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none"
                 />
               </label>
+
+              <div className="mt-4">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                  Plan start date
+                </span>
+                <div className="mt-1">
+                  <DatePicker value={startDate} onChange={setStartDate} label="Choose a start date" />
+                </div>
+                <p className="mt-1.5 text-[12px] font-medium text-muted-foreground">
+                  Every study session will be dated from here automatically.
+                </p>
+              </div>
 
               <label className="mt-4 block">
                 <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -854,16 +796,17 @@ function SetupPage() {
             </>
           ) : null}
 
-          {step === 5 ? (
+          {step === 4 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">Ready to build your plan</p>
               <div className="mt-4 space-y-2 text-[13px] font-semibold">
                 <Row
                   label="Subjects"
                   value={picks
-                    .map((p) => `${p.name}${p.tier ? ` (${p.tier})` : ""} · ${p.board}`)
+                    .map((p) => `${p.name}${p.tier ? ` (${p.tier})` : ""}`)
                     .join(", ")}
                 />
+                <Row label="Starts" value={format(new Date(`${startDate}T12:00:00`), "d MMMM yyyy")} />
                 <Row label="Weeks" value={`${weeks}`} />
                 {studyDays.map((day) => (
                   <Row

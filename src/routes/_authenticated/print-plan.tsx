@@ -4,6 +4,7 @@ import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
 import { detailedTopicText } from "@/lib/gcse-topics";
+import { planDayLabel, sortPlanDays } from "@/lib/plan-dates";
 
 export const Route = createFileRoute("/_authenticated/print-plan")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -85,7 +86,7 @@ function PrintablePlanPage() {
         </header>
 
         <div className="print-plan-days">
-          {plan.study_days.map((day) => {
+          {sortPlanDays(plan.start_date, week, plan.study_days).map((day) => {
             const daySessions = sessions
               .filter((session) => session.day_label === day)
               .sort((a, b) => a.session_slot - b.session_slot);
@@ -93,7 +94,7 @@ function PrintablePlanPage() {
 
             return (
               <section key={day} className="print-plan-day">
-                <h2>{day}</h2>
+                <h2>{planDayLabel(plan.start_date, week, day)}</h2>
                 {daySessions.map((session) => {
                   const subject = subjects.find((item) => item.id === session.subject_id);
                   const minutes = session.length_minutes ?? plan.session_length_minutes;
@@ -101,7 +102,7 @@ function PrintablePlanPage() {
                     <article key={session.id} className="print-plan-session">
                       <div className="print-plan-session-meta">
                         <strong>
-                          {subject ? `${subject.name} · ${subject.exam_board}` : "Subject removed"}
+                          {subject?.name ?? "Subject removed"}
                         </strong>
                         <span>{minutes < 60 ? `${minutes} min` : `${minutes / 60} hr`}</span>
                       </div>

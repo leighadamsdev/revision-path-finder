@@ -15,6 +15,8 @@ const TABS = [
   { to: "/sites", label: "Sites", icon: Sparkles },
 ] as const;
 
+const ADMIN_TAB = { to: "/admin", label: "Admin", icon: Settings } as const;
+
 export function AppShell({
   children,
   headerCentre,
@@ -71,16 +73,6 @@ export function AppShell({
             {headerCentre}
 
             <div className="flex shrink-0 items-center gap-1">
-              {isAdmin ? (
-                <Link
-                  to="/admin"
-                  aria-label="Shared content admin"
-                  title="Shared content admin"
-                  className="grid size-9 place-items-center rounded-full text-structure-foreground/75 hover:bg-structure-foreground/10"
-                >
-                  <Settings className="size-4" />
-                </Link>
-              ) : null}
               {plan ? (
                 <Link
                   to="/edit-plan"
@@ -113,8 +105,8 @@ export function AppShell({
 
       <nav className="app-nav fixed inset-x-0 bottom-0 z-20 border-t border-structure bg-structure text-structure-foreground">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className="grid grid-cols-4">
-            {TABS.map((tab) => (
+          <div className={`grid ${isAdmin ? "grid-cols-5" : "grid-cols-4"}`}>
+            {(isAdmin ? [...TABS, ADMIN_TAB] : TABS).map((tab) => (
               <Link
                 key={tab.to}
                 to={tab.to}

@@ -56,8 +56,14 @@ function TimetablePage() {
       const sheet = document.querySelector<HTMLElement>(".print-week-sheet");
       if (!sheet) return;
       sheet.style.zoom = "1";
-      const a4ContentHeight = (281 * 96) / 25.4;
-      const scale = Math.min(1, a4ContentHeight / sheet.scrollHeight);
+      const pixelsPerMillimetre = 96 / 25.4;
+      const printableWidth = 190 * pixelsPerMillimetre;
+      const printableHeight = 270 * pixelsPerMillimetre;
+      const scale = Math.min(
+        1,
+        printableWidth / sheet.scrollWidth,
+        printableHeight / sheet.scrollHeight,
+      );
       sheet.style.zoom = String(scale);
     }
 
@@ -140,7 +146,14 @@ function TimetablePage() {
           <h1 className="text-xl font-extrabold tracking-tight">Week {week}</h1>
           <p className="text-[13px] font-semibold text-muted-foreground">{plan.name}</p>
         </div>
-        <Button type="button" variant="outline" onClick={() => window.print()}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            window.dispatchEvent(new Event("beforeprint"));
+            window.print();
+          }}
+        >
           <Printer aria-hidden="true" />
           Print week
         </Button>

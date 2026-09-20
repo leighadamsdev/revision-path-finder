@@ -24,8 +24,8 @@ export const Route = createFileRoute("/")({
 
 const POINTS = [
   {
-    title: "Your subjects, your boards",
-    body: "Search for each subject and exam board, or upload your school's options booklet and let RevisionPath draft the list for you.",
+    title: "Your subjects and topics",
+    body: "Search for each subject and add the topics you want to focus on. Alternatively upload your school's options booklet and revision guide and let RevisionPath draft the list for you.",
     dot: "bg-maths",
   },
   {
@@ -35,7 +35,7 @@ const POINTS = [
   },
   {
     title: "Honest confidence ratings",
-    body: "Rate each session 1–5 and jot down gaps. Low-rated topics come back around before the exams.",
+    body: "Rate each session 1–5 and jot down gaps. Low-rated topics can come back around before the exams.",
     dot: "bg-hist",
   },
 ];
@@ -66,8 +66,7 @@ function Landing() {
           A revision timetable that fits the time you've actually got.
         </h1>
         <p className="mt-4 max-w-[52ch] text-base font-medium text-muted-foreground">
-          Tell RevisionPath your subjects, exam boards and how many weeks are left. It builds a
-          week-by-week plan of study sessions — one topic at a time, no spreadsheet required.
+          Tell RevisionPath your subjects, how many weeks you have until exam day and what topics you need to study. RevisionTrax builds a week-by-week plan of study sessions — one topic at a time, no spreadsheet required.
         </p>
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link

@@ -1,13 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Pencil, Printer } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Link2,
+  Pencil,
+  Printer,
+  Share2,
+  X,
+} from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { SessionCard } from "@/components/SessionCard";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
 import type { SessionRow } from "@/lib/plan";
+import { disablePlanShare, enablePlanShare } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
 import { planDayLabel, sortPlanDays } from "@/lib/plan-dates";
 
@@ -35,6 +54,9 @@ export const Route = createFileRoute("/_authenticated/plan")({
 function TimetablePage() {
   const { plan, isLoading } = useActivePlan();
   const [week, setWeek] = useState(1);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
   const subjectsQuery = usePlanSubjects(plan?.id);
   const sessionsQuery = usePlanSessions(plan?.id);
   const queryClient = useQueryClient();

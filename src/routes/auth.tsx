@@ -29,19 +29,40 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
       void ensureProfile(user)
         .catch(() => undefined)
-        .then(() => navigate({ to: "/plan" }));
+        .then(async () => {
+          const { data } = await supabase.from("plans").select("id").limit(1);
+          navigate({ to: data && data.length > 0 ? "/plan" : "/setup" });
+        });
     }
   }, [loading, user, navigate]);
+
+  async function handleReset(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "We couldn't send that email.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();

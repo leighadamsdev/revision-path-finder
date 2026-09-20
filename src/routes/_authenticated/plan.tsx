@@ -57,8 +57,8 @@ function TimetablePage() {
       if (!sheet) return;
       sheet.style.zoom = "1";
       const pixelsPerMillimetre = 96 / 25.4;
-      const printableWidth = 193 * pixelsPerMillimetre;
-      const printableHeight = 280 * pixelsPerMillimetre;
+      const printableWidth = 190 * pixelsPerMillimetre;
+      const printableHeight = 270 * pixelsPerMillimetre;
       const scale = Math.min(
         1,
         printableWidth / sheet.scrollWidth,

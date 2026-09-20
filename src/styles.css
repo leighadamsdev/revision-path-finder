@@ -131,7 +131,9 @@
   html,
   body {
     width: auto;
-    min-height: 0;
+    height: 281mm;
+    min-height: 281mm;
+    max-height: 281mm;
     margin: 0;
     overflow: hidden;
     background: var(--color-card);
@@ -141,7 +143,8 @@
 
   .app-shell {
     min-height: 0;
-    height: auto;
+    height: 281mm;
+    max-height: 281mm;
     overflow: hidden;
   }
 
@@ -168,6 +171,8 @@
   .print-week-sheet {
     width: 194mm;
     max-width: 194mm;
+    max-height: 280mm;
+    overflow: hidden;
     break-inside: avoid;
     page-break-inside: avoid;
     page-break-after: avoid;

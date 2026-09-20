@@ -130,8 +130,10 @@
 
   html,
   body {
-    width: 210mm;
-    min-height: 297mm;
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
     background: var(--color-card);
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
@@ -158,6 +160,8 @@
   }
 
   .print-week-sheet {
+    width: 194mm;
+    max-width: 194mm;
     break-inside: avoid;
     page-break-inside: avoid;
     page-break-after: avoid;

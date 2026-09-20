@@ -72,8 +72,8 @@ function TimetablePage() {
         <div className="rounded-[16px] bg-card p-6 ring-1 ring-black/5">
           <p className="text-lg font-extrabold tracking-tight">Let's build your first plan</p>
           <p className="mt-2 max-w-[46ch] text-[13px] font-medium leading-relaxed text-muted-foreground">
-            It takes about a minute: pick your subjects and exam boards, say how long you've got,
-            and choose how topics get filled in.
+            It takes about a minute: pick your subjects, say how long you've got, and choose the
+            topics you want to cover.
           </p>
           <Link
             to="/setup"

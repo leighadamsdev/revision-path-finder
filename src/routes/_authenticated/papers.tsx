@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FileText, ClipboardCheck, ChevronDown } from "lucide-react";
+import { FileText, ClipboardCheck, ChevronDown, Download } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
@@ -46,19 +46,36 @@ function PaperList({
       </p>
       <div className="mt-2 space-y-2">
         {files.map((file) => (
-          <a
+          <div
             key={`${file.board}-${file.tier}-${file.series}-${file.kind}-${file.paper}`}
-            href={file.url}
-            target="_blank"
-            rel="noreferrer"
             className="flex items-center justify-between gap-3 rounded-[12px] bg-background px-3 py-2.5 text-[13px] font-bold ring-1 ring-border"
           >
-            <span>{file.paper}</span>
-            <span className="text-[11px] font-bold text-muted-foreground">
-              {file.tier ? `${file.tier} · ` : ""}
-              {file.series}
+            <span className="min-w-0">
+              <span className="block truncate">{file.paper}</span>
+              <span className="block text-[11px] font-bold text-muted-foreground">
+                {file.tier ? `${file.tier} · ` : ""}
+                {file.series}
+              </span>
             </span>
-          </a>
+            <span className="flex shrink-0 items-center gap-2">
+              <a
+                href={file.url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-extrabold text-primary-foreground"
+              >
+                Open
+              </a>
+              <a
+                href={file.url}
+                download
+                aria-label={`Download ${file.paper}`}
+                className="rounded-full px-2 py-1.5 text-muted-foreground ring-1 ring-border"
+              >
+                <Download className="size-3.5" strokeWidth={2.5} />
+              </a>
+            </span>
+          </div>
         ))}
       </div>
     </div>

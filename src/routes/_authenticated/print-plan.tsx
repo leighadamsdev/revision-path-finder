@@ -29,15 +29,6 @@ export const Route = createFileRoute("/_authenticated/print-plan")({
   component: PrintablePlanPage,
 });
 
-function ConfidenceDots({ value }: { value: number | null }) {
-  return (
-    <span className="print-confidence-dots" aria-label={value ? `${value} out of 5` : "Not rated"}>
-      {[1, 2, 3, 4, 5].map((dot) => (
-        <span key={dot} className={value != null && dot <= value ? "is-filled" : ""} />
-      ))}
-    </span>
-  );
-}
 
 function PrintablePlanPage() {
   const { week: requestedWeek } = Route.useSearch();
@@ -107,12 +98,6 @@ function PrintablePlanPage() {
                         <span>{minutes < 60 ? `${minutes} min` : `${minutes / 60} hr`}</span>
                       </div>
                       <h3>{detailedTopicText(subject?.name ?? "", session.topic_text) || "Topic to be decided"}</h3>
-                      <div className="print-plan-ratings">
-                        <span>Before</span>
-                        <ConfidenceDots value={session.confidence_before} />
-                        <span>After</span>
-                        <ConfidenceDots value={session.confidence} />
-                      </div>
                       <p><strong>Gaps to revisit:</strong> {session.gap_notes || "—"}</p>
                     </article>
                   );

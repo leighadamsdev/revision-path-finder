@@ -12,6 +12,8 @@ import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-s
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
 import { DatePicker } from "@/components/DatePicker";
+import { ConfidencePicker } from "@/components/ConfidencePicker";
+
 
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({
@@ -69,6 +71,11 @@ function SetupPage() {
   const [parsing, setParsing] = useState<string | null>(null);
 
   const [customName, setCustomName] = useState("");
+  /** Optional exam date per subject name. */
+  const [examDates, setExamDates] = useState<Record<string, string>>({});
+  /** Optional 1–5 confidence per subject name. */
+  const [confidences, setConfidences] = useState<Record<string, number | null>>({});
+
 
   const [name, setName] = useState("Finals plan");
   const [startDate, setStartDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
@@ -218,12 +225,16 @@ function SetupPage() {
       await ensureProfile(user);
       const subjectIds: string[] = [];
       const tiers: Record<string, string | null> = {};
+      const examDateMap: Record<string, string | null> = {};
+      const confidenceMap: Record<string, number | null> = {};
       const chosenTopics: Record<string, string[]> = {};
       const priorityTopics: Record<string, string[]> = {};
       for (const pick of picks) {
         const id = await resolveSubjectId(pick.name, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
+        examDateMap[id] = examDates[pick.name] || null;
+        confidenceMap[id] = confidences[pick.name] ?? null;
         const topics = topicsFor(pick.name);
         if (topics.length) chosenTopics[id] = topics;
         const priority = prioritiesFor(pick.name);
@@ -244,9 +255,12 @@ function SetupPage() {
         contentMode: "ai",
         subjectIds,
         tiers,
+        examDates: examDateMap,
+        confidence: confidenceMap,
         chosenTopics,
         priorityTopics,
       });
+
       window.localStorage.setItem("revisionpath.activePlan", planId);
       await queryClient.invalidateQueries();
       navigate({ to: "/plan" });
@@ -400,43 +414,93 @@ function SetupPage() {
                   <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
                     Your subjects
                   </p>
-                  <div className="mt-2 space-y-1.5">
+                  <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+                    Add an exam date and how confident you feel — both optional. Shakier subjects
+                    and sooner exams get more sessions.
+                  </p>
+                  <div className="mt-2 space-y-2">
                     {picks.map((pick) => (
                       <div
                         key={pick.name}
-                        className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2 ring-1 ring-border"
+                        className="rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border"
                       >
-                        <span className="text-sm font-bold">{pick.name}</span>
-                        {isTiered(pick.name) ? (
-                          <div className="ml-auto flex gap-1">
-                            {(["Foundation", "Higher"] as const).map((tier) => (
-                              <button
-                                key={tier}
-                                onClick={() => setTier(pick.name, tier)}
-                                className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
-                                  pick.tier === tier
-                                    ? "bg-structure text-structure-foreground"
-                                    : "bg-card text-muted-foreground ring-1 ring-border"
-                                }`}
-                              >
-                                {tier}
-                              </button>
-                            ))}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-bold">{pick.name}</span>
+                          {isTiered(pick.name) ? (
+                            <div className="ml-auto flex gap-1">
+                              {(["Foundation", "Higher"] as const).map((tier) => (
+                                <button
+                                  key={tier}
+                                  onClick={() => setTier(pick.name, tier)}
+                                  className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
+                                    pick.tier === tier
+                                      ? "bg-structure text-structure-foreground"
+                                      : "bg-card text-muted-foreground ring-1 ring-border"
+                                  }`}
+                                >
+                                  {tier}
+                                </button>
+                              ))}
+                            </div>
+                          ) : null}
+                          <button
+                            onClick={() =>
+                              setPicks((prev) => prev.filter((p) => p.name !== pick.name))
+                            }
+                            className={`text-[12px] font-bold text-muted-foreground hover:text-foreground ${
+                              isTiered(pick.name) ? "" : "ml-auto"
+                            }`}
+                          >
+                            Remove
+                          </button>
+                        </div>
+
+                        <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
+                          <div>
+                            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                              Exam date (optional)
+                            </span>
+                            <div className="mt-1 flex items-center gap-2">
+                              <div className="min-w-0 flex-1">
+                                <DatePicker
+                                  value={examDates[pick.name] ?? ""}
+                                  onChange={(value) =>
+                                    setExamDates((prev) => ({ ...prev, [pick.name]: value }))
+                                  }
+                                  label="Not sure yet"
+                                />
+                              </div>
+                              {examDates[pick.name] ? (
+                                <button
+                                  onClick={() =>
+                                    setExamDates((prev) => ({ ...prev, [pick.name]: "" }))
+                                  }
+                                  className="text-[12px] font-bold text-muted-foreground hover:text-foreground"
+                                >
+                                  Clear
+                                </button>
+                              ) : null}
+                            </div>
                           </div>
-                        ) : null}
-                        <button
-                          onClick={() =>
-                            setPicks((prev) => prev.filter((p) => p.name !== pick.name))
-                          }
-                          className={`text-[12px] font-bold text-muted-foreground hover:text-foreground ${
-                            isTiered(pick.name) ? "" : "ml-auto"
-                          }`}
-                        >
-                          Remove
-                        </button>
+                          <div>
+                            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                              How confident are you? {confidences[pick.name] ? `${confidences[pick.name]}/5` : ""}
+                            </span>
+                            <div className="mt-2">
+                              <ConfidencePicker
+                                value={confidences[pick.name] ?? null}
+                                onChange={(value) =>
+                                  setConfidences((prev) => ({ ...prev, [pick.name]: value }))
+                                }
+                                label={`${pick.name} confidence`}
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
+
                   {missingTiers ? (
                     <p className="mt-2 text-[12px] font-bold text-muted-foreground">
                       {missingTiers} still need a tier — pick Foundation or Higher.

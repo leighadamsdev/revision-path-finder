@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateTopics } from "@/lib/revision.functions";
 import { catalogueSubject } from "@/lib/gcse-subjects";
 import { subjectUnits } from "@/lib/gcse-topics";
+import { allocateWeek, weekWeight, type SubjectWeighting } from "@/lib/scheduling";
 
 export type Subject = {
   id: string;
@@ -9,6 +10,13 @@ export type Subject = {
   exam_board: string;
   color_key: string;
   is_custom: boolean;
+};
+
+/** A subject as it sits inside one plan: tier, exam date and confidence are per plan. */
+export type PlanSubject = Subject & {
+  tier: string | null;
+  exam_date: string | null;
+  confidence: number | null;
 };
 
 export type DaySetting = { day: string; sessions: number; minutes: number };
@@ -77,15 +85,43 @@ export async function disablePlanShare(planId: string) {
   if (error) throw error;
 }
 
-export async function fetchPlanSubjects(planId: string): Promise<Subject[]> {
+export async function fetchPlanSubjects(planId: string): Promise<PlanSubject[]> {
   const { data, error } = await supabase
     .from("plan_subjects")
-    .select("subjects(id, name, exam_board, color_key, is_custom)")
+    .select("tier, exam_date, confidence, subjects(id, name, exam_board, color_key, is_custom)")
     .eq("plan_id", planId);
   if (error) throw error;
   return (data ?? [])
-    .map((row) => (row as { subjects: Subject | null }).subjects)
-    .filter((s): s is Subject => Boolean(s));
+    .map((row) => {
+      const link = row as unknown as {
+        tier: string | null;
+        exam_date: string | null;
+        confidence: number | null;
+        subjects: Subject | null;
+      };
+      if (!link.subjects) return null;
+      return {
+        ...link.subjects,
+        tier: link.tier,
+        exam_date: link.exam_date,
+        confidence: link.confidence,
+      } satisfies PlanSubject;
+    })
+    .filter((s): s is PlanSubject => Boolean(s));
+}
+
+/** Saves an exam date and/or confidence rating for one subject in one plan. */
+export async function updatePlanSubjectMeta(
+  planId: string,
+  subjectId: string,
+  patch: { exam_date?: string | null; confidence?: number | null },
+) {
+  const { error } = await supabase
+    .from("plan_subjects")
+    .update(patch)
+    .eq("plan_id", planId)
+    .eq("subject_id", subjectId);
+  if (error) throw error;
 }
 
 export async function fetchSessions(planId: string): Promise<SessionRow[]> {
@@ -121,6 +157,10 @@ export type PlanDraft = {
   subjectIds: string[];
   /** Foundation / Higher per subject id, where the subject is tiered. */
   tiers?: Record<string, string | null>;
+  /** Optional exam date (yyyy-MM-dd) per subject id. */
+  examDates?: Record<string, string | null>;
+  /** Optional 1–5 confidence per subject id. */
+  confidence?: Record<string, number | null>;
   /** Topics the student ticked from the GCSE checklist, per subject id. */
   chosenTopics?: Record<string, string[]>;
   /** Up to three chosen topics per subject to place in the earliest available sessions. */
@@ -129,19 +169,52 @@ export type PlanDraft = {
 
 type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };
 
-function buildSlots(draft: PlanDraft): Slot[] {
+type ScheduleInput = {
+  startDate: string;
+  weeks: number;
+  days: DaySetting[];
+  subjects: SubjectWeighting[];
+};
+
+/**
+ * Lays out every session slot in the plan and decides which subject each one belongs to,
+ * favouring low-confidence subjects and subjects with an exam coming up.
+ */
+export function buildSchedule(input: ScheduleInput): Slot[] {
+  const subjects = input.subjects.filter((s) => s.subjectId);
+  if (subjects.length === 0) return [];
+
   const slots: Slot[] = [];
-  let index = 0;
-  for (let week = 1; week <= draft.weeks; week += 1) {
-    for (const day of draft.days) {
+  const credit: Record<string, number> = {};
+
+  for (let week = 1; week <= input.weeks; week += 1) {
+    const daySlots: Array<{ day: string; slot: number; minutes: number }> = [];
+    for (const day of input.days) {
       for (let slot = 1; slot <= day.sessions; slot += 1) {
-        const subjectId = draft.subjectIds[index % draft.subjectIds.length]!;
-        slots.push({ week, day: day.day, slot, subjectId, minutes: day.minutes });
-        index += 1;
+        daySlots.push({ day: day.day, slot, minutes: day.minutes });
       }
     }
+    const weights = subjects.map((subject) => weekWeight(input.startDate, subject, week));
+    const assigned = allocateWeek(subjects, daySlots.length, weights, credit);
+    daySlots.forEach((entry, i) => {
+      slots.push({
+        week,
+        day: entry.day,
+        slot: entry.slot,
+        subjectId: assigned[i] ?? subjects[0]!.subjectId,
+        minutes: entry.minutes,
+      });
+    });
   }
   return slots;
+}
+
+function draftWeightings(draft: PlanDraft): SubjectWeighting[] {
+  return draft.subjectIds.map((subjectId) => ({
+    subjectId,
+    examDate: draft.examDates?.[subjectId] ?? null,
+    confidence: draft.confidence?.[subjectId] ?? null,
+  }));
 }
 
 /** Creates the plan, its subject links and every session row. */
@@ -173,11 +246,18 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       plan_id: planId,
       subject_id: subjectId,
       tier: draft.tiers?.[subjectId] ?? null,
+      exam_date: draft.examDates?.[subjectId] ?? null,
+      confidence: draft.confidence?.[subjectId] ?? null,
     })),
   );
   if (linkError) throw linkError;
 
-  const slots = buildSlots(draft);
+  const slots = buildSchedule({
+    startDate: draft.startDate,
+    weeks: draft.weeks,
+    days: draft.days,
+    subjects: draftWeightings(draft),
+  });
   const topicsBySubject = await buildTopics(draft, slots);
   const counters: Record<string, number> = {};
 
@@ -261,17 +341,14 @@ async function buildTopics(draft: PlanDraft, slots: Slot[]) {
   return result;
 }
 
-/** Regenerates a single session's topic, weighting the student's weak areas. */
+/** Regenerates a single session's topic. */
 export async function regenerateSessionTopic(session: SessionRow, subject: Subject) {
   const { data: existing } = await supabase
     .from("sessions")
-    .select("topic_text, confidence")
+    .select("topic_text")
     .eq("plan_id", session.plan_id)
     .eq("subject_id", subject.id);
 
-  const weak = (existing ?? [])
-    .filter((row) => (row.confidence ?? 5) <= 2 && row.topic_text)
-    .map((row) => row.topic_text as string);
   const avoid = (existing ?? []).map((row) => row.topic_text as string).filter(Boolean);
 
   const { topics } = await generateTopics({
@@ -279,7 +356,7 @@ export async function regenerateSessionTopic(session: SessionRow, subject: Subje
       subject: subject.name,
       examBoard: subject.exam_board,
       count: 1,
-      weakTopics: weak.slice(0, 10),
+      weakTopics: [],
       avoidTopics: avoid.slice(0, 60),
     },
   });
@@ -323,5 +400,154 @@ export async function updatePlanDetails(planId: string, name: string, startDate:
     .from("plans")
     .update({ name: name.trim() || "My revision plan", start_date: startDate })
     .eq("id", planId);
+  if (error) throw error;
+}
+
+/** Saves plan-wide settings (name, start date, weeks, study days and session lengths). */
+export async function updatePlanSettings(
+  planId: string,
+  settings: { name: string; startDate: string; weeks: number; days: DaySetting[] },
+) {
+  const { error } = await supabase
+    .from("plans")
+    .update({
+      name: settings.name.trim() || "My revision plan",
+      start_date: settings.startDate,
+      weeks: settings.weeks,
+      days_per_week: settings.days.length,
+      study_days: settings.days.map((d) => d.day),
+      sessions_per_day: Math.max(...settings.days.map((d) => d.sessions), 1),
+      session_length_minutes: settings.days[0]?.minutes ?? 45,
+      day_plan: settings.days,
+    })
+    .eq("id", planId);
+  if (error) throw error;
+}
+
+/**
+ * Rebuilds the session grid after a settings change, reusing the topics already in the plan
+ * and keeping any "gaps to revisit" notes that sit in the same week / day / slot.
+ */
+export async function regeneratePlanSessions(
+  planId: string,
+  settings: {
+    startDate: string;
+    weeks: number;
+    days: DaySetting[];
+    subjects: Array<SubjectWeighting & { name: string }>;
+  },
+) {
+  const existing = await fetchSessions(planId);
+
+  const notes = new Map<string, string>();
+  const topicsBySubject: Record<string, string[]> = {};
+  for (const session of existing) {
+    if (session.gap_notes) {
+      notes.set(`${session.week_number}|${session.day_label}|${session.session_slot}`, session.gap_notes);
+    }
+    if (session.subject_id && session.topic_text) {
+      const pool = (topicsBySubject[session.subject_id] ??= []);
+      if (!pool.includes(session.topic_text)) pool.push(session.topic_text);
+    }
+  }
+
+  // Subjects newly added to the plan need a topic pool of their own.
+  for (const subject of settings.subjects) {
+    if (topicsBySubject[subject.subjectId]?.length) continue;
+    const units = subjectUnits(subject.name).flatMap((unit) =>
+      unit.elements.map((element) =>
+        element.detail ? `${element.label}: ${element.detail}` : element.label,
+      ),
+    );
+    topicsBySubject[subject.subjectId] = units.length
+      ? units
+      : await fetchLibraryTopics(subject.subjectId);
+  }
+
+  const slots = buildSchedule({
+    startDate: settings.startDate,
+    weeks: settings.weeks,
+    days: settings.days,
+    subjects: settings.subjects,
+  });
+
+  const counters: Record<string, number> = {};
+  const rows = slots.map((slot) => {
+    const used = counters[slot.subjectId] ?? 0;
+    counters[slot.subjectId] = used + 1;
+    const pool = topicsBySubject[slot.subjectId] ?? [];
+    return {
+      plan_id: planId,
+      week_number: slot.week,
+      day_label: slot.day,
+      session_slot: slot.slot,
+      subject_id: slot.subjectId,
+      topic_text: pool.length ? (pool[used % pool.length] ?? "") : "",
+      gap_notes: notes.get(`${slot.week}|${slot.day}|${slot.slot}`) ?? "",
+      length_minutes: slot.minutes,
+    };
+  });
+
+  const { error: deleteError } = await supabase.from("sessions").delete().eq("plan_id", planId);
+  if (deleteError) throw deleteError;
+  if (rows.length) {
+    const { error: insertError } = await supabase.from("sessions").insert(rows);
+    if (insertError) throw insertError;
+  }
+}
+
+/** Adds or removes subjects on an existing plan, keeping tier / date / confidence values. */
+export async function savePlanSubjects(
+  planId: string,
+  subjects: Array<{ subjectId: string; tier: string | null; examDate: string | null; confidence: number | null }>,
+) {
+  const { data: current, error } = await supabase
+    .from("plan_subjects")
+    .select("id, subject_id")
+    .eq("plan_id", planId);
+  if (error) throw error;
+
+  const keep = new Set(subjects.map((s) => s.subjectId));
+  const stale = (current ?? []).filter((row) => !keep.has(row.subject_id as string));
+  if (stale.length) {
+    const { error: deleteError } = await supabase
+      .from("plan_subjects")
+      .delete()
+      .in("id", stale.map((row) => row.id as string));
+    if (deleteError) throw deleteError;
+  }
+
+  const existingIds = new Set((current ?? []).map((row) => row.subject_id as string));
+  const inserts = subjects.filter((s) => !existingIds.has(s.subjectId));
+  if (inserts.length) {
+    const { error: insertError } = await supabase.from("plan_subjects").insert(
+      inserts.map((s) => ({
+        plan_id: planId,
+        subject_id: s.subjectId,
+        tier: s.tier,
+        exam_date: s.examDate,
+        confidence: s.confidence,
+      })),
+    );
+    if (insertError) throw insertError;
+  }
+
+  for (const subject of subjects.filter((s) => existingIds.has(s.subjectId))) {
+    const { error: updateError } = await supabase
+      .from("plan_subjects")
+      .update({ tier: subject.tier, exam_date: subject.examDate, confidence: subject.confidence })
+      .eq("plan_id", planId)
+      .eq("subject_id", subject.subjectId);
+    if (updateError) throw updateError;
+  }
+}
+
+/** Permanently deletes a plan along with its sessions and subject links. */
+export async function deletePlan(planId: string) {
+  const { error: sessionError } = await supabase.from("sessions").delete().eq("plan_id", planId);
+  if (sessionError) throw sessionError;
+  const { error: linkError } = await supabase.from("plan_subjects").delete().eq("plan_id", planId);
+  if (linkError) throw linkError;
+  const { error } = await supabase.from("plans").delete().eq("id", planId);
   if (error) throw error;
 }

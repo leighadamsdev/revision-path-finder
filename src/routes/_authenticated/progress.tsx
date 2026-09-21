@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { differenceInCalendarDays, format, parseISO } from "date-fns";
 
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
@@ -11,12 +12,12 @@ export const Route = createFileRoute("/_authenticated/progress")({
       {
         name: "description",
         content:
-          "See how much of your GCSE revision plan you've rated and which topics you flagged as low confidence.",
+          "See how your revision time is split between subjects, your confidence ratings and the gaps you've noted down.",
       },
       { property: "og:title", content: "Progress — rev.plan" },
       {
         property: "og:description",
-        content: "How much of your revision plan you've rated, and what still needs work.",
+        content: "How your revision time is split, and what still needs work.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,75 +31,22 @@ function ProgressPage() {
   const sessions = usePlanSessions(plan?.id).data ?? [];
   const subjects = usePlanSubjects(plan?.id).data ?? [];
 
-  const rated = sessions.filter((s) => s.confidence != null);
-  const pct = sessions.length ? Math.round((rated.length / sessions.length) * 100) : 0;
-  const low = rated.filter((s) => (s.confidence ?? 5) <= 2);
-
-  const paired = sessions.filter((s) => s.confidence_before != null && s.confidence != null);
-  const avgBefore = paired.length
-    ? paired.reduce((sum, s) => sum + (s.confidence_before ?? 0), 0) / paired.length
-    : 0;
-  const avgAfter = paired.length
-    ? paired.reduce((sum, s) => sum + (s.confidence ?? 0), 0) / paired.length
-    : 0;
-  const improvedCount = paired.filter((s) => (s.confidence ?? 0) > (s.confidence_before ?? 0)).length;
+  const withNotes = sessions.filter((s) => s.gap_notes.trim().length > 0);
 
   return (
     <AppShell>
       <h1 className="text-2xl font-extrabold tracking-tight">Progress</h1>
       <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-        Rating sessions honestly is what makes the rest of the plan useful.
+        Your time is shared out by how confident you feel and how close each exam is.
       </p>
 
-      <div className="mt-5 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
-        <div className="flex items-baseline justify-between">
-          <p className="text-sm font-extrabold tracking-tight">Sessions rated</p>
-          <p className="text-2xl font-extrabold tabular-nums">{pct}%</p>
-        </div>
-        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-background">
-          <div className="h-full rounded-full bg-sci" style={{ width: `${pct}%` }} />
-        </div>
-        <p className="mt-2 text-[13px] font-medium text-muted-foreground">
-          {rated.length} of {sessions.length} sessions across all {plan?.weeks ?? 0} weeks
-        </p>
-      </div>
-
-      <div className="mt-4 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
-        <p className="text-sm font-extrabold tracking-tight">Improvement</p>
-        {paired.length === 0 ? (
-          <p className="mt-2 text-[13px] font-medium text-muted-foreground">
-            Rate a session before you revise and again afterwards to see your improvement here.
-          </p>
-        ) : (
-          <>
-            <div className="mt-3 flex items-baseline gap-3">
-              <p className="text-2xl font-extrabold tabular-nums">{avgBefore.toFixed(1)}</p>
-              <span className="text-sm font-bold text-muted-foreground">→</span>
-              <p className="text-2xl font-extrabold tabular-nums text-sci">
-                {avgAfter.toFixed(1)}
-              </p>
-              <p className="ml-auto text-sm font-extrabold tabular-nums">
-                {avgAfter - avgBefore >= 0 ? "+" : ""}
-                {(avgAfter - avgBefore).toFixed(1)} avg
-              </p>
-            </div>
-            <p className="mt-2 text-[13px] font-medium text-muted-foreground">
-              {improvedCount} of {paired.length} sessions improved after revising
-            </p>
-          </>
-        )}
-      </div>
-
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
         {subjects.map((subject) => {
           const own = sessions.filter((s) => s.subject_id === subject.id);
-          const ownRated = own.filter((s) => s.confidence != null);
-          const avg = ownRated.length
-            ? (
-                ownRated.reduce((sum, s) => sum + (s.confidence ?? 0), 0) / ownRated.length
-              ).toFixed(1)
-            : "—";
+          const share = sessions.length ? Math.round((own.length / sessions.length) * 100) : 0;
           const style = subjectStyle(subject.color_key);
+          const examDate = subject.exam_date ? parseISO(subject.exam_date) : null;
+          const daysLeft = examDate ? differenceInCalendarDays(examDate, new Date()) : null;
           return (
             <div key={subject.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
               <span
@@ -107,47 +55,66 @@ function ProgressPage() {
                 <span className={`size-1.5 rounded-full ${style.dot}`} />
                 {subject.name}
               </span>
-              <div className="mt-3 flex items-baseline gap-4">
-                <p className="text-[13px] font-semibold text-muted-foreground">
-                  {ownRated.length}/{own.length} rated
-                </p>
-                <p className="ml-auto text-[13px] font-extrabold">Avg {avg}/5</p>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-background">
+                <div className={`h-full rounded-full ${style.fill}`} style={{ width: `${share}%` }} />
               </div>
+              <div className="mt-2 flex items-baseline gap-3">
+                <p className="text-[13px] font-semibold text-muted-foreground">
+                  {own.length} sessions · {share}% of your time
+                </p>
+                <p className="ml-auto text-[13px] font-extrabold">
+                  {subject.confidence ? `${subject.confidence}/5` : "Not rated"}
+                </p>
+              </div>
+              <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
+                {examDate
+                  ? daysLeft != null && daysLeft < 0
+                    ? `Exam sat ${format(examDate, "d MMM")}`
+                    : `Exam ${format(examDate, "EEE d MMM")} · ${daysLeft} days`
+                  : "No exam date set yet"}
+              </p>
             </div>
           );
         })}
       </div>
 
+      {subjects.length === 0 ? (
+        <p className="mt-4 text-[13px] font-medium text-muted-foreground">
+          No subjects yet —{" "}
+          <Link to="/setup" className="font-bold underline underline-offset-2">
+            build a plan
+          </Link>{" "}
+          to get started.
+        </p>
+      ) : null}
+
       <h2 className="mt-8 text-sm font-extrabold uppercase tracking-[0.12em] text-muted-foreground">
-        Worth revisiting (rated 1–2)
+        Gaps you've noted
       </h2>
       <div className="mt-3 space-y-2">
-        {low.length === 0 ? (
+        {withNotes.length === 0 ? (
           <p className="text-[13px] font-medium text-muted-foreground">
-            Nothing rated 1 or 2 yet. Rate a few sessions and anything shaky will collect here.
+            Nothing noted yet. Jot down anything you got stuck on and it will collect here.
           </p>
         ) : (
-          low.map((s) => {
+          withNotes.map((s) => {
             const subject = subjects.find((x) => x.id === s.subject_id);
             const style = subjectStyle(subject?.color_key);
             return (
               <div
                 key={s.id}
-                className="flex items-center gap-3 rounded-[14px] bg-card p-3 ring-1 ring-black/5"
+                className="flex items-start gap-3 rounded-[14px] bg-card p-3 ring-1 ring-black/5"
               >
-                <span className={`size-2.5 shrink-0 rounded-full ${style.dot}`} />
+                <span className={`mt-1.5 size-2.5 shrink-0 rounded-full ${style.dot}`} />
                 <div className="min-w-0">
                   <p className="truncate text-[14px] font-bold">
                     {s.topic_text || "Untitled topic"}
                   </p>
-                  <p className="text-[11px] font-semibold text-muted-foreground">
+                  <p className="text-[12px] font-medium text-muted-foreground">{s.gap_notes}</p>
+                  <p className="mt-0.5 text-[11px] font-semibold text-muted-foreground">
                     Week {s.week_number} · {s.day_label}
-                    {s.gap_notes ? ` · ${s.gap_notes}` : ""}
                   </p>
                 </div>
-                <span className={`ml-auto text-sm font-extrabold ${style.text}`}>
-                  {s.confidence}/5
-                </span>
               </div>
             );
           })

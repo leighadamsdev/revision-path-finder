@@ -45,8 +45,11 @@ function ProgressPage() {
           const own = sessions.filter((s) => s.subject_id === subject.id);
           const share = sessions.length ? Math.round((own.length / sessions.length) * 100) : 0;
           const style = subjectStyle(subject.color_key);
-          const examDate = subject.exam_date ? parseISO(subject.exam_date) : null;
+          const examDates = subject.exam_dates.map((value) => parseISO(value));
+          const next = examDates.find((date) => differenceInCalendarDays(date, new Date()) >= 0);
+          const examDate = next ?? examDates[examDates.length - 1] ?? null;
           const daysLeft = examDate ? differenceInCalendarDays(examDate, new Date()) : null;
+
           return (
             <div key={subject.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
               <span

@@ -12,6 +12,8 @@ import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-s
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
 import { DatePicker } from "@/components/DatePicker";
+import { ConfidencePicker } from "@/components/ConfidencePicker";
+
 
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({
@@ -69,6 +71,11 @@ function SetupPage() {
   const [parsing, setParsing] = useState<string | null>(null);
 
   const [customName, setCustomName] = useState("");
+  /** Optional exam date per subject name. */
+  const [examDates, setExamDates] = useState<Record<string, string>>({});
+  /** Optional 1–5 confidence per subject name. */
+  const [confidences, setConfidences] = useState<Record<string, number | null>>({});
+
 
   const [name, setName] = useState("Finals plan");
   const [startDate, setStartDate] = useState(() => format(new Date(), "yyyy-MM-dd"));

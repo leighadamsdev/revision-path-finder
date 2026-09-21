@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
-import { papersForSubject, type PaperFile } from "@/lib/past-paper-files";
+import { papersForSubject, papersByBoard, type PaperFile } from "@/lib/past-paper-files";
 import { subjectStyle } from "@/lib/subjects";
 
 export const Route = createFileRoute("/_authenticated/papers")({
@@ -118,9 +118,11 @@ function PapersPage() {
       <div className="mt-5 space-y-3">
         {subjects.map((subject) => {
           const papers = papersForSubject(subject.name, subject.tier);
+          const boardGroups = papersByBoard(subject.name, subject.tier);
           const style = subjectStyle(subject.color_key);
           const hasFiles = papers.questionPapers.length > 0 || papers.markSchemes.length > 0;
           const isCollapsed = collapsed[subject.id] ?? false;
+
           return (
             <div key={subject.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
               <button
@@ -144,17 +146,24 @@ function PapersPage() {
 
               {!isCollapsed ? (
                 hasFiles ? (
-                  <div className="mt-2">
-                    <PaperList
-                      title="Question papers"
-                      icon={<FileText className="size-3.5" strokeWidth={2.5} />}
-                      files={papers.questionPapers}
-                    />
-                    <PaperList
-                      title="Mark schemes"
-                      icon={<ClipboardCheck className="size-3.5" strokeWidth={2.5} />}
-                      files={papers.markSchemes}
-                    />
+                  <div className="mt-2 space-y-4">
+                    {boardGroups.map((group) => (
+                      <div key={group.board}>
+                        <p className="text-[12px] font-extrabold tracking-tight">
+                          {group.board}
+                        </p>
+                        <PaperList
+                          title="Question papers"
+                          icon={<FileText className="size-3.5" strokeWidth={2.5} />}
+                          files={group.questionPapers}
+                        />
+                        <PaperList
+                          title="Mark schemes"
+                          icon={<ClipboardCheck className="size-3.5" strokeWidth={2.5} />}
+                          files={group.markSchemes}
+                        />
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="mt-3 text-[13px] font-medium text-muted-foreground">
@@ -162,6 +171,7 @@ function PapersPage() {
                   </p>
                 )
               ) : null}
+
             </div>
           );
         })}

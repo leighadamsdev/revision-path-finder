@@ -174,8 +174,9 @@ export type PlanDraft = {
   subjectIds: string[];
   /** Foundation / Higher per subject id, where the subject is tiered. */
   tiers?: Record<string, string | null>;
-  /** Optional exam date (yyyy-MM-dd) per subject id. */
-  examDates?: Record<string, string | null>;
+  /** Up to three optional exam dates (yyyy-MM-dd) per subject id. */
+  examDates?: Record<string, string[]>;
+
   /** Optional 1–5 confidence per subject id. */
   confidence?: Record<string, number | null>;
   /** Topics the student ticked from the GCSE checklist, per subject id. */
@@ -229,10 +230,11 @@ export function buildSchedule(input: ScheduleInput): Slot[] {
 function draftWeightings(draft: PlanDraft): SubjectWeighting[] {
   return draft.subjectIds.map((subjectId) => ({
     subjectId,
-    examDate: draft.examDates?.[subjectId] ?? null,
+    examDates: draft.examDates?.[subjectId] ?? [],
     confidence: draft.confidence?.[subjectId] ?? null,
   }));
 }
+
 
 /** Creates the plan, its subject links and every session row. */
 export async function createPlan(profileId: string, draft: PlanDraft) {
@@ -263,10 +265,11 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       plan_id: planId,
       subject_id: subjectId,
       tier: draft.tiers?.[subjectId] ?? null,
-      exam_date: draft.examDates?.[subjectId] ?? null,
+      ...examDateColumns(draft.examDates?.[subjectId] ?? []),
       confidence: draft.confidence?.[subjectId] ?? null,
     })),
   );
+
   if (linkError) throw linkError;
 
   const slots = buildSchedule({

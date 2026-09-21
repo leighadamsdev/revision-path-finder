@@ -144,17 +144,24 @@ function PapersPage() {
 
               {!isCollapsed ? (
                 hasFiles ? (
-                  <div className="mt-2">
-                    <PaperList
-                      title="Question papers"
-                      icon={<FileText className="size-3.5" strokeWidth={2.5} />}
-                      files={papers.questionPapers}
-                    />
-                    <PaperList
-                      title="Mark schemes"
-                      icon={<ClipboardCheck className="size-3.5" strokeWidth={2.5} />}
-                      files={papers.markSchemes}
-                    />
+                  <div className="mt-2 space-y-4">
+                    {boardGroups.map((group) => (
+                      <div key={group.board}>
+                        <p className="text-[12px] font-extrabold tracking-tight">
+                          {group.board}
+                        </p>
+                        <PaperList
+                          title="Question papers"
+                          icon={<FileText className="size-3.5" strokeWidth={2.5} />}
+                          files={group.questionPapers}
+                        />
+                        <PaperList
+                          title="Mark schemes"
+                          icon={<ClipboardCheck className="size-3.5" strokeWidth={2.5} />}
+                          files={group.markSchemes}
+                        />
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="mt-3 text-[13px] font-medium text-muted-foreground">
@@ -162,6 +169,7 @@ function PapersPage() {
                   </p>
                 )
               ) : null}
+
             </div>
           );
         })}

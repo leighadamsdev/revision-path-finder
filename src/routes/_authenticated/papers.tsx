@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
-import { papersForSubject, type PaperFile } from "@/lib/past-paper-files";
+import { papersByBoard, type PaperFile } from "@/lib/past-paper-files";
 import { subjectStyle } from "@/lib/subjects";
 
 export const Route = createFileRoute("/_authenticated/papers")({
@@ -47,7 +47,7 @@ function PaperList({
       <div className="mt-2 space-y-2">
         {files.map((file) => (
           <a
-            key={`${file.kind}-${file.paper}`}
+            key={`${file.board}-${file.tier}-${file.series}-${file.kind}-${file.paper}`}
             href={file.url}
             target="_blank"
             rel="noreferrer"
@@ -82,9 +82,9 @@ function PapersPage() {
 
       <div className="mt-5 space-y-3">
         {subjects.map((subject) => {
-          const { questionPapers, markSchemes } = papersForSubject(subject.name, subject.tier);
+          const boards = papersByBoard(subject.name, subject.tier, subject.exam_board);
           const style = subjectStyle(subject.color_key);
-          const hasFiles = questionPapers.length + markSchemes.length > 0;
+          const hasFiles = boards.length > 0;
           const isCollapsed = collapsed[subject.id] ?? false;
           return (
             <div key={subject.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
@@ -109,18 +109,23 @@ function PapersPage() {
 
               {!isCollapsed ? (
                 hasFiles ? (
-                  <>
-                    <PaperList
-                      title="Question papers"
-                      icon={<FileText className="size-3.5" strokeWidth={2.5} />}
-                      files={questionPapers}
-                    />
-                    <PaperList
-                      title="Mark schemes"
-                      icon={<ClipboardCheck className="size-3.5" strokeWidth={2.5} />}
-                      files={markSchemes}
-                    />
-                  </>
+                  <div className="mt-2 space-y-4">
+                    {boards.map((group) => (
+                      <div key={group.board}>
+                        <p className="text-[13px] font-extrabold">{group.board}</p>
+                        <PaperList
+                          title="Question papers"
+                          icon={<FileText className="size-3.5" strokeWidth={2.5} />}
+                          files={group.questionPapers}
+                        />
+                        <PaperList
+                          title="Mark schemes"
+                          icon={<ClipboardCheck className="size-3.5" strokeWidth={2.5} />}
+                          files={group.markSchemes}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <p className="mt-3 text-[13px] font-medium text-muted-foreground">
                     No papers here for this subject yet — we're adding more.

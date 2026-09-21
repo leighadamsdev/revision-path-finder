@@ -51,18 +51,24 @@ export type Database = {
       }
       plan_subjects: {
         Row: {
+          confidence: number | null
+          exam_date: string | null
           id: string
           plan_id: string
           subject_id: string
           tier: string | null
         }
         Insert: {
+          confidence?: number | null
+          exam_date?: string | null
           id?: string
           plan_id: string
           subject_id: string
           tier?: string | null
         }
         Update: {
+          confidence?: number | null
+          exam_date?: string | null
           id?: string
           plan_id?: string
           subject_id?: string

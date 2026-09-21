@@ -113,7 +113,7 @@ export function AppShell({
 
       <nav className="app-nav fixed inset-x-0 bottom-0 z-20 border-t border-structure bg-structure text-structure-foreground">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className={`grid ${isAdmin ? "grid-cols-5" : "grid-cols-4"}`}>
+          <div className={`grid ${isAdmin ? "grid-cols-6" : "grid-cols-5"}`}>
             {(isAdmin ? [...TABS, ADMIN_TAB] : TABS).map((tab) => (
               <Link
                 key={tab.to}

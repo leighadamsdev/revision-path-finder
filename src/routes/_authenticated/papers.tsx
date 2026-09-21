@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FileText, ClipboardCheck } from "lucide-react";
+import { FileText, ClipboardCheck, ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";

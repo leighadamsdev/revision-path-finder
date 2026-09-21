@@ -68,6 +68,10 @@ function PaperList({
 function PapersPage() {
   const { plan } = useActivePlan();
   const subjects = usePlanSubjects(plan?.id).data ?? [];
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  const toggle = (id: string) =>
+    setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
     <AppShell>
@@ -81,9 +85,15 @@ function PapersPage() {
           const { questionPapers, markSchemes } = papersForSubject(subject.name, subject.tier);
           const style = subjectStyle(subject.color_key);
           const hasFiles = questionPapers.length + markSchemes.length > 0;
+          const isCollapsed = collapsed[subject.id] ?? false;
           return (
             <div key={subject.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
-              <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => toggle(subject.id)}
+                aria-expanded={!isCollapsed}
+                className="flex w-full items-center justify-between gap-2 text-left"
+              >
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${style.tag}`}
                 >
@@ -91,7 +101,11 @@ function PapersPage() {
                   {subject.name} · {subject.exam_board}
                   {subject.tier ? ` · ${subject.tier}` : ""}
                 </span>
-              </div>
+                <ChevronDown
+                  strokeWidth={2.5}
+                  className={`size-4 shrink-0 text-muted-foreground transition-transform ${isCollapsed ? "" : "rotate-180"}`}
+                />
+              </button>
 
               {hasFiles ? (
                 <>

@@ -94,7 +94,9 @@ export async function disablePlanShare(planId: string) {
 export async function fetchPlanSubjects(planId: string): Promise<PlanSubject[]> {
   const { data, error } = await supabase
     .from("plan_subjects")
-    .select("tier, exam_date, confidence, subjects(id, name, exam_board, color_key, is_custom)")
+    .select(
+      "tier, exam_date, exam_date_2, exam_date_3, confidence, subjects(id, name, exam_board, color_key, is_custom)",
+    )
     .eq("plan_id", planId);
   if (error) throw error;
   return (data ?? [])
@@ -102,6 +104,8 @@ export async function fetchPlanSubjects(planId: string): Promise<PlanSubject[]> 
       const link = row as unknown as {
         tier: string | null;
         exam_date: string | null;
+        exam_date_2: string | null;
+        exam_date_3: string | null;
         confidence: number | null;
         subjects: Subject | null;
       };
@@ -110,25 +114,32 @@ export async function fetchPlanSubjects(planId: string): Promise<PlanSubject[]> 
         ...link.subjects,
         tier: link.tier,
         exam_date: link.exam_date,
+        exam_date_2: link.exam_date_2,
+        exam_date_3: link.exam_date_3,
+        exam_dates: examDateList(link),
         confidence: link.confidence,
       } satisfies PlanSubject;
     })
     .filter((s): s is PlanSubject => Boolean(s));
 }
 
-/** Saves an exam date and/or confidence rating for one subject in one plan. */
+/** Saves exam dates and/or a confidence rating for one subject in one plan. */
 export async function updatePlanSubjectMeta(
   planId: string,
   subjectId: string,
-  patch: { exam_date?: string | null; confidence?: number | null },
+  patch: { examDates?: string[]; confidence?: number | null },
 ) {
   const { error } = await supabase
     .from("plan_subjects")
-    .update(patch)
+    .update({
+      ...(patch.examDates ? examDateColumns(patch.examDates) : {}),
+      ...(patch.confidence !== undefined ? { confidence: patch.confidence } : {}),
+    })
     .eq("plan_id", planId)
     .eq("subject_id", subjectId);
   if (error) throw error;
 }
+
 
 export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   const { data, error } = await supabase

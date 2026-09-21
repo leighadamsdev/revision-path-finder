@@ -47,7 +47,7 @@ function PaperList({
       <div className="mt-2 space-y-2">
         {files.map((file) => (
           <a
-            key={`${file.kind}-${file.paper}`}
+            key={`${file.board}-${file.tier}-${file.series}-${file.kind}-${file.paper}`}
             href={file.url}
             target="_blank"
             rel="noreferrer"

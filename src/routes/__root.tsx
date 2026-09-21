@@ -81,13 +81,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "rev.plan builds a calm, week-by-week GCSE revision timetable around your subjects, exam boards and the time you actually have.",
+          "rev.plan builds a calm, week-by-week GCSE revision timetable around your subjects and the time you actually have.",
       },
       { property: "og:title", content: "rev.plan — personalised GCSE revision timetables" },
       {
         property: "og:description",
         content:
-          "Build a week-by-week GCSE revision timetable around your subjects, exam boards and study time.",
+          "Build a week-by-week GCSE revision timetable around your subjects and study time.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -95,8 +95,6 @@ export function subjectStyle(colorKey: string | null | undefined): SubjectStyle 
   return STYLES[colorKey ?? "media"] ?? STYLES["media"]!;
 }
 
-export const EXAM_BOARDS = ["AQA", "Edexcel", "OCR", "WJEC Eduqas"] as const;
-
 export const WEEK_DAYS = [
   "Monday",
   "Tuesday",
@@ -109,6 +107,3 @@ export const WEEK_DAYS = [
 
 export const SESSION_LENGTHS = [30, 45, 60, 90] as const;
 
-export function subjectLabel(name: string, board: string) {
-  return `${name} · ${board}`;
-}

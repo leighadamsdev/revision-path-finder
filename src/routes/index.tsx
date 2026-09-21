@@ -9,13 +9,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Pick your subjects and exam boards, say how much time you have, and rev.plan builds a week-by-week GCSE revision timetable you can actually follow.",
+          "Pick your subjects, say how much time you have, and rev.plan builds a week-by-week GCSE revision timetable you can actually follow.",
       },
       { property: "og:title", content: "rev.plan — a calm GCSE revision timetable" },
       {
         property: "og:description",
         content:
-          "Pick your subjects and exam boards, say how much time you have, and get a week-by-week revision timetable.",
+          "Pick your subjects, say how much time you have, and get a week-by-week revision timetable.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

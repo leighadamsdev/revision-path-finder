@@ -25,8 +25,8 @@ export const Route = createFileRoute("/")({
 });
 
 const HOW_STEPS = [
-  "Tell rev.plan the subjects and tiers you are studying",
-  "Choose the exact topics from a pre-populated list",
+  "Tell revplan the subjects and tiers you are studying",
+  "Either:\n1. Choose the exact topics from a pre-populated list\n2. Download your own topic list\n",
   "Lock in how many weeks you have until exam day",
   "Let rev.plan build you a week-by-week, session by session plan.",
   "Print it out or follow it online, it is up to you.",
@@ -88,11 +88,6 @@ function Landing() {
                     {i + 1}
                   </span>
                   {step}
-                  {i === 1 ? (
-                    <span className="mt-1 block text-sm opacity-80">
-                      (or you can upload your own)
-                    </span>
-                  ) : null}
                 </div>
               </li>
             ))}

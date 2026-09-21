@@ -70,7 +70,7 @@ function Landing() {
           GCSE revision planner
         </p>
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          A bespoke timetable, designed around the time you've got and what you need to revise
+          A bespoke timetable, designed around the time you've got and exactly what you need to revise
         </h1>
         <div className="relative mt-8 w-full max-w-xl">
           <div

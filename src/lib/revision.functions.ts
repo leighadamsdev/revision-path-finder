@@ -5,7 +5,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const TopicsInput = z.object({
   subject: z.string().min(1),
-  examBoard: z.string().min(1),
   count: z.number().int().min(1).max(120),
   weakTopics: z.array(z.string()).max(40).default([]),
   avoidTopics: z.array(z.string()).max(200).default([]),
@@ -37,7 +36,6 @@ export const generateTopics = createServerFn({ method: "POST" })
                 type: "input_text",
                 text: [
                   `Subject: ${data.subject}`,
-                  `Exam board: ${data.examBoard}`,
                   `Produce exactly ${data.count} topics, in the order they should be studied.`,
                   data.weakTopics.length
                     ? `The student rated these topics low in confidence — weave each of them back in during the later half of the sequence: ${data.weakTopics.join("; ")}.`

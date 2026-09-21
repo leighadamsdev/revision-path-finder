@@ -2241,7 +2241,7 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
         {
           label: "Composition 1 & 2",
           detail:
-            "Developing musical ideas, harmonisation, and arranging for a free brief and an exam board commission.",
+            "Developing musical ideas, harmonisation, and arranging for a free brief and a set commission.",
         },
       ],
     },
@@ -2408,7 +2408,7 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
         },
         {
           label: "Required Studies",
-          detail: "Two core development studies specified by your exam board.",
+          detail: "Two core development studies specified by your course.",
         },
       ],
     },
@@ -2431,7 +2431,7 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
         },
         {
           label: "Required Studies",
-          detail: "Two core memory studies specified by your exam board.",
+          detail: "Two core memory studies specified by your course.",
         },
       ],
     },
@@ -2455,7 +2455,7 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
         },
         {
           label: "Required Studies",
-          detail: "Two core studies on mental health specified by your exam board.",
+          detail: "Two core studies on mental health specified by your course.",
         },
       ],
     },
@@ -2474,7 +2474,7 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
         },
         {
           label: "Required Studies",
-          detail: "Two core social influence studies specified by your exam board.",
+          detail: "Two core social influence studies specified by your course.",
         },
       ],
     },
@@ -2498,7 +2498,7 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
         },
         {
           label: "Required Studies",
-          detail: "Two core neuropsychology studies specified by your exam board.",
+          detail: "Two core neuropsychology studies specified by your course.",
         },
       ],
     },

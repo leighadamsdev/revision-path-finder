@@ -346,7 +346,6 @@ async function buildTopics(draft: PlanDraft, slots: Slot[]) {
       const { topics } = await generateTopics({
         data: {
           subject: subject.name,
-          examBoard: subject.exam_board,
           count,
           weakTopics: [],
           avoidTopics: [],
@@ -374,7 +373,6 @@ export async function regenerateSessionTopic(session: SessionRow, subject: Subje
   const { topics } = await generateTopics({
     data: {
       subject: subject.name,
-      examBoard: subject.exam_board,
       count: 1,
       weakTopics: [],
       avoidTopics: avoid.slice(0, 60),

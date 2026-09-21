@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/useRole";
-import { EXAM_BOARDS } from "@/lib/subjects";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -103,7 +102,7 @@ function useSubjectList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subjects")
-        .select("id, name, exam_board, color_key, is_custom")
+        .select("id, name, color_key, is_custom")
         .order("name");
       if (error) throw error;
       return data ?? [];
@@ -115,14 +114,13 @@ function SubjectsPanel() {
   const qc = useQueryClient();
   const { data: subjects = [], isLoading } = useSubjectList();
   const [name, setName] = useState("");
-  const [board, setBoard] = useState<string>(EXAM_BOARDS[0] ?? "AQA");
   const [colorKey, setColorKey] = useState("media");
 
   async function add() {
     if (!name.trim()) return;
     const { error } = await supabase
       .from("subjects")
-      .insert({ name: name.trim(), exam_board: board, color_key: colorKey, is_custom: false });
+      .insert({ name: name.trim(), exam_board: "Not specified", color_key: colorKey, is_custom: false });
     if (error) { toast.error(error.message); return; }
     setName("");
     toast.success("Subject added");
@@ -148,20 +146,10 @@ function SubjectsPanel() {
     <div className="space-y-4">
       <Card>
         <p className="text-sm font-extrabold">Add a subject</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-4">
-          <label className="block sm:col-span-2">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block">
             <span className={label}>Name</span>
             <input className={input} value={name} onChange={(e) => setName(e.target.value)} />
-          </label>
-          <label className="block">
-            <span className={label}>Exam board</span>
-            <select className={input} value={board} onChange={(e) => setBoard(e.target.value)}>
-              {EXAM_BOARDS.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
           </label>
           <label className="block">
             <span className={label}>Colour key</span>
@@ -189,7 +177,6 @@ function SubjectsPanel() {
               key={s.id}
               fields={[
                 { key: "name", label: "Name", value: s.name },
-                { key: "exam_board", label: "Exam board", value: s.exam_board },
                 { key: "color_key", label: "Colour", value: s.color_key },
               ]}
               onSave={(patch) => saveRow(s.id, patch)}
@@ -217,7 +204,7 @@ function SubjectPicker({
         <option value="">Choose a subject…</option>
         {subjects.map((s) => (
           <option key={s.id} value={s.id}>
-            {s.name} · {s.exam_board}
+            {s.name}
           </option>
         ))}
       </select>
@@ -327,7 +314,7 @@ function PapersPanel() {
       const { data, error } = await supabase
         .from("past_papers")
         .select(
-          "id, spec_code, official_portal_url, free_resource_url, free_resource_name, subjects(name, exam_board)",
+          "id, spec_code, official_portal_url, free_resource_url, free_resource_name, subjects(name)",
         )
         .order("spec_code");
       if (error) throw error;
@@ -337,7 +324,7 @@ function PapersPanel() {
         official_portal_url: string;
         free_resource_url: string;
         free_resource_name: string;
-        subjects: { name: string; exam_board: string } | null;
+        subjects: { name: string } | null;
       }[];
     },
   });
@@ -394,7 +381,7 @@ function PapersPanel() {
           <EditableRow
             key={row.id}
             heading={
-              row.subjects ? `${row.subjects.name} · ${row.subjects.exam_board}` : "Unlinked subject"
+              row.subjects ? row.subjects.name : "Unlinked subject"
             }
             fields={[
               { key: "spec_code", label: "Spec code", value: row.spec_code },

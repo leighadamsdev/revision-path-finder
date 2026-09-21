@@ -118,9 +118,11 @@ function PapersPage() {
       <div className="mt-5 space-y-3">
         {subjects.map((subject) => {
           const papers = papersForSubject(subject.name, subject.tier);
+          const boardGroups = papersByBoard(subject.name, subject.tier);
           const style = subjectStyle(subject.color_key);
           const hasFiles = papers.questionPapers.length > 0 || papers.markSchemes.length > 0;
           const isCollapsed = collapsed[subject.id] ?? false;
+
           return (
             <div key={subject.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
               <button

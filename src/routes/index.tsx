@@ -199,8 +199,7 @@ function PlanMockup() {
       </p>
       <div className="mt-3 overflow-hidden rounded-[20px] bg-card shadow-[0_20px_60px_-25px] shadow-structure/35 ring-1 ring-black/10">
         <div className="flex flex-wrap items-center gap-3 bg-structure px-4 py-3">
-          <LogoOnDark className="h-4 w-auto" />
-          <p className="text-[14px] font-extrabold text-structure-foreground">rev.plan</p>
+          <LogoOnDark className="h-5 w-auto" />
           <div className="ml-auto flex items-center gap-1.5">
             {["Week 2", "Week 3", "Week 4"].map((week, i) => (
               <span

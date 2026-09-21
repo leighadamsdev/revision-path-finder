@@ -140,14 +140,21 @@ export const PAPER_FILES: PaperFile[] = [
   },
 ];
 
-/** Papers held in the app for one subject, optionally narrowed to a tier. */
+/** Papers held in the app for one subject. All tiers are listed, with the
+ * student's own tier first so their papers are easiest to reach. */
 export function papersForSubject(subjectName: string, tier: string | null) {
   const name = subjectName.trim().toLowerCase();
-  const files = PAPER_FILES.filter((file) => {
-    if (file.subject.toLowerCase() !== name) return false;
-    if (!file.tier || !tier) return true;
-    return file.tier.toLowerCase() === tier.trim().toLowerCase();
-  });
+  const own = tier?.trim().toLowerCase() ?? null;
+  const files = PAPER_FILES.filter((file) => file.subject.toLowerCase() === name).sort(
+    (a, b) => {
+      if (own) {
+        const aOwn = a.tier?.toLowerCase() === own ? 0 : 1;
+        const bOwn = b.tier?.toLowerCase() === own ? 0 : 1;
+        if (aOwn !== bOwn) return aOwn - bOwn;
+      }
+      return a.paper.localeCompare(b.paper);
+    },
+  );
   return {
     questionPapers: files.filter((f) => f.kind === "qp"),
     markSchemes: files.filter((f) => f.kind === "ms"),

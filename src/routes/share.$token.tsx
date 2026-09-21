@@ -27,20 +27,6 @@ export const Route = createFileRoute("/share/$token")({
   component: SharedPlanPage,
 });
 
-function ConfidenceDots({ value, fill }: { value: number | null; fill: string }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      {[1, 2, 3, 4, 5].map((v) => (
-        <span
-          key={v}
-          className={`size-3.5 rounded-full ${
-            value != null && value >= v ? fill : "ring-1 ring-black/15"
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
 
 function SharedPlanPage() {
   const data = Route.useLoaderData() as SharedPlanPayload | null;
@@ -155,17 +141,6 @@ function SharedPlanPage() {
                                   <p className="mt-2 text-[14px] font-bold leading-snug">
                                     {session.topic_text || "Topic to be confirmed"}
                                   </p>
-                                  <div className="mt-2.5 flex items-center gap-2">
-                                    <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                                      Confidence
-                                    </span>
-                                    <ConfidenceDots value={session.confidence} fill={style.fill} />
-                                    {session.confidence == null && (
-                                      <span className="text-[11px] font-semibold text-muted-foreground">
-                                        not rated yet
-                                      </span>
-                                    )}
-                                  </div>
                                   <p className="mt-2 rounded-[10px] bg-card px-3 py-1.5 text-[12px] font-medium text-muted-foreground ring-1 ring-border">
                                     {session.gap_notes || "Gaps to revisit…"}
                                   </p>

@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateTopics } from "@/lib/revision.functions";
 import { catalogueSubject } from "@/lib/gcse-subjects";
 import { subjectUnits } from "@/lib/gcse-topics";
+import { examDateColumns, examDateList } from "@/lib/exam-dates";
 import { allocateWeek, weekWeight, type SubjectWeighting } from "@/lib/scheduling";
 
 export type Subject = {
@@ -12,12 +13,17 @@ export type Subject = {
   is_custom: boolean;
 };
 
-/** A subject as it sits inside one plan: tier, exam date and confidence are per plan. */
+/** A subject as it sits inside one plan: tier, exam dates and confidence are per plan. */
 export type PlanSubject = Subject & {
   tier: string | null;
   exam_date: string | null;
+  exam_date_2: string | null;
+  exam_date_3: string | null;
+  /** All the subject's exam dates, oldest first (up to three). */
+  exam_dates: string[];
   confidence: number | null;
 };
+
 
 export type DaySetting = { day: string; sessions: number; minutes: number };
 

@@ -107,24 +107,26 @@ function PapersPage() {
                 />
               </button>
 
-              {hasFiles ? (
-                <>
-                  <PaperList
-                    title="Question papers"
-                    icon={<FileText className="size-3.5" strokeWidth={2.5} />}
-                    files={questionPapers}
-                  />
-                  <PaperList
-                    title="Mark schemes"
-                    icon={<ClipboardCheck className="size-3.5" strokeWidth={2.5} />}
-                    files={markSchemes}
-                  />
-                </>
-              ) : (
-                <p className="mt-3 text-[13px] font-medium text-muted-foreground">
-                  No papers here for this subject yet — we're adding more.
-                </p>
-              )}
+              {!isCollapsed ? (
+                hasFiles ? (
+                  <>
+                    <PaperList
+                      title="Question papers"
+                      icon={<FileText className="size-3.5" strokeWidth={2.5} />}
+                      files={questionPapers}
+                    />
+                    <PaperList
+                      title="Mark schemes"
+                      icon={<ClipboardCheck className="size-3.5" strokeWidth={2.5} />}
+                      files={markSchemes}
+                    />
+                  </>
+                ) : (
+                  <p className="mt-3 text-[13px] font-medium text-muted-foreground">
+                    No papers here for this subject yet — we're adding more.
+                  </p>
+                )
+              ) : null}
             </div>
           );
         })}

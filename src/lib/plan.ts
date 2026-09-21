@@ -516,11 +516,17 @@ export async function regeneratePlanSessions(
   }
 }
 
-/** Adds or removes subjects on an existing plan, keeping tier / date / confidence values. */
+/** Adds or removes subjects on an existing plan, keeping tier / dates / confidence values. */
 export async function savePlanSubjects(
   planId: string,
-  subjects: Array<{ subjectId: string; tier: string | null; examDate: string | null; confidence: number | null }>,
+  subjects: Array<{
+    subjectId: string;
+    tier: string | null;
+    examDates: string[];
+    confidence: number | null;
+  }>,
 ) {
+
   const { data: current, error } = await supabase
     .from("plan_subjects")
     .select("id, subject_id")

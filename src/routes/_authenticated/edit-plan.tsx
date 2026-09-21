@@ -361,27 +361,16 @@ function EditPlanPage() {
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                        Exam date
+                        Exam dates (up to 3)
                       </span>
-                      <div className="mt-1 flex items-center gap-2">
-                        <div className="min-w-0 flex-1">
-                          <DatePicker
-                            value={row.examDate ?? ""}
-                            onChange={(value) => patchRow(row.subjectId, { examDate: value || null })}
-                            label="Not set yet"
-                          />
-                        </div>
-                        {row.examDate ? (
-                          <button
-                            type="button"
-                            onClick={() => patchRow(row.subjectId, { examDate: null })}
-                            className="text-[12px] font-bold text-muted-foreground hover:text-foreground"
-                          >
-                            Clear
-                          </button>
-                        ) : null}
+                      <div className="mt-1">
+                        <ExamDatesField
+                          dates={row.examDates}
+                          onChange={(dates) => patchRow(row.subjectId, { examDates: dates })}
+                        />
                       </div>
                     </div>
+
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                         Confidence {row.confidence ? `${row.confidence}/5` : ""}

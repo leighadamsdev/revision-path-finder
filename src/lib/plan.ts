@@ -551,7 +551,7 @@ export async function savePlanSubjects(
         plan_id: planId,
         subject_id: s.subjectId,
         tier: s.tier,
-        exam_date: s.examDate,
+        ...examDateColumns(s.examDates),
         confidence: s.confidence,
       })),
     );
@@ -561,9 +561,14 @@ export async function savePlanSubjects(
   for (const subject of subjects.filter((s) => existingIds.has(s.subjectId))) {
     const { error: updateError } = await supabase
       .from("plan_subjects")
-      .update({ tier: subject.tier, exam_date: subject.examDate, confidence: subject.confidence })
+      .update({
+        tier: subject.tier,
+        ...examDateColumns(subject.examDates),
+        confidence: subject.confidence,
+      })
       .eq("plan_id", planId)
       .eq("subject_id", subject.subjectId);
+
     if (updateError) throw updateError;
   }
 }

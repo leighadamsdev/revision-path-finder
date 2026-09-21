@@ -55,7 +55,9 @@ function Landing() {
     <div className="min-h-screen bg-background font-sans text-foreground">
       <header className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-2.5">
-          <Logo className="h-7 w-auto" />
+          <span className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 shadow-[0_2px_10px_rgba(3,49,58,0.08)]">
+            <Logo className="h-11 w-auto" />
+          </span>
         </div>
         <Link
           to="/auth"

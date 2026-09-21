@@ -29,7 +29,7 @@ const HOW_STEPS = [
   "Either:\n1. Choose the exact topics from a pre-populated list\n2. Download your own topic list\n",
   "Lock in how many weeks you have until exam day",
   "Let rev.plan build you a week-by-week, session by session plan.",
-  "Print it out or follow it online, it is up to you.",
+  "Print it out, share it or follow it online, it is up to you.",
 ];
 
 const POINTS = [

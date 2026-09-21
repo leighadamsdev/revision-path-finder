@@ -1,15 +1,4 @@
-import aqaP1ms from "@/assets/papers/Higher_November_2024_Paper1_NonCalculator_MS.pdf.asset.json";
-import aqaP1qp from "@/assets/papers/Higher_November_2024_Paper1_NonCalculator_QP.pdf.asset.json";
-import aqaP2ms from "@/assets/papers/Higher_November_2024_Paper2_Calculator_MS.pdf.asset.json";
-import aqaP2qp from "@/assets/papers/Higher_November_2024_Paper2_Calculator_QP.pdf.asset.json";
-import aqaP3ms from "@/assets/papers/Higher_November_2024_Paper3_Calculator_MS.pdf.asset.json";
-import aqaP3qp from "@/assets/papers/Higher_November_2024_Paper3_Calculator_QP.pdf.asset.json";
-import edxF1qp from "@/assets/papers/Edexcel_June_2024_Foundation_Paper1_NonCalculator_QP.pdf.asset.json";
-import edxF2qp from "@/assets/papers/Edexcel_June_2024_Foundation_Paper2_Calculator_QP.pdf.asset.json";
-import edxF3qp from "@/assets/papers/Edexcel_June_2024_Foundation_Paper3_Calculator_QP.pdf.asset.json";
-import edxH1qp from "@/assets/papers/Edexcel_June_2024_Higher_Paper1_NonCalculator_QP.pdf.asset.json";
-import edxH2qp from "@/assets/papers/Edexcel_June_2024_Higher_Paper2_Calculator_QP.pdf.asset.json";
-import edxH3qp from "@/assets/papers/Edexcel_June_2024_Higher_Paper3_Calculator_QP.pdf.asset.json";
+const paperUrl = (filename: string) => `/papers/${filename}`;
 
 export type PaperKind = "qp" | "ms";
 
@@ -35,7 +24,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "November 2024",
     paper: "Paper 1 (non-calculator)",
     kind: "qp",
-    url: aqaP1qp.url,
+    url: paperUrl("Higher_November_2024_Paper1_NonCalculator_QP.pdf"),
   },
   {
     subject: "Mathematics",
@@ -44,7 +33,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "November 2024",
     paper: "Paper 1 (non-calculator)",
     kind: "ms",
-    url: aqaP1ms.url,
+    url: paperUrl("Higher_November_2024_Paper1_NonCalculator_MS.pdf"),
   },
   {
     subject: "Mathematics",
@@ -53,7 +42,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "November 2024",
     paper: "Paper 2 (calculator)",
     kind: "qp",
-    url: aqaP2qp.url,
+    url: paperUrl("Higher_November_2024_Paper2_Calculator_QP.pdf"),
   },
   {
     subject: "Mathematics",
@@ -62,7 +51,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "November 2024",
     paper: "Paper 2 (calculator)",
     kind: "ms",
-    url: aqaP2ms.url,
+    url: paperUrl("Higher_November_2024_Paper2_Calculator_MS.pdf"),
   },
   {
     subject: "Mathematics",
@@ -71,7 +60,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "November 2024",
     paper: "Paper 3 (calculator)",
     kind: "qp",
-    url: aqaP3qp.url,
+    url: paperUrl("Higher_November_2024_Paper3_Calculator_QP.pdf"),
   },
   {
     subject: "Mathematics",
@@ -80,7 +69,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "November 2024",
     paper: "Paper 3 (calculator)",
     kind: "ms",
-    url: aqaP3ms.url,
+    url: paperUrl("Higher_November_2024_Paper3_Calculator_MS.pdf"),
   },
 
   // Edexcel (Pearson) — June 2024
@@ -91,7 +80,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "June 2024",
     paper: "Paper 1 (non-calculator)",
     kind: "qp",
-    url: edxF1qp.url,
+    url: paperUrl("Edexcel_June_2024_Foundation_Paper1_NonCalculator_QP.pdf"),
   },
   {
     subject: "Mathematics",
@@ -100,7 +89,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "June 2024",
     paper: "Paper 2 (calculator)",
     kind: "qp",
-    url: edxF2qp.url,
+    url: paperUrl("Edexcel_June_2024_Foundation_Paper2_Calculator_QP.pdf"),
   },
   {
     subject: "Mathematics",
@@ -109,7 +98,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "June 2024",
     paper: "Paper 3 (calculator)",
     kind: "qp",
-    url: edxF3qp.url,
+    url: paperUrl("Edexcel_June_2024_Foundation_Paper3_Calculator_QP.pdf"),
   },
   {
     subject: "Mathematics",
@@ -118,7 +107,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "June 2024",
     paper: "Paper 1 (non-calculator)",
     kind: "qp",
-    url: edxH1qp.url,
+    url: paperUrl("Edexcel_June_2024_Higher_Paper1_NonCalculator_QP.pdf"),
   },
   {
     subject: "Mathematics",
@@ -127,7 +116,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "June 2024",
     paper: "Paper 2 (calculator)",
     kind: "qp",
-    url: edxH2qp.url,
+    url: paperUrl("Edexcel_June_2024_Higher_Paper2_Calculator_QP.pdf"),
   },
   {
     subject: "Mathematics",
@@ -136,7 +125,7 @@ export const PAPER_FILES: PaperFile[] = [
     series: "June 2024",
     paper: "Paper 3 (calculator)",
     kind: "qp",
-    url: edxH3qp.url,
+    url: paperUrl("Edexcel_June_2024_Higher_Paper3_Calculator_QP.pdf"),
   },
 ];
 

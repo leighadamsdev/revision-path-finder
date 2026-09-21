@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FileText, ClipboardCheck, ChevronDown, Download } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
@@ -40,24 +39,6 @@ function PaperList({
 }) {
   if (files.length === 0) return null;
 
-  async function downloadPaper(file: PaperFile) {
-    try {
-      const response = await fetch(file.url);
-      if (!response.ok) throw new Error("Download failed");
-      const blobUrl = URL.createObjectURL(await response.blob());
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = decodeURIComponent(file.url.split("/").pop() ?? `${file.paper}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1_000);
-    } catch (error) {
-      console.error(error);
-      toast.error("That paper couldn't be downloaded. Please try again.");
-    }
-  }
-
   return (
     <div className="mt-3">
       <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
@@ -80,18 +61,20 @@ function PaperList({
             <span className="flex shrink-0 items-center gap-2">
               <a
                 href={file.url}
+                target="_blank"
+                rel="noreferrer"
                 className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-extrabold text-primary-foreground"
               >
                 Open
               </a>
-              <button
-                type="button"
-                onClick={() => void downloadPaper(file)}
+              <a
+                href={file.url}
+                download
                 aria-label={`Download ${file.paper}`}
                 className="rounded-full px-2 py-1.5 text-muted-foreground ring-1 ring-border"
               >
                 <Download className="size-3.5" strokeWidth={2.5} />
-              </button>
+              </a>
             </span>
           </div>
         ))}

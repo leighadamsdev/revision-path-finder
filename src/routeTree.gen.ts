@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
+import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
 import { Route as AuthenticatedPapersRouteImport } from './routes/_authenticated/papers'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
@@ -50,6 +51,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
 const AuthenticatedEditPlanRoute = AuthenticatedEditPlanRouteImport.update({
   id: '/edit-plan',
   path: '/edit-plan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExamsRoute = AuthenticatedExamsRouteImport.update({
+  id: '/exams',
+  path: '/exams',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPapersRoute = AuthenticatedPapersRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
+  '/exams': typeof AuthenticatedExamsRoute
   '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
+  '/exams': typeof AuthenticatedExamsRoute
   '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
+  '/_authenticated/exams': typeof AuthenticatedExamsRoute
   '/_authenticated/papers': typeof AuthenticatedPapersRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin'
     | '/edit-plan'
+    | '/exams'
     | '/papers'
     | '/plan'
     | '/print-plan'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin'
     | '/edit-plan'
+    | '/exams'
     | '/papers'
     | '/plan'
     | '/print-plan'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/admin'
     | '/_authenticated/edit-plan'
+    | '/_authenticated/exams'
     | '/_authenticated/papers'
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
@@ -230,6 +242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEditPlanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/exams': {
+      id: '/_authenticated/exams'
+      path: '/exams'
+      fullPath: '/exams'
+      preLoaderRoute: typeof AuthenticatedExamsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/papers': {
       id: '/_authenticated/papers'
       path: '/papers'
@@ -285,6 +304,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedEditPlanRoute: typeof AuthenticatedEditPlanRoute
+  AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
   AuthenticatedPapersRoute: typeof AuthenticatedPapersRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
@@ -296,6 +316,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedEditPlanRoute: AuthenticatedEditPlanRoute,
+  AuthenticatedExamsRoute: AuthenticatedExamsRoute,
   AuthenticatedPapersRoute: AuthenticatedPapersRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,

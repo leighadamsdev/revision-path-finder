@@ -12,6 +12,8 @@ import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-s
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
 import { DatePicker } from "@/components/DatePicker";
+import { ExamDatesField } from "@/components/ExamDatesField";
+
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 
 

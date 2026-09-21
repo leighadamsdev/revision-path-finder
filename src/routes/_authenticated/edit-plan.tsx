@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { DatePicker } from "@/components/DatePicker";
+import { ExamDatesField } from "@/components/ExamDatesField";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -423,7 +425,7 @@ function EditPlanPage() {
                       name: subject.name,
                       colorKey: subject.color_key,
                       tier: null,
-                      examDate: null,
+                      examDates: [],
                       confidence: null,
                     },
                   ]);

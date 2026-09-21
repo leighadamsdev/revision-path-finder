@@ -28,8 +28,8 @@ const HOW_STEPS = [
   "Tell revplan the subjects and tiers you are studying",
   "Either:\n1. Choose the exact topics from a pre-populated list\n2. Download your own topic list\n",
   "Lock in how many weeks you have until exam day",
-  "Let rev.plan build you a week-by-week, session by session plan.",
-  "Print it out, share it or follow it online, it is up to you.",
+  "Let revplan build you a week-by-week, session by session plan.",
+  "Print it out, share it or use it online, it is up to you.",
 ];
 
 const POINTS = [

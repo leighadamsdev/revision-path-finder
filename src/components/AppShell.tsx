@@ -6,6 +6,7 @@ import { CalendarRange, CircleGauge, FileText, Pencil, Settings, Sparkles } from
 import { supabase } from "@/integrations/supabase/client";
 import { useActivePlan } from "@/hooks/useActivePlan";
 import { useIsAdmin } from "@/hooks/useRole";
+import { LogoOnDark } from "@/components/Logo";
 
 
 const TABS = [
@@ -43,11 +44,8 @@ export function AppShell({
         <div className="mx-auto max-w-5xl px-4 pb-3 pt-4 sm:px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <div className="grid size-8 shrink-0 place-items-center rounded-[10px] bg-primary">
-                <span className="text-sm font-extrabold text-primary-foreground">R</span>
-              </div>
+              <LogoOnDark className="h-5 w-auto" />
               <div className="min-w-0 leading-none">
-                <p className="text-[15px] font-extrabold tracking-tight">rev.plan</p>
                 {plan ? (
                   plans.length > 1 ? (
                     <select

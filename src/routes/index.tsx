@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
+import { Logo, LogoOnDark } from "@/components/Logo";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -53,10 +55,7 @@ function Landing() {
     <div className="min-h-screen bg-background font-sans text-foreground">
       <header className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-2.5">
-          <div className="grid size-8 place-items-center rounded-[10px] bg-structure">
-            <span className="text-sm font-extrabold text-structure-foreground">R</span>
-          </div>
-          <p className="text-[15px] font-extrabold tracking-tight">rev.plan</p>
+          <Logo className="h-7 w-auto" />
         </div>
         <Link
           to="/auth"
@@ -200,10 +199,7 @@ function PlanMockup() {
       </p>
       <div className="mt-3 overflow-hidden rounded-[20px] bg-card shadow-[0_20px_60px_-25px] shadow-structure/35 ring-1 ring-black/10">
         <div className="flex flex-wrap items-center gap-3 bg-structure px-4 py-3">
-          <div className="grid size-7 place-items-center rounded-lg bg-primary">
-            <span className="text-[13px] font-extrabold text-primary-foreground">R</span>
-          </div>
-          <p className="text-[14px] font-extrabold text-structure-foreground">rev.plan</p>
+          <LogoOnDark className="h-5 w-auto" />
           <div className="ml-auto flex items-center gap-1.5">
             {["Week 2", "Week 3", "Week 4"].map((week, i) => (
               <span

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 
 import { getSharedPlan, type SharedPlanPayload } from "@/lib/share.functions";
+import { LogoOnDark } from "@/components/Logo";
 import { subjectStyle } from "@/lib/subjects";
 import { planDayDate, sortPlanDays } from "@/lib/plan-dates";
 
@@ -48,12 +49,7 @@ function SharedPlanPage() {
     <div className="min-h-screen bg-background font-sans text-foreground">
       <header className="bg-structure">
         <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-5 py-4">
-          <div className="grid size-8 place-items-center rounded-[10px] bg-primary">
-            <span className="text-sm font-extrabold text-primary-foreground">R</span>
-          </div>
-          <p className="text-[15px] font-extrabold tracking-tight text-structure-foreground">
-            rev.plan
-          </p>
+          <LogoOnDark className="h-5 w-auto" />
           <span className="ml-auto rounded-full bg-structure-foreground/10 px-3 py-1 text-[11px] font-extrabold text-structure-foreground/80">
             Shared read-only
           </span>

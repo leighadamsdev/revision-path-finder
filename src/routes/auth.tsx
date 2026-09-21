@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
+import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -108,10 +109,7 @@ function AuthPage() {
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
       <header className="mx-auto w-full max-w-md px-5 py-5">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="grid size-8 place-items-center rounded-[10px] bg-structure">
-            <span className="text-sm font-extrabold text-structure-foreground">R</span>
-          </div>
-          <p className="text-[15px] font-extrabold tracking-tight">rev.plan</p>
+          <Logo className="h-7 w-auto" />
         </Link>
       </header>
 

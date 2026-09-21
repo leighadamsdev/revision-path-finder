@@ -54,9 +54,10 @@ type Row = {
   name: string;
   colorKey: string;
   tier: string | null;
-  examDate: string | null;
+  examDates: string[];
   confidence: number | null;
 };
+
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -107,7 +108,7 @@ function EditPlanPage() {
         name: subject.name,
         colorKey: subject.color_key,
         tier: subject.tier,
-        examDate: subject.exam_date,
+        examDates: subject.exam_dates,
         confidence: subject.confidence,
       })),
     );
@@ -133,19 +134,25 @@ function EditPlanPage() {
         minutes: days[day]?.minutes ?? 45,
       }));
 
-      await savePlanSubjects(plan.id, rows);
+      const cleanRows = rows.map((row) => ({
+        ...row,
+        examDates: [...new Set(row.examDates.filter(Boolean))].sort(),
+      }));
+
+      await savePlanSubjects(plan.id, cleanRows);
       await updatePlanSettings(plan.id, { name, startDate, weeks, days: daySettings });
       await regeneratePlanSessions(plan.id, {
         startDate,
         weeks,
         days: daySettings,
-        subjects: rows.map((row) => ({
+        subjects: cleanRows.map((row) => ({
           subjectId: row.subjectId,
           name: row.name,
-          examDate: row.examDate,
+          examDates: row.examDates,
           confidence: row.confidence,
         })),
       });
+
 
       await queryClient.invalidateQueries();
       toast.success("Plan updated — your timetable has been rebuilt.");

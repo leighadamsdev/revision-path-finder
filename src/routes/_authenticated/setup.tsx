@@ -225,12 +225,16 @@ function SetupPage() {
       await ensureProfile(user);
       const subjectIds: string[] = [];
       const tiers: Record<string, string | null> = {};
+      const examDateMap: Record<string, string | null> = {};
+      const confidenceMap: Record<string, number | null> = {};
       const chosenTopics: Record<string, string[]> = {};
       const priorityTopics: Record<string, string[]> = {};
       for (const pick of picks) {
         const id = await resolveSubjectId(pick.name, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
+        examDateMap[id] = examDates[pick.name] || null;
+        confidenceMap[id] = confidences[pick.name] ?? null;
         const topics = topicsFor(pick.name);
         if (topics.length) chosenTopics[id] = topics;
         const priority = prioritiesFor(pick.name);
@@ -251,9 +255,12 @@ function SetupPage() {
         contentMode: "ai",
         subjectIds,
         tiers,
+        examDates: examDateMap,
+        confidence: confidenceMap,
         chosenTopics,
         priorityTopics,
       });
+
       window.localStorage.setItem("revisionpath.activePlan", planId);
       await queryClient.invalidateQueries();
       navigate({ to: "/plan" });

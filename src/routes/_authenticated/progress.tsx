@@ -72,10 +72,13 @@ function ProgressPage() {
               <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
                 {examDate
                   ? daysLeft != null && daysLeft < 0
-                    ? `Exam sat ${format(examDate, "d MMM")}`
-                    : `Exam ${format(examDate, "EEE d MMM")} · ${daysLeft} days`
+                    ? `Last exam sat ${format(examDate, "d MMM")}`
+                    : `Next exam ${format(examDate, "EEE d MMM")} · ${daysLeft} days${
+                        examDates.length > 1 ? ` · ${examDates.length} exams` : ""
+                      }`
                   : "No exam date set yet"}
               </p>
+
             </div>
           );
         })}

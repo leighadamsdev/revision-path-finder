@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { DatePicker } from "@/components/DatePicker";
+import { ExamDatesField } from "@/components/ExamDatesField";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -54,9 +56,10 @@ type Row = {
   name: string;
   colorKey: string;
   tier: string | null;
-  examDate: string | null;
+  examDates: string[];
   confidence: number | null;
 };
+
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -107,7 +110,7 @@ function EditPlanPage() {
         name: subject.name,
         colorKey: subject.color_key,
         tier: subject.tier,
-        examDate: subject.exam_date,
+        examDates: subject.exam_dates,
         confidence: subject.confidence,
       })),
     );
@@ -133,19 +136,25 @@ function EditPlanPage() {
         minutes: days[day]?.minutes ?? 45,
       }));
 
-      await savePlanSubjects(plan.id, rows);
+      const cleanRows = rows.map((row) => ({
+        ...row,
+        examDates: [...new Set(row.examDates.filter(Boolean))].sort(),
+      }));
+
+      await savePlanSubjects(plan.id, cleanRows);
       await updatePlanSettings(plan.id, { name, startDate, weeks, days: daySettings });
       await regeneratePlanSessions(plan.id, {
         startDate,
         weeks,
         days: daySettings,
-        subjects: rows.map((row) => ({
+        subjects: cleanRows.map((row) => ({
           subjectId: row.subjectId,
           name: row.name,
-          examDate: row.examDate,
+          examDates: row.examDates,
           confidence: row.confidence,
         })),
       });
+
 
       await queryClient.invalidateQueries();
       toast.success("Plan updated — your timetable has been rebuilt.");
@@ -354,27 +363,16 @@ function EditPlanPage() {
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                        Exam date
+                        Exam dates (up to 3)
                       </span>
-                      <div className="mt-1 flex items-center gap-2">
-                        <div className="min-w-0 flex-1">
-                          <DatePicker
-                            value={row.examDate ?? ""}
-                            onChange={(value) => patchRow(row.subjectId, { examDate: value || null })}
-                            label="Not set yet"
-                          />
-                        </div>
-                        {row.examDate ? (
-                          <button
-                            type="button"
-                            onClick={() => patchRow(row.subjectId, { examDate: null })}
-                            className="text-[12px] font-bold text-muted-foreground hover:text-foreground"
-                          >
-                            Clear
-                          </button>
-                        ) : null}
+                      <div className="mt-1">
+                        <ExamDatesField
+                          dates={row.examDates}
+                          onChange={(dates) => patchRow(row.subjectId, { examDates: dates })}
+                        />
                       </div>
                     </div>
+
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                         Confidence {row.confidence ? `${row.confidence}/5` : ""}
@@ -427,7 +425,7 @@ function EditPlanPage() {
                       name: subject.name,
                       colorKey: subject.color_key,
                       tier: null,
-                      examDate: null,
+                      examDates: [],
                       confidence: null,
                     },
                   ]);

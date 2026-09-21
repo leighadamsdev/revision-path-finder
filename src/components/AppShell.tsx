@@ -1,7 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { CalendarRange, CircleGauge, FileText, Pencil, Settings, Sparkles } from "lucide-react";
+import {
+  CalendarDays,
+  CalendarRange,
+  CircleGauge,
+  FileText,
+  Pencil,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useActivePlan } from "@/hooks/useActivePlan";
@@ -11,10 +19,12 @@ import { LogoOnDark } from "@/components/Logo";
 
 const TABS = [
   { to: "/plan", label: "Timetable", icon: CalendarRange },
+  { to: "/exams", label: "Exams", icon: CalendarDays },
   { to: "/progress", label: "Progress", icon: CircleGauge },
   { to: "/papers", label: "Past Papers", icon: FileText },
   { to: "/sites", label: "Sites", icon: Sparkles },
 ] as const;
+
 
 const ADMIN_TAB = { to: "/admin", label: "Admin", icon: Settings } as const;
 
@@ -103,7 +113,7 @@ export function AppShell({
 
       <nav className="app-nav fixed inset-x-0 bottom-0 z-20 border-t border-structure bg-structure text-structure-foreground">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className={`grid ${isAdmin ? "grid-cols-5" : "grid-cols-4"}`}>
+          <div className={`grid ${isAdmin ? "grid-cols-6" : "grid-cols-5"}`}>
             {(isAdmin ? [...TABS, ADMIN_TAB] : TABS).map((tab) => (
               <Link
                 key={tab.to}

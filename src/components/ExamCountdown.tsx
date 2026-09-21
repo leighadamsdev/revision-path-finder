@@ -8,11 +8,18 @@ import { subjectStyle } from "@/lib/subjects";
 export function ExamCountdown({ subjects }: { subjects: PlanSubject[] }) {
   const today = new Date();
   const dated = subjects
-    .filter((subject) => Boolean(subject.exam_date))
-    .map((subject) => {
-      const date = parseISO(subject.exam_date!);
-      return { subject, date, days: differenceInCalendarDays(date, today) };
-    })
+    .flatMap((subject) =>
+      subject.exam_dates.map((value, index) => {
+        const date = parseISO(value);
+        return {
+          key: `${subject.id}-${index}`,
+          subject,
+          paper: subject.exam_dates.length > 1 ? `Paper ${index + 1}` : null,
+          date,
+          days: differenceInCalendarDays(date, today),
+        };
+      }),
+    )
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   if (dated.length === 0) return null;
@@ -26,19 +33,24 @@ export function ExamCountdown({ subjects }: { subjects: PlanSubject[] }) {
         Exam countdown
       </p>
       <ul className="mt-3 flex flex-wrap gap-2">
-        {[...upcoming, ...done].map(({ subject, date, days }) => {
+        {[...upcoming, ...done].map(({ key, subject, paper, date, days }) => {
           const style = subjectStyle(subject.color_key);
           const sat = days < 0;
           return (
             <li
-              key={subject.id}
+              key={key}
               className={`flex min-w-[9.5rem] flex-1 items-center gap-2.5 rounded-[14px] bg-background px-3 py-2.5 ring-1 ring-black/5 sm:flex-none ${
                 sat ? "opacity-55" : ""
               }`}
             >
               <span className={`size-2 shrink-0 rounded-full ${style.dot}`} />
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-extrabold">{subject.name}</p>
+                <p className="truncate text-[13px] font-extrabold">
+                  {subject.name}
+                  {paper ? (
+                    <span className="font-semibold text-muted-foreground"> · {paper}</span>
+                  ) : null}
+                </p>
                 <p className="text-[11px] font-semibold text-muted-foreground">
                   {format(date, "EEE d MMM")}
                 </p>

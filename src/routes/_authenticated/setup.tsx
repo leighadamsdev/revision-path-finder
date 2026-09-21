@@ -12,6 +12,8 @@ import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-s
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
 import { DatePicker } from "@/components/DatePicker";
+import { ExamDatesField } from "@/components/ExamDatesField";
+
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 
 
@@ -71,8 +73,9 @@ function SetupPage() {
   const [parsing, setParsing] = useState<string | null>(null);
 
   const [customName, setCustomName] = useState("");
-  /** Optional exam date per subject name. */
-  const [examDates, setExamDates] = useState<Record<string, string>>({});
+  /** Up to three optional exam dates per subject name. */
+  const [examDates, setExamDates] = useState<Record<string, string[]>>({});
+
   /** Optional 1–5 confidence per subject name. */
   const [confidences, setConfidences] = useState<Record<string, number | null>>({});
 
@@ -225,7 +228,7 @@ function SetupPage() {
       await ensureProfile(user);
       const subjectIds: string[] = [];
       const tiers: Record<string, string | null> = {};
-      const examDateMap: Record<string, string | null> = {};
+      const examDateMap: Record<string, string[]> = {};
       const confidenceMap: Record<string, number | null> = {};
       const chosenTopics: Record<string, string[]> = {};
       const priorityTopics: Record<string, string[]> = {};
@@ -233,7 +236,7 @@ function SetupPage() {
         const id = await resolveSubjectId(pick.name, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
-        examDateMap[id] = examDates[pick.name] || null;
+        examDateMap[id] = [...new Set((examDates[pick.name] ?? []).filter(Boolean))].sort();
         confidenceMap[id] = confidences[pick.name] ?? null;
         const topics = topicsFor(pick.name);
         if (topics.length) chosenTopics[id] = topics;
@@ -458,30 +461,19 @@ function SetupPage() {
                         <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
                           <div>
                             <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                              Exam date (optional)
+                              Exam dates (optional, up to 3)
                             </span>
-                            <div className="mt-1 flex items-center gap-2">
-                              <div className="min-w-0 flex-1">
-                                <DatePicker
-                                  value={examDates[pick.name] ?? ""}
-                                  onChange={(value) =>
-                                    setExamDates((prev) => ({ ...prev, [pick.name]: value }))
-                                  }
-                                  label="Not sure yet"
-                                />
-                              </div>
-                              {examDates[pick.name] ? (
-                                <button
-                                  onClick={() =>
-                                    setExamDates((prev) => ({ ...prev, [pick.name]: "" }))
-                                  }
-                                  className="text-[12px] font-bold text-muted-foreground hover:text-foreground"
-                                >
-                                  Clear
-                                </button>
-                              ) : null}
+                            <div className="mt-1">
+                              <ExamDatesField
+                                dates={examDates[pick.name] ?? []}
+                                onChange={(dates) =>
+                                  setExamDates((prev) => ({ ...prev, [pick.name]: dates }))
+                                }
+                                label="Not sure yet"
+                              />
                             </div>
                           </div>
+
                           <div>
                             <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                               How confident are you? {confidences[pick.name] ? `${confidences[pick.name]}/5` : ""}

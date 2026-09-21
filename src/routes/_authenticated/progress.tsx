@@ -45,8 +45,11 @@ function ProgressPage() {
           const own = sessions.filter((s) => s.subject_id === subject.id);
           const share = sessions.length ? Math.round((own.length / sessions.length) * 100) : 0;
           const style = subjectStyle(subject.color_key);
-          const examDate = subject.exam_date ? parseISO(subject.exam_date) : null;
+          const examDates = subject.exam_dates.map((value) => parseISO(value));
+          const next = examDates.find((date) => differenceInCalendarDays(date, new Date()) >= 0);
+          const examDate = next ?? examDates[examDates.length - 1] ?? null;
           const daysLeft = examDate ? differenceInCalendarDays(examDate, new Date()) : null;
+
           return (
             <div key={subject.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
               <span
@@ -69,10 +72,13 @@ function ProgressPage() {
               <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
                 {examDate
                   ? daysLeft != null && daysLeft < 0
-                    ? `Exam sat ${format(examDate, "d MMM")}`
-                    : `Exam ${format(examDate, "EEE d MMM")} · ${daysLeft} days`
+                    ? `Last exam sat ${format(examDate, "d MMM")}`
+                    : `Next exam ${format(examDate, "EEE d MMM")} · ${daysLeft} days${
+                        examDates.length > 1 ? ` · ${examDates.length} exams` : ""
+                      }`
                   : "No exam date set yet"}
               </p>
+
             </div>
           );
         })}

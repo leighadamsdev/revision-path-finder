@@ -3,12 +3,13 @@ import { differenceInCalendarDays, parseISO } from "date-fns";
 /**
  * Session weighting. Two things pull a subject up the queue:
  *  - a low confidence rating (1–2 means "I need more of this")
- *  - an exam that is close (and nothing at all once that exam has been sat)
+ *  - an exam that is close (and nothing at all once every exam has been sat)
  */
 
 export type SubjectWeighting = {
   subjectId: string;
-  examDate?: string | null;
+  /** Up to three exam dates (yyyy-MM-dd), oldest first. */
+  examDates?: string[];
   confidence?: number | null;
 };
 
@@ -30,18 +31,25 @@ export function weekOfPlan(startDate: string | null | undefined, date: string | 
 }
 
 /**
- * Ramps a subject up as its exam approaches and drops it to zero afterwards.
- * No exam date means an even spread (weight 1 every week), as before.
+ * Ramps a subject up as its first exam approaches and drops it to zero once the last
+ * of its exams has been sat. No exam dates means an even spread (weight 1 every week).
  */
 export function examDateWeight(
   startDate: string | null | undefined,
-  examDate: string | null | undefined,
+  examDates: string[] | null | undefined,
   week: number,
 ) {
-  const examWeek = weekOfPlan(startDate, examDate);
-  if (examWeek == null) return 1;
-  if (week > examWeek) return 0;
-  const span = Math.max(1, examWeek - 1);
+  const weeks = (examDates ?? [])
+    .map((date) => weekOfPlan(startDate, date))
+    .filter((value): value is number => value != null)
+    .sort((a, b) => a - b);
+  if (weeks.length === 0) return 1;
+
+  const last = weeks[weeks.length - 1]!;
+  if (week > last) return 0;
+
+  const first = weeks[0]!;
+  const span = Math.max(1, first - 1);
   const urgency = Math.min(1, Math.max(0, (week - 1) / span));
   return 0.7 + 1.1 * urgency;
 }
@@ -51,7 +59,7 @@ export function weekWeight(
   subject: SubjectWeighting,
   week: number,
 ) {
-  return examDateWeight(startDate, subject.examDate, week) * confidenceWeight(subject.confidence);
+  return examDateWeight(startDate, subject.examDates, week) * confidenceWeight(subject.confidence);
 }
 
 /**

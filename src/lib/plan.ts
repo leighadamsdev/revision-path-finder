@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateTopics } from "@/lib/revision.functions";
 import { catalogueSubject } from "@/lib/gcse-subjects";
 import { subjectUnits } from "@/lib/gcse-topics";
+import { examDateColumns, examDateList } from "@/lib/exam-dates";
 import { allocateWeek, weekWeight, type SubjectWeighting } from "@/lib/scheduling";
 
 export type Subject = {
@@ -12,12 +13,17 @@ export type Subject = {
   is_custom: boolean;
 };
 
-/** A subject as it sits inside one plan: tier, exam date and confidence are per plan. */
+/** A subject as it sits inside one plan: tier, exam dates and confidence are per plan. */
 export type PlanSubject = Subject & {
   tier: string | null;
   exam_date: string | null;
+  exam_date_2: string | null;
+  exam_date_3: string | null;
+  /** All the subject's exam dates, oldest first (up to three). */
+  exam_dates: string[];
   confidence: number | null;
 };
+
 
 export type DaySetting = { day: string; sessions: number; minutes: number };
 
@@ -88,7 +94,9 @@ export async function disablePlanShare(planId: string) {
 export async function fetchPlanSubjects(planId: string): Promise<PlanSubject[]> {
   const { data, error } = await supabase
     .from("plan_subjects")
-    .select("tier, exam_date, confidence, subjects(id, name, exam_board, color_key, is_custom)")
+    .select(
+      "tier, exam_date, exam_date_2, exam_date_3, confidence, subjects(id, name, exam_board, color_key, is_custom)",
+    )
     .eq("plan_id", planId);
   if (error) throw error;
   return (data ?? [])
@@ -96,6 +104,8 @@ export async function fetchPlanSubjects(planId: string): Promise<PlanSubject[]> 
       const link = row as unknown as {
         tier: string | null;
         exam_date: string | null;
+        exam_date_2: string | null;
+        exam_date_3: string | null;
         confidence: number | null;
         subjects: Subject | null;
       };
@@ -104,25 +114,32 @@ export async function fetchPlanSubjects(planId: string): Promise<PlanSubject[]> 
         ...link.subjects,
         tier: link.tier,
         exam_date: link.exam_date,
+        exam_date_2: link.exam_date_2,
+        exam_date_3: link.exam_date_3,
+        exam_dates: examDateList(link),
         confidence: link.confidence,
       } satisfies PlanSubject;
     })
     .filter((s): s is PlanSubject => Boolean(s));
 }
 
-/** Saves an exam date and/or confidence rating for one subject in one plan. */
+/** Saves exam dates and/or a confidence rating for one subject in one plan. */
 export async function updatePlanSubjectMeta(
   planId: string,
   subjectId: string,
-  patch: { exam_date?: string | null; confidence?: number | null },
+  patch: { examDates?: string[]; confidence?: number | null },
 ) {
   const { error } = await supabase
     .from("plan_subjects")
-    .update(patch)
+    .update({
+      ...(patch.examDates ? examDateColumns(patch.examDates) : {}),
+      ...(patch.confidence !== undefined ? { confidence: patch.confidence } : {}),
+    })
     .eq("plan_id", planId)
     .eq("subject_id", subjectId);
   if (error) throw error;
 }
+
 
 export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   const { data, error } = await supabase
@@ -157,8 +174,9 @@ export type PlanDraft = {
   subjectIds: string[];
   /** Foundation / Higher per subject id, where the subject is tiered. */
   tiers?: Record<string, string | null>;
-  /** Optional exam date (yyyy-MM-dd) per subject id. */
-  examDates?: Record<string, string | null>;
+  /** Up to three optional exam dates (yyyy-MM-dd) per subject id. */
+  examDates?: Record<string, string[]>;
+
   /** Optional 1–5 confidence per subject id. */
   confidence?: Record<string, number | null>;
   /** Topics the student ticked from the GCSE checklist, per subject id. */
@@ -212,10 +230,11 @@ export function buildSchedule(input: ScheduleInput): Slot[] {
 function draftWeightings(draft: PlanDraft): SubjectWeighting[] {
   return draft.subjectIds.map((subjectId) => ({
     subjectId,
-    examDate: draft.examDates?.[subjectId] ?? null,
+    examDates: draft.examDates?.[subjectId] ?? [],
     confidence: draft.confidence?.[subjectId] ?? null,
   }));
 }
+
 
 /** Creates the plan, its subject links and every session row. */
 export async function createPlan(profileId: string, draft: PlanDraft) {
@@ -246,10 +265,11 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       plan_id: planId,
       subject_id: subjectId,
       tier: draft.tiers?.[subjectId] ?? null,
-      exam_date: draft.examDates?.[subjectId] ?? null,
+      ...examDateColumns(draft.examDates?.[subjectId] ?? []),
       confidence: draft.confidence?.[subjectId] ?? null,
     })),
   );
+
   if (linkError) throw linkError;
 
   const slots = buildSchedule({
@@ -496,11 +516,17 @@ export async function regeneratePlanSessions(
   }
 }
 
-/** Adds or removes subjects on an existing plan, keeping tier / date / confidence values. */
+/** Adds or removes subjects on an existing plan, keeping tier / dates / confidence values. */
 export async function savePlanSubjects(
   planId: string,
-  subjects: Array<{ subjectId: string; tier: string | null; examDate: string | null; confidence: number | null }>,
+  subjects: Array<{
+    subjectId: string;
+    tier: string | null;
+    examDates: string[];
+    confidence: number | null;
+  }>,
 ) {
+
   const { data: current, error } = await supabase
     .from("plan_subjects")
     .select("id, subject_id")
@@ -525,7 +551,7 @@ export async function savePlanSubjects(
         plan_id: planId,
         subject_id: s.subjectId,
         tier: s.tier,
-        exam_date: s.examDate,
+        ...examDateColumns(s.examDates),
         confidence: s.confidence,
       })),
     );
@@ -535,9 +561,14 @@ export async function savePlanSubjects(
   for (const subject of subjects.filter((s) => existingIds.has(s.subjectId))) {
     const { error: updateError } = await supabase
       .from("plan_subjects")
-      .update({ tier: subject.tier, exam_date: subject.examDate, confidence: subject.confidence })
+      .update({
+        tier: subject.tier,
+        ...examDateColumns(subject.examDates),
+        confidence: subject.confidence,
+      })
       .eq("plan_id", planId)
       .eq("subject_id", subject.subjectId);
+
     if (updateError) throw updateError;
   }
 }

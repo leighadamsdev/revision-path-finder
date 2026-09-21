@@ -1,7 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { CalendarRange, CircleGauge, FileText, Pencil, Settings, Sparkles } from "lucide-react";
+import {
+  CalendarDays,
+  CalendarRange,
+  CircleGauge,
+  FileText,
+  Pencil,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useActivePlan } from "@/hooks/useActivePlan";
@@ -11,10 +19,12 @@ import { LogoOnDark } from "@/components/Logo";
 
 const TABS = [
   { to: "/plan", label: "Timetable", icon: CalendarRange },
+  { to: "/exams", label: "Exams", icon: CalendarDays },
   { to: "/progress", label: "Progress", icon: CircleGauge },
   { to: "/papers", label: "Past Papers", icon: FileText },
   { to: "/sites", label: "Sites", icon: Sparkles },
 ] as const;
+
 
 const ADMIN_TAB = { to: "/admin", label: "Admin", icon: Settings } as const;
 

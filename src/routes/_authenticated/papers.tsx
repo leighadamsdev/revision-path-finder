@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
-import { papersForSubject, type PaperFile } from "@/lib/past-paper-files";
+import { papersForSubject, papersByBoard, type PaperFile } from "@/lib/past-paper-files";
 import { subjectStyle } from "@/lib/subjects";
 
 export const Route = createFileRoute("/_authenticated/papers")({

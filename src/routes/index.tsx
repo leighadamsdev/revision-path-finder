@@ -28,7 +28,7 @@ const HOW_STEPS = [
   "Tell revplan the subjects and tiers you are studying",
   "Choose the exact topics from a pre-populated list\nor Download your own topic list",
   "Lock in how many weeks you have until exam day",
-  "Let revplan build you a week-by-week, session by session plan.",
+  "Let revplan build you a week-by-week, session by session plan, linked to exam dates and your subject confidence",
   "Print it out, share it or use it online, it is up to you.",
 ];
 

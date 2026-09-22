@@ -4,7 +4,8 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
-import { KIND_LABELS, papersByBoard } from "@/lib/past-paper-files";
+import { catalogueSubject } from "@/lib/gcse-subjects";
+import { KIND_LABELS, allPaperSubjects, papersByBoard } from "@/lib/past-paper-files";
 import { subjectStyle } from "@/lib/subjects";
 
 export const Route = createFileRoute("/_authenticated/papers")({

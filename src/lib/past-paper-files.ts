@@ -47,6 +47,11 @@ export type BoardGroup = {
 
 const KIND_ORDER: PaperKind[] = ["qp", "ms", "insert", "resource"];
 
+/** Every subject we hold papers for, alphabetically. */
+export function allPaperSubjects(): string[] {
+  return [...new Set(PAPER_FILES.map((f) => f.subject))].sort((a, b) => a.localeCompare(b));
+}
+
 /**
  * All papers held for a subject, grouped by exam board, then by exam series
  * (most recent first), then by paper — with the question paper and its mark

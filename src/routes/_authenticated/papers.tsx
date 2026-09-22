@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FileText, ClipboardCheck, ChevronDown, Download } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
-import { papersForSubject, papersByBoard, type PaperFile } from "@/lib/past-paper-files";
+import { KIND_LABELS, papersByBoard } from "@/lib/past-paper-files";
 import { subjectStyle } from "@/lib/subjects";
 
 export const Route = createFileRoute("/_authenticated/papers")({
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/papers")({
       {
         name: "description",
         content:
-          "Question papers and mark schemes for the subjects in your revision plan, ready to open right here.",
+          "Question papers and mark schemes for the subjects in your revision plan, newest exams first.",
       },
       { property: "og:title", content: "Past papers — rev.plan" },
       {
@@ -28,82 +28,24 @@ export const Route = createFileRoute("/_authenticated/papers")({
   component: PapersPage,
 });
 
-function PaperList({
-  title,
-  icon,
-  files,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  files: PaperFile[];
-}) {
-  if (files.length === 0) return null;
-
-  return (
-    <div className="mt-3">
-      <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-        {icon}
-        {title}
-      </p>
-      <div className="mt-2 space-y-2">
-        {files.map((file) => (
-          <div
-            key={`${file.board}-${file.tier}-${file.series}-${file.kind}-${file.paper}`}
-            className="flex items-center justify-between gap-3 rounded-[12px] bg-background px-3 py-2.5 text-[13px] font-bold ring-1 ring-border"
-          >
-            <span className="min-w-0">
-              <span className="block truncate">{file.paper}</span>
-              <span className="block text-[11px] font-bold text-muted-foreground">
-                {file.tier ? `${file.tier} · ` : ""}
-                {file.series}
-              </span>
-            </span>
-            <span className="flex shrink-0 items-center gap-2">
-              <a
-                href={file.url}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-extrabold text-primary-foreground"
-              >
-                Open
-              </a>
-              <a
-                href={file.url}
-                download
-                aria-label={`Download ${file.paper}`}
-                className="rounded-full px-2 py-1.5 text-muted-foreground ring-1 ring-border"
-              >
-                <Download className="size-3.5" strokeWidth={2.5} />
-              </a>
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function PapersPage() {
   const { plan } = useActivePlan();
   const subjects = usePlanSubjects(plan?.id).data ?? [];
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-  const toggle = (id: string) =>
-    setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggle = (id: string) => setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
     <AppShell>
       <h1 className="text-2xl font-extrabold tracking-tight">Past papers</h1>
       <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-        Question papers and mark schemes for your subjects — open them straight from here.
+        Question papers and mark schemes for your subjects, most recent exams first.
       </p>
 
       <div className="mt-5 space-y-3">
         {subjects.map((subject) => {
-          const papers = papersForSubject(subject.name, subject.tier);
           const boardGroups = papersByBoard(subject.name, subject.tier);
           const style = subjectStyle(subject.color_key);
-          const hasFiles = papers.questionPapers.length > 0 || papers.markSchemes.length > 0;
           const isCollapsed = collapsed[subject.id] ?? false;
 
           return (
@@ -128,23 +70,44 @@ function PapersPage() {
               </button>
 
               {!isCollapsed ? (
-                hasFiles ? (
-                  <div className="mt-2 space-y-4">
+                boardGroups.length > 0 ? (
+                  <div className="mt-3 space-y-5">
                     {boardGroups.map((group) => (
                       <div key={group.board}>
-                        <p className="text-[12px] font-extrabold tracking-tight">
-                          {group.board}
-                        </p>
-                        <PaperList
-                          title="Question papers"
-                          icon={<FileText className="size-3.5" strokeWidth={2.5} />}
-                          files={group.questionPapers}
-                        />
-                        <PaperList
-                          title="Mark schemes"
-                          icon={<ClipboardCheck className="size-3.5" strokeWidth={2.5} />}
-                          files={group.markSchemes}
-                        />
+                        <p className="text-[12px] font-extrabold tracking-tight">{group.board}</p>
+                        <div className="mt-2 space-y-4">
+                          {group.series.map((series) => (
+                            <div key={series.seriesKey}>
+                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                                {series.series}
+                              </p>
+                              <div className="mt-2 space-y-2">
+                                {series.papers.map((paper) => (
+                                  <div
+                                    key={paper.label}
+                                    className="rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border"
+                                  >
+                                    <p className="text-[13px] font-bold">{paper.label}</p>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                      {paper.files.map((file) => (
+                                        <a
+                                          key={file.url}
+                                          href={file.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-[11px] font-extrabold text-primary-foreground"
+                                        >
+                                          {KIND_LABELS[file.kind]}
+                                          <ExternalLink className="size-3" strokeWidth={2.5} />
+                                        </a>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -154,7 +117,6 @@ function PapersPage() {
                   </p>
                 )
               ) : null}
-
             </div>
           );
         })}

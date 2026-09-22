@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/papers")({
       {
         name: "description",
         content:
-          "Question papers and mark schemes for the subjects in your revision plan, newest exams first.",
+          "Question papers and mark schemes for every GCSE subject, grouped by exam board, newest exams first.",
       },
       { property: "og:title", content: "Past papers — rev.plan" },
       {
@@ -31,29 +31,32 @@ export const Route = createFileRoute("/_authenticated/papers")({
 
 function PapersPage() {
   const { plan } = useActivePlan();
-  const subjects = usePlanSubjects(plan?.id).data ?? [];
+  const planSubjects = usePlanSubjects(plan?.id).data ?? [];
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-  const toggle = (id: string) => setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggle = (name: string) => setCollapsed((prev) => ({ ...prev, [name]: !prev[name] }));
+  const names = allPaperSubjects();
 
   return (
     <AppShell>
       <h1 className="text-2xl font-extrabold tracking-tight">Past papers</h1>
       <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-        Question papers and mark schemes for your subjects, most recent exams first.
+        Question papers and mark schemes for every subject, most recent exams first.
       </p>
 
       <div className="mt-5 space-y-3">
-        {subjects.map((subject) => {
-          const boardGroups = papersByBoard(subject.name, subject.tier);
-          const style = subjectStyle(subject.color_key);
-          const isCollapsed = collapsed[subject.id] ?? false;
+        {names.map((name) => {
+          const mine = planSubjects.find((s) => s.name.toLowerCase() === name.toLowerCase());
+          const tier = mine?.tier ?? null;
+          const boardGroups = papersByBoard(name, tier);
+          const style = subjectStyle(mine?.color_key ?? catalogueSubject(name)?.colorKey);
+          const isCollapsed = collapsed[name] ?? true;
 
           return (
-            <div key={subject.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+            <div key={name} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
               <button
                 type="button"
-                onClick={() => toggle(subject.id)}
+                onClick={() => toggle(name)}
                 aria-expanded={!isCollapsed}
                 className="flex w-full items-center justify-between gap-2 text-left"
               >
@@ -61,8 +64,8 @@ function PapersPage() {
                   className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${style.tag}`}
                 >
                   <span className={`size-1.5 rounded-full ${style.dot}`} />
-                  {subject.name}
-                  {subject.tier ? ` · ${subject.tier}` : ""}
+                  {name}
+                  {tier ? ` · ${tier}` : ""}
                 </span>
                 <ChevronDown
                   strokeWidth={2.5}

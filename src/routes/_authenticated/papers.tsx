@@ -124,9 +124,9 @@ function PapersPage() {
             </div>
           );
         })}
-        {subjects.length === 0 ? (
+        {names.length === 0 ? (
           <p className="text-[13px] font-medium text-muted-foreground">
-            Add subjects to your plan and their papers will show up here.
+            No papers yet — we're adding more.
           </p>
         ) : null}
       </div>

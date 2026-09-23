@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as KnowledgeCheckerRouteImport } from './routes/knowledge-checker'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RevisionGuideRouteImport } from './routes/revision-guide'
 import { Route as RevisionHelpRouteImport } from './routes/revision-help'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
@@ -47,6 +48,11 @@ const KnowledgeCheckerRoute = KnowledgeCheckerRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RevisionGuideRoute = RevisionGuideRouteImport.update({
+  id: '/revision-guide',
+  path: '/revision-guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RevisionHelpRoute = RevisionHelpRouteImport.update({
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/knowledge-checker': typeof KnowledgeCheckerRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/knowledge-checker': typeof KnowledgeCheckerRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/knowledge-checker': typeof KnowledgeCheckerRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/knowledge-checker'
     | '/reset-password'
+    | '/revision-guide'
     | '/revision-help'
     | '/admin'
     | '/edit-plan'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/knowledge-checker'
     | '/reset-password'
+    | '/revision-guide'
     | '/revision-help'
     | '/admin'
     | '/edit-plan'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/knowledge-checker'
     | '/reset-password'
+    | '/revision-guide'
     | '/revision-help'
     | '/_authenticated/admin'
     | '/_authenticated/edit-plan'
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   KnowledgeCheckerRoute: typeof KnowledgeCheckerRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RevisionGuideRoute: typeof RevisionGuideRoute
   RevisionHelpRoute: typeof RevisionHelpRoute
   ShareTokenRoute: typeof ShareTokenRoute
 }
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/revision-guide': {
+      id: '/revision-guide'
+      path: '/revision-guide'
+      fullPath: '/revision-guide'
+      preLoaderRoute: typeof RevisionGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/revision-help': {
@@ -353,6 +373,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   KnowledgeCheckerRoute: KnowledgeCheckerRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RevisionGuideRoute: RevisionGuideRoute,
   RevisionHelpRoute: RevisionHelpRoute,
   ShareTokenRoute: ShareTokenRoute,
 }

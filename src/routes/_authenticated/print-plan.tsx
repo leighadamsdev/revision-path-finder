@@ -64,6 +64,7 @@ function PrintablePlanPage() {
           <Button asChild variant="ghost"><Link to="/papers">Past Papers</Link></Button>
           <Button asChild variant="ghost"><Link to="/sites">Revision links</Link></Button>
           <Button asChild variant="ghost"><Link to="/revision-help">Revision Help</Link></Button>
+          <Button asChild variant="ghost"><Link to="/knowledge-checker">Knowledge Checker</Link></Button>
         </nav>
         <Button type="button" onClick={() => window.print()}>
           <Printer aria-hidden="true" />

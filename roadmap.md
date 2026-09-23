@@ -12,5 +12,6 @@
 - [x] Replace Revision Help with the interactive RevPlan Knowledge Checker walkthrough.
 - [x] Add the three-step switcher, clickable gap-analysis sample, and Myth vs. Science comparison.
 - [x] Verify the Knowledge Checker guide on desktop and mobile.
-- [ ] Add a usable online Knowledge Checker for students.
-- [ ] Create a matching downloadable Knowledge Checker worksheet.
+- [x] Add a usable online Knowledge Checker for students.
+- [x] Create a matching downloadable Knowledge Checker worksheet.
+- [x] Verify the online checker interactions, persistence, download, and responsive layouts.

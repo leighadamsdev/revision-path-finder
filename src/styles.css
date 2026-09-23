@@ -327,6 +327,10 @@
     display: none;
   }
 
+  body:has(.knowledge-checker-print) .print\:hidden {
+    display: none;
+  }
+
   .print-preview-shell {
     width: auto;
     max-width: none;

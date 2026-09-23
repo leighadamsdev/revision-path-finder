@@ -9,6 +9,10 @@ import { AppShell } from "@/components/AppShell";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { DatePicker } from "@/components/DatePicker";
 import { ExamDatesField } from "@/components/ExamDatesField";
+import { ExamDateUpload } from "@/components/ExamDateUpload";
+import { HolidayPlanner } from "@/components/HolidayPlanner";
+import { IntensityField } from "@/components/IntensityField";
+import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,14 +23,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
+import { useActivePlan, usePlanSubjects, usePlanTopics } from "@/hooks/useActivePlan";
 import {
   deletePlan,
   fetchSubjects,
   regeneratePlanSessions,
   savePlanSubjects,
+  savePlanTopics,
   updatePlanSettings,
   type DaySetting,
+  type HolidayPeriod,
+  type Intensity,
 } from "@/lib/plan";
 import { SESSION_LENGTHS, WEEK_DAYS, subjectStyle } from "@/lib/subjects";
 

@@ -236,7 +236,48 @@ type ScheduleInput = {
   weeks: number;
   days: DaySetting[];
   subjects: SubjectWeighting[];
+  /** Heavier study in the final weeks before the first exam. */
+  intensity?: Intensity | null;
+  /** Holiday stretches with their own daily pattern. */
+  holidays?: HolidayPeriod[] | null;
 };
+
+/** The earliest exam date across every subject in the plan, if any. */
+function firstExamDate(subjects: SubjectWeighting[]): string | null {
+  const dates = subjects.flatMap((subject) => subject.examDates ?? []).filter(Boolean).sort();
+  return dates[0] ?? null;
+}
+
+/**
+ * How many sessions one calendar day gets: a holiday pattern wins, then the
+ * pre-exam intensity window, then the student's ordinary term-time pattern.
+ */
+function sessionsForDay(
+  date: Date,
+  day: string,
+  baseSessions: number,
+  input: ScheduleInput,
+  firstExam: string | null,
+) {
+  const iso = format(date, "yyyy-MM-dd");
+
+  const holiday = (input.holidays ?? []).find(
+    (period) => period.start && period.end && iso >= period.start && iso <= period.end,
+  );
+  if (holiday) {
+    if (holiday.days.length && !holiday.days.includes(day)) return 0;
+    return Math.max(0, holiday.sessions);
+  }
+
+  if (input.intensity && input.intensity.weeks > 0 && firstExam) {
+    const gap = differenceInCalendarDays(parseISO(firstExam), date);
+    if (gap >= 0 && gap <= input.intensity.weeks * 7 && baseSessions > 0) {
+      return Math.max(0, input.intensity.sessions);
+    }
+  }
+
+  return baseSessions;
+}
 
 /**
  * Lays out every session slot in the plan and decides which subject each one belongs to,
@@ -248,14 +289,23 @@ export function buildSchedule(input: ScheduleInput): Slot[] {
 
   const slots: Slot[] = [];
   const credit: Record<string, number> = {};
+  const firstExam = firstExamDate(subjects);
+  const byDay = new Map(input.days.map((entry) => [entry.day, entry]));
+  const fallbackMinutes = input.days[0]?.minutes ?? 45;
 
   for (let week = 1; week <= input.weeks; week += 1) {
     const daySlots: Array<{ day: string; slot: number; minutes: number }> = [];
-    for (const day of input.days) {
-      for (let slot = 1; slot <= day.sessions; slot += 1) {
-        daySlots.push({ day: day.day, slot, minutes: day.minutes });
+    for (const day of WEEK_DAYS) {
+      const config = byDay.get(day);
+      const date = planDayDate(input.startDate, week, day);
+      const count = date
+        ? sessionsForDay(date, day, config?.sessions ?? 0, input, firstExam)
+        : (config?.sessions ?? 0);
+      for (let slot = 1; slot <= count; slot += 1) {
+        daySlots.push({ day, slot, minutes: config?.minutes ?? fallbackMinutes });
       }
     }
+    if (daySlots.length === 0) continue;
     const weights = subjects.map((subject) => weekWeight(input.startDate, subject, week));
     const assigned = allocateWeek(subjects, daySlots.length, weights, credit);
     daySlots.forEach((entry, i) => {

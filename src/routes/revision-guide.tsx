@@ -102,7 +102,7 @@ function RevisionGuide() {
               <span>SCIENCE-BACKED</span>
             </p>
             <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-tight sm:text-6xl">
-              How to revise effectively (and actually remember it!)
+              How to revise effectively (and remember it!)
             </h1>
             <p className="mt-4 max-w-2xl text-lg font-semibold leading-relaxed text-checker-paper/75 sm:text-xl">
               Revision doesn't have to mean staring at a textbook for hours until your brain hurts.

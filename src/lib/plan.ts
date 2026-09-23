@@ -660,7 +660,8 @@ export async function regeneratePlanSessions(
     if (session.gap_notes) {
       notes.set(`${session.week_number}|${session.day_label}|${session.session_slot}`, session.gap_notes);
     }
-    if (session.subject_id && session.topic_text) {
+    const chosen = savedTopics.some((row) => row.subject_id === session.subject_id);
+    if (session.subject_id && session.topic_text && !chosen) {
       const pool = (topicsBySubject[session.subject_id] ??= []);
       if (!pool.includes(session.topic_text)) pool.push(session.topic_text);
     }
@@ -772,6 +773,8 @@ export async function savePlanSubjects(
 
 /** Permanently deletes a plan along with its sessions and subject links. */
 export async function deletePlan(planId: string) {
+  const { error: topicError } = await supabase.from("plan_topics").delete().eq("plan_id", planId);
+  if (topicError) throw topicError;
   const { error: sessionError } = await supabase.from("sessions").delete().eq("plan_id", planId);
   if (sessionError) throw sessionError;
   const { error: linkError } = await supabase.from("plan_subjects").delete().eq("plan_id", planId);

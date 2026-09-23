@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { Logo } from "@/components/Logo";
+import { PublicHeader } from "@/components/PublicHeader";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
@@ -57,13 +57,9 @@ function ResetPasswordPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
-      <header className="mx-auto w-full max-w-md px-5 py-5">
-        <Link to="/" className="flex items-center gap-2.5">
-          <Logo className="h-7 w-auto" />
-        </Link>
-      </header>
+      <PublicHeader />
 
-      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-16">
+      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-16 pt-6">
         <div className="rounded-[18px] bg-card p-5 ring-1 ring-black/5">
           <p className="text-lg font-extrabold tracking-tight">Choose a new password</p>
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">

@@ -3,6 +3,7 @@ import { format } from "date-fns";
 
 import { getSharedPlan, type SharedPlanPayload } from "@/lib/share.functions";
 import { LogoOnDark } from "@/components/Logo";
+import { PublicHeader } from "@/components/PublicHeader";
 import { subjectStyle } from "@/lib/subjects";
 import { planDayDate, sortPlanDays } from "@/lib/plan-dates";
 
@@ -33,14 +34,15 @@ function SharedPlanPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      <header className="bg-structure">
-        <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-5 py-4">
+      <PublicHeader />
+      <div className="bg-structure">
+        <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-5 py-3">
           <LogoOnDark className="h-5 w-auto" />
           <span className="ml-auto rounded-full bg-structure-foreground/10 px-3 py-1 text-[11px] font-extrabold text-structure-foreground/80">
             Shared read-only
           </span>
         </div>
-      </header>
+      </div>
 
       <main className="mx-auto max-w-3xl px-5 pb-20 pt-8">
         {!data ? (

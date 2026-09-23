@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
-import { Logo } from "@/components/Logo";
+import { PublicHeader } from "@/components/PublicHeader";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -107,13 +107,9 @@ function AuthPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
-      <header className="mx-auto w-full max-w-md px-5 py-5">
-        <Link to="/" className="flex items-center gap-2.5">
-          <Logo className="h-7 w-auto" />
-        </Link>
-      </header>
+      <PublicHeader />
 
-      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-16">
+      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-16 pt-6">
         <div className="rounded-[18px] bg-card p-5 ring-1 ring-black/5">
           {checkEmail ? (
             <div>

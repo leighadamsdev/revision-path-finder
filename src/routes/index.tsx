@@ -59,12 +59,20 @@ function Landing() {
             <Logo className="h-11 w-auto" />
           </span>
         </div>
-        <Link
-          to="/auth"
-          className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-        >
-          Sign in
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/revision-help"
+            className="hidden rounded-full px-3 py-2 text-[13px] font-bold text-structure hover:bg-structure/5 sm:inline-flex"
+          >
+            Revision Help
+          </Link>
+          <Link
+            to="/auth"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+          >
+            Sign in
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-5 pb-20 pt-6">

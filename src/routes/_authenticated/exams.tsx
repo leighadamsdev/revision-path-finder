@@ -24,13 +24,13 @@ import { subjectStyle } from "@/lib/subjects";
 export const Route = createFileRoute("/_authenticated/exams")({
   head: () => ({
     meta: [
-      { title: "Exam calendar — rev.plan" },
+      { title: "Exam timetable — rev.plan" },
       {
         name: "description",
         content:
           "A month-by-month calendar of your GCSE exams: see which exam falls on which day and how long you have left.",
       },
-      { property: "og:title", content: "Exam calendar — rev.plan" },
+      { property: "og:title", content: "Exam timetable — rev.plan" },
       {
         property: "og:description",
         content: "See which exam is on which day, month by month.",
@@ -87,7 +87,7 @@ function ExamCalendarPage() {
       <div className="mx-auto max-w-3xl">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight">Exam calendar</h1>
+            <h1 className="text-xl font-extrabold tracking-tight">Exam timetable</h1>
             <p className="mt-1 text-[13px] font-medium text-muted-foreground">
               Every exam date you've added, laid out day by day.
             </p>

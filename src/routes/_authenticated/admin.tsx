@@ -14,12 +14,12 @@ export const Route = createFileRoute("/_authenticated/admin")({
       {
         name: "description",
         content:
-          "Maintain the shared rev.plan content: subjects, topic lists, past paper links and revision sites.",
+          "Maintain the shared rev.plan content: subjects, topic lists, past paper links and revision links.",
       },
       { property: "og:title", content: "Shared content admin — rev.plan" },
       {
         property: "og:description",
-        content: "Maintain shared rev.plan subjects, topics, past papers and revision sites.",
+        content: "Maintain shared rev.plan subjects, topics, past papers and revision links.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -34,7 +34,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "subjects", label: "Subjects" },
   { key: "topics", label: "Topic lists" },
   { key: "papers", label: "Past papers" },
-  { key: "sites", label: "Revision sites" },
+  { key: "sites", label: "Revision links" },
 ];
 
 const input =

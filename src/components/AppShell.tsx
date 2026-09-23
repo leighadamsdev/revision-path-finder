@@ -3,9 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
   CalendarDays,
-  CalendarRange,
-  CircleGauge,
   FileText,
+  House,
   Pencil,
   Settings,
   Sparkles,
@@ -18,11 +17,10 @@ import { LogoOnDark } from "@/components/Logo";
 
 
 const TABS = [
-  { to: "/plan", label: "Timetable", icon: CalendarRange },
-  { to: "/exams", label: "Exams", icon: CalendarDays },
-  { to: "/progress", label: "Progress", icon: CircleGauge },
+  { to: "/plan", label: "Home", icon: House },
+  { to: "/exams", label: "Exam timetable", icon: CalendarDays },
   { to: "/papers", label: "Past Papers", icon: FileText },
-  { to: "/sites", label: "Sites", icon: Sparkles },
+  { to: "/sites", label: "Revision links", icon: Sparkles },
 ] as const;
 
 
@@ -54,7 +52,9 @@ export function AppShell({
         <div className="mx-auto max-w-5xl px-4 pb-3 pt-4 sm:px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <LogoOnDark className="h-5 w-auto" />
+              <Link to="/plan" aria-label="Home" title="Home">
+                <LogoOnDark className="h-5 w-auto" />
+              </Link>
               <div className="min-w-0 leading-none">
                 {plan ? (
                   plans.length > 1 ? (
@@ -106,40 +106,27 @@ export function AppShell({
               </button>
             </div>
           </div>
+
+          <nav className="app-nav mt-3 border-t border-structure-foreground/15" aria-label="Main navigation">
+            <div className={`grid items-stretch gap-1 pt-2 ${isAdmin ? "grid-cols-5" : "grid-cols-4"}`}>
+              {(isAdmin ? [...TABS, ADMIN_TAB] : TABS).map((tab) => (
+                <Link
+                  key={tab.to}
+                  to={tab.to}
+                  className="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-[8px] px-1 py-2 text-center text-structure-foreground/70 sm:min-h-10 sm:flex-row sm:gap-2 sm:px-3"
+                  activeProps={{ className: "bg-structure-foreground/10 text-primary" }}
+                  activeOptions={{ exact: true }}
+                >
+                  <tab.icon className="size-4 shrink-0" strokeWidth={2.5} />
+                  <span className="text-[10px] font-bold leading-tight sm:text-[11px]">{tab.label}</span>
+                </Link>
+              ))}
+            </div>
+          </nav>
         </div>
       </div>
 
-      <main className="app-main mx-auto max-w-5xl px-4 pb-28 pt-6 sm:px-6">{children}</main>
-
-      <nav className="app-nav fixed inset-x-0 bottom-0 z-20 border-t border-structure bg-structure text-structure-foreground">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className={`grid ${isAdmin ? "grid-cols-6" : "grid-cols-5"}`}>
-            {(isAdmin ? [...TABS, ADMIN_TAB] : TABS).map((tab) => (
-              <Link
-                key={tab.to}
-                to={tab.to}
-                className="flex flex-col items-center gap-1 py-2.5 text-structure-foreground/70"
-                activeProps={{ className: "text-primary" }}
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className={`grid size-6 place-items-center rounded-full ${isActive ? "bg-primary/15" : ""}`}
-                    >
-                      <tab.icon className="size-4" strokeWidth={2.5} />
-                    </span>
-                    <span
-                      className={`text-[10px] ${isActive ? "font-extrabold" : "font-bold"}`}
-                    >
-                      {tab.label}
-                    </span>
-                  </>
-                )}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </nav>
+      <main className="app-main mx-auto max-w-5xl px-4 pb-12 pt-6 sm:px-6">{children}</main>
     </div>
   );
 }

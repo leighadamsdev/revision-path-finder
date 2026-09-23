@@ -3,6 +3,8 @@ import { ChevronDown, ExternalLink } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
+import { PublicHeader } from "@/components/PublicHeader";
+import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
 import { catalogueSubject } from "@/lib/gcse-subjects";
 import { KIND_LABELS, allPaperSubjects, papersByBoard } from "@/lib/past-paper-files";
@@ -30,22 +32,33 @@ export const Route = createFileRoute("/papers")({
 });
 
 function PapersPage() {
+  const { user } = useAuth();
   const { plan } = useActivePlan();
   const planSubjects = usePlanSubjects(plan?.id).data ?? [];
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const toggle = (name: string) => setCollapsed((prev) => ({ ...prev, [name]: !prev[name] }));
   const names = allPaperSubjects();
+  const ownNames = names.filter((name) =>
+    planSubjects.some((subject) => subject.name.toLowerCase() === name.toLowerCase()),
+  );
+  const sections = ownNames.length
+    ? [{ title: "Your subjects", names: ownNames }, { title: "All subjects", names }]
+    : [{ title: null, names }];
 
-  return (
-    <AppShell>
+  const content = (
+    <>
       <h1 className="text-2xl font-extrabold tracking-tight">Past papers</h1>
       <p className="mt-1 text-[13px] font-medium text-muted-foreground">
         Question papers and mark schemes for every subject, most recent exams first.
       </p>
 
-      <div className="mt-5 space-y-3">
-        {names.map((name) => {
+      <div className="mt-6 space-y-8">
+        {sections.map((section) => (
+          <section key={section.title ?? "papers"}>
+            {section.title ? <h2 className="mb-3 text-[12px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">{section.title}</h2> : null}
+            <div className="space-y-3">
+        {section.names.map((name) => {
           const mine = planSubjects.find((s) => s.name.toLowerCase() === name.toLowerCase());
           const tier = mine?.tier ?? null;
           const boardGroups = papersByBoard(name, tier);
@@ -124,12 +137,24 @@ function PapersPage() {
             </div>
           );
         })}
+            </div>
+          </section>
+        ))}
         {names.length === 0 ? (
           <p className="text-[13px] font-medium text-muted-foreground">
             No papers yet — we're adding more.
           </p>
         ) : null}
       </div>
-    </AppShell>
+    </>
+  );
+
+  return user ? (
+    <AppShell>{content}</AppShell>
+  ) : (
+    <div className="min-h-screen bg-background font-sans text-foreground">
+      <PublicHeader />
+      <main className="mx-auto max-w-5xl px-5 pb-20 pt-8">{content}</main>
+    </div>
   );
 }

@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 
 import { PublicHeader } from "@/components/PublicHeader";
+import { useAuth } from "@/hooks/useAuth";
+import { useActivePlan } from "@/hooks/useActivePlan";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -192,6 +194,8 @@ function AudioTool({
 }
 
 function RevisionToolsPage() {
+  const { user } = useAuth();
+  const { plan } = useActivePlan();
   const [timerMode, setTimerMode] = useState<TimerMode>("focus");
   const [remaining, setRemaining] = useState(TIMER_SECONDS.focus);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -377,12 +381,18 @@ function RevisionToolsPage() {
               <span>Focus built in</span>
             </p>
             <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-tight sm:text-6xl">
-              Your Revision Toolkit
+               Handy Revision Tools
             </h1>
             <p className="mt-4 max-w-2xl text-lg font-semibold leading-relaxed text-checker-paper/75 sm:text-xl">
               Knowing how to revise is step one. Having the right tools to actually do it is step
               two. Use this built-in toolkit to lock in your focus and block out distractions.
             </p>
+          </div>
+        </section>
+        <section className="mx-auto mt-10 max-w-5xl px-5">
+          <div className="rounded-[8px] bg-checker-ink p-6 text-checker-paper sm:flex sm:items-center sm:justify-between sm:gap-6">
+            <div><h2 className="text-xl font-extrabold">Put your focused sessions into a plan</h2><p className="mt-1 text-sm font-semibold text-checker-paper/70">Turn these tools into a routine you can follow each week.</p></div>
+            <Button asChild className="mt-4 shrink-0 sm:mt-0"><Link to={user ? (plan ? "/plan" : "/setup") : "/auth"} search={user ? undefined : { mode: "signup", context: "create-plan", returnTo: "/setup" }}>{plan ? "Open my plan" : "Create your revision plan"}</Link></Button>
           </div>
         </section>
 

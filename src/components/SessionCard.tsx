@@ -85,12 +85,12 @@ export function SessionCard({
       <textarea
         value={topic}
         placeholder="Type the topic for this session…"
-        rows={2}
+        rows={3}
         onChange={(e) => {
           setTopic(e.target.value);
           queueSave("topic", { topic_text: e.target.value });
         }}
-        className="print-editable w-full resize-none bg-transparent text-[15px] font-bold leading-snug placeholder:text-muted-foreground/60 focus:outline-none"
+        className="print-editable min-h-16 w-full resize-y overflow-auto bg-transparent text-[15px] font-bold leading-snug placeholder:text-muted-foreground/60 focus:outline-none"
       />
 
       <div className="mt-3 flex items-center gap-3">

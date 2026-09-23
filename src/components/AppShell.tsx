@@ -10,6 +10,7 @@ import {
   Sparkles,
   Lightbulb,
   ClipboardCheck,
+  GraduationCap,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ const TABS = [
   { to: "/sites", label: "Revision links", icon: Sparkles },
   { to: "/revision-help", label: "Revision Help", icon: Lightbulb },
   { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
+  { to: "/revision-guide", label: "Revision guide", icon: GraduationCap },
 ] as const;
 
 
@@ -112,7 +114,7 @@ export function AppShell({
           </div>
 
           <nav className="app-nav mt-3 border-t border-structure-foreground/15" aria-label="Main navigation">
-            <div className={`grid items-stretch gap-1 pt-2 ${isAdmin ? "grid-cols-7" : "grid-cols-6"}`}>
+            <div className={`grid items-stretch gap-1 pt-2 ${isAdmin ? "grid-cols-8" : "grid-cols-7"}`}>
               {(isAdmin ? [...TABS, ADMIN_TAB] : TABS).map((tab) => (
                 <Link
                   key={tab.to}

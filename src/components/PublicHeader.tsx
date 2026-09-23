@@ -9,6 +9,7 @@ const PUBLIC_LINKS = [
   { to: "/sites", label: "Revision links" },
   { to: "/revision-help", label: "Revision Help" },
   { to: "/knowledge-checker", label: "Knowledge Checker" },
+  { to: "/revision-guide", label: "Revision guide" },
 ] as const;
 
 export function PublicHeader() {

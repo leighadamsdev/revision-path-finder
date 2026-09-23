@@ -1,9 +1,18 @@
+import { differenceInCalendarDays, format, parseISO } from "date-fns";
+
 import { supabase } from "@/integrations/supabase/client";
 import { generateTopics } from "@/lib/revision.functions";
 import { catalogueSubject } from "@/lib/gcse-subjects";
 import { subjectUnits } from "@/lib/gcse-topics";
 import { examDateColumns, examDateList } from "@/lib/exam-dates";
-import { allocateWeek, weekWeight, type SubjectWeighting } from "@/lib/scheduling";
+import { planDayDate } from "@/lib/plan-dates";
+import { WEEK_DAYS } from "@/lib/subjects";
+import {
+  allocateWeek,
+  orderTopics,
+  weekWeight,
+  type SubjectWeighting,
+} from "@/lib/scheduling";
 
 export type Subject = {
   id: string;
@@ -27,6 +36,29 @@ export type PlanSubject = Subject & {
 
 export type DaySetting = { day: string; sessions: number; minutes: number };
 
+/** A manually entered holiday stretch with its own daily pattern. */
+export type HolidayPeriod = {
+  name: string;
+  start: string;
+  end: string;
+  /** Days of the week studied during the holiday. */
+  days: string[];
+  sessions: number;
+};
+
+/** Heavier (or lighter) study in the final weeks before the first exam. */
+export type Intensity = { weeks: number; sessions: number };
+
+/** One topic inside a plan, with its own confidence rating. */
+export type PlanTopic = {
+  id: string;
+  subject_id: string;
+  topic: string;
+  confidence: number | null;
+  is_priority: boolean;
+  position: number;
+};
+
 export type Plan = {
   id: string;
   name: string;
@@ -40,6 +72,9 @@ export type Plan = {
   created_at: string;
   start_date: string;
   share_token: string | null;
+  intensity_weeks: number | null;
+  intensity_sessions_per_day: number | null;
+  holiday_periods: HolidayPeriod[];
 };
 
 export type SessionRow = {
@@ -70,11 +105,14 @@ export async function fetchPlans(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("plans")
     .select(
-      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date, share_token",
+      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date, share_token, intensity_weeks, intensity_sessions_per_day, holiday_periods",
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as unknown as Plan[];
+  return ((data ?? []) as unknown as Plan[]).map((plan) => ({
+    ...plan,
+    holiday_periods: Array.isArray(plan.holiday_periods) ? plan.holiday_periods : [],
+  }));
 }
 
 /** Turns sharing on for a plan and returns the new share token. */
@@ -177,12 +215,18 @@ export type PlanDraft = {
   /** Up to three optional exam dates (yyyy-MM-dd) per subject id. */
   examDates?: Record<string, string[]>;
 
-  /** Optional 1–5 confidence per subject id. */
+  /** Optional 1–5 confidence per subject id, used when no topics were chosen. */
   confidence?: Record<string, number | null>;
   /** Topics the student ticked from the GCSE checklist, per subject id. */
   chosenTopics?: Record<string, string[]>;
   /** Up to three chosen topics per subject to place in the earliest available sessions. */
   priorityTopics?: Record<string, string[]>;
+  /** Optional 1–5 confidence per topic, keyed by subject id then topic. */
+  topicConfidence?: Record<string, Record<string, number | null>>;
+  /** Heavier study in the final weeks before the first exam. */
+  intensity?: Intensity | null;
+  /** Manually entered holiday stretches. */
+  holidays?: HolidayPeriod[];
 };
 
 type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };

@@ -168,7 +168,7 @@ function TimetablePage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || (plan && (subjectsQuery.isLoading || topicsQuery.isLoading || sessionsQuery.isLoading))) {
     return (
       <AppShell>
         <div className="space-y-3" aria-label="Checking for your plan"><p className="text-sm font-semibold text-muted-foreground">Checking for your plan…</p><div className="h-28 animate-pulse rounded-[8px] bg-card" /><div className="h-48 animate-pulse rounded-[8px] bg-card" /></div>

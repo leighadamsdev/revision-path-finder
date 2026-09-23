@@ -317,7 +317,7 @@ function SetupPage() {
     step === 1
       ? picks.length > 0 && missingTiers === 0
       : step === 3
-          ? studyDays.length > 0 && weeks > 0 && Boolean(startDate)
+          ? studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start)
           : true;
   const missingTierNames = picks.filter((pick) => isTiered(pick.name) && !pick.tier).map((pick) => pick.name);
   const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
@@ -980,6 +980,8 @@ function SetupPage() {
                   ? `Choose a tier for ${missingTierNames.join(", ")}.`
                   : step === 3 && !startDate
                     ? "Choose a plan start date to continue."
+                    : step === 3 && holidayError
+                      ? "Fix the holiday dates to continue."
                     : "Choose at least one study day to continue."}
             </p>
           ) : null}

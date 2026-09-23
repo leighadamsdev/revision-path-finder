@@ -74,7 +74,7 @@ function ExamCalendarPage() {
     end: endOfWeek(endOfMonth(shown), { weekStartsOn: 1 }),
   });
 
-  if (isLoading) {
+  if (isLoading || (plan && subjectsQuery.isLoading)) {
     return (
       <AppShell>
         <div className="space-y-3" aria-label="Checking for your plan">

@@ -102,6 +102,7 @@ function ResetPasswordPage() {
           </form>
           <Link
             to="/auth"
+            search={{}}
             className="mt-4 block text-center text-[13px] font-bold text-muted-foreground"
           >
             Back to sign in

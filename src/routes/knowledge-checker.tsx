@@ -208,7 +208,7 @@ function KnowledgeCheckerPage() {
         shading: heading ? { fill: "94D8CA", type: ShadingType.CLEAR } : undefined,
         children: [new Paragraph({ children: [new TextRun({ text, bold: heading, color: "0E333D" })] })],
       });
-    const document = new Document({
+    const wordDocument = new Document({
       styles: {
         default: { document: { run: { font: "Arial", size: 22, color: "0E333D" } } },
         paragraphStyles: [
@@ -262,7 +262,7 @@ function KnowledgeCheckerPage() {
         },
       ],
     });
-    const blob = await Packer.toBlob(document);
+    const blob = await Packer.toBlob(wordDocument);
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

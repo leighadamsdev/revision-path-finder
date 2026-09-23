@@ -24,6 +24,11 @@
   --color-pe: oklch(0.4796 0.109 303.93);
   --color-structure: oklch(0.2889 0.0488 214.62);
   --color-structure-foreground: oklch(0.9245 0.1127 173.77);
+
+  /* Confidence traffic lights — 1–2 red, 3–4 amber, 5 green */
+  --color-conf-low: oklch(0.5769 0.1775 24.91);
+  --color-conf-mid: oklch(0.7137 0.1434 70.08);
+  --color-conf-high: oklch(0.5479 0.132 150.35);
 }
 
 @theme inline {

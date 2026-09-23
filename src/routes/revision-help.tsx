@@ -14,6 +14,7 @@ import {
   ListChecks,
   Target,
   X,
+  Download,
 } from "lucide-react";
 
 import { PublicHeader } from "@/components/PublicHeader";
@@ -132,8 +133,16 @@ function RevisionHelp() {
               A 30-minute routine to test what you really remember, reveal the missing details, and
               choose exactly what to revise next.
             </p>
-            <div className="mt-7 inline-flex items-center gap-2 rounded-[8px] border border-checker-mint/35 bg-checker-mint/10 px-4 py-3 text-sm font-extrabold text-checker-mint">
-              <Clock3 className="size-4" /> One sheet · three steps · 30 minutes max
+            <div className="mt-7 flex flex-wrap gap-3">
+              <div className="inline-flex items-center gap-2 rounded-[8px] border border-checker-mint/35 bg-checker-mint/10 px-4 py-3 text-sm font-extrabold text-checker-mint">
+                <Clock3 className="size-4" /> One sheet · three steps · 30 minutes max
+              </div>
+              <Button asChild variant="outline" className="border-checker-mint/40 bg-transparent text-checker-mint hover:bg-checker-mint/10 hover:text-checker-mint">
+                <Link to="/knowledge-checker">Use online <ArrowRight /></Link>
+              </Button>
+              <Button asChild variant="ghost" className="text-checker-paper hover:bg-checker-mint/10 hover:text-checker-paper">
+                <a href="/revplan-knowledge-checker.pdf" download><Download /> Download PDF</a>
+              </Button>
             </div>
           </div>
         </section>

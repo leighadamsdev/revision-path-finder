@@ -152,7 +152,7 @@ function KnowledgeCheckerPage() {
   return (
     <div className="min-h-screen bg-checker-paper font-sans text-checker-ink">
       <PublicHeader />
-      <main className="mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
+      <main className="knowledge-checker-print mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
         <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-extrabold uppercase text-muted-foreground">Online worksheet</p>

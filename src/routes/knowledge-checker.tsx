@@ -234,8 +234,8 @@ function KnowledgeCheckerPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 print:hidden">
-            <Button asChild variant="outline">
-              <a href="/revplan-knowledge-checker.pdf" download><Download /> Blank PDF</a>
+            <Button type="button" variant="outline" onClick={downloadBlankPdf}>
+              <Download /> Blank PDF
             </Button>
             <Button type="button" variant="outline" onClick={() => window.print()}><Printer /> Print this sheet</Button>
           </div>

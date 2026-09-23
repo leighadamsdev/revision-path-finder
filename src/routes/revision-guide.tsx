@@ -98,8 +98,8 @@ function RevisionGuide() {
         <section className="bg-checker-ink text-checker-paper">
           <div className="mx-auto max-w-5xl px-5 py-12 sm:py-16">
             <p className="flex flex-wrap items-center gap-2 text-xs font-extrabold uppercase text-checker-mint">
-              <span className="rounded-full bg-checker-mint px-3 py-1 text-checker-ink">GCSE revision guide</span>
-              <span>Science-backed · year 10 + 11</span>
+              <span className="rounded-full bg-checker-mint px-3 py-1 text-checker-ink">EFFECTIVE REVISION</span>
+              <span>SCIENCE-BACKED</span>
             </p>
             <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-tight sm:text-6xl">
               How to revise effectively (and actually remember it!)

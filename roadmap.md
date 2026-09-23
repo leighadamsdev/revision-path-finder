@@ -15,3 +15,5 @@
 - [x] Add a usable online Knowledge Checker for students.
 - [x] Create a matching downloadable Knowledge Checker worksheet.
 - [x] Verify the online checker interactions, persistence, download, and responsive layouts.
+- [ ] Simplify the Knowledge Checker printout so the website header is removed and repeated pages only show subject/topic/date.
+- [ ] Add an option to turn highlighted gaps and corrections into flashcards.

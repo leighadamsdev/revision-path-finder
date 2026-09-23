@@ -422,6 +422,7 @@ function EditPlanPage() {
           <div className="mt-4 space-y-2.5">
             {rows.map((row) => {
               const style = subjectStyle(row.colorKey);
+              const subjectTopics = topics.filter((topic) => topic.subjectId === row.subjectId);
               return (
                 <div key={row.subjectId} className="rounded-[14px] bg-background p-3 ring-1 ring-border">
                   <div className="flex items-center gap-2">

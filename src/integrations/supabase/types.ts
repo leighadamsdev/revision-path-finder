@@ -97,13 +97,64 @@ export type Database = {
           },
         ]
       }
+      plan_topics: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          id: string
+          is_priority: boolean
+          plan_id: string
+          position: number
+          subject_id: string
+          topic: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          is_priority?: boolean
+          plan_id: string
+          position?: number
+          subject_id: string
+          topic: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          is_priority?: boolean
+          plan_id?: string
+          position?: number
+          subject_id?: string
+          topic?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_topics_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_topics_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           content_mode: Database["public"]["Enums"]["content_mode"]
           created_at: string
           day_plan: Json | null
           days_per_week: number
+          holiday_periods: Json
           id: string
+          intensity_sessions_per_day: number | null
+          intensity_weeks: number | null
           name: string
           profile_id: string
           session_length_minutes: number
@@ -118,7 +169,10 @@ export type Database = {
           created_at?: string
           day_plan?: Json | null
           days_per_week?: number
+          holiday_periods?: Json
           id?: string
+          intensity_sessions_per_day?: number | null
+          intensity_weeks?: number | null
           name?: string
           profile_id: string
           session_length_minutes?: number
@@ -133,7 +187,10 @@ export type Database = {
           created_at?: string
           day_plan?: Json | null
           days_per_week?: number
+          holiday_periods?: Json
           id?: string
+          intensity_sessions_per_day?: number | null
+          intensity_weeks?: number | null
           name?: string
           profile_id?: string
           session_length_minutes?: number

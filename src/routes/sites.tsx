@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { REVISION_LINK_GROUPS } from "@/lib/revision-sites";
 import { subjectStyle } from "@/lib/subjects";
 
-export const Route = createFileRoute("/_authenticated/sites")({
+export const Route = createFileRoute("/sites")({
   head: () => ({
     meta: [
       { title: "Revision links — rev.plan" },

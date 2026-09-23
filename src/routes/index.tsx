@@ -27,7 +27,7 @@ export const Route = createFileRoute("/")({
 
 const HOW_STEPS = [
   "Tell revplan the subjects and tiers you are studying",
-  "Choose the exact topics from a pre-populated list\nor Download your own topic list",
+  "Choose the exact topics from a pre-populated list\nor upload your own topic list",
   "Lock in how many weeks you have until exam day",
   "Let revplan build you a week-by-week, session by session plan, linked to exam dates and your subject confidence",
   "Print it out, share it or use it online, it is up to you.",
@@ -87,6 +87,7 @@ function Landing() {
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link
             to="/auth"
+            search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}
             className="rounded-full bg-primary px-6 py-3 text-sm font-extrabold text-primary-foreground"
           >
             Create your plan
@@ -95,6 +96,9 @@ function Landing() {
             Free · your plan stays private to you
           </span>
         </div>
+        <Link to="/revision-guide" className="mt-3 inline-flex text-[13px] font-bold text-muted-foreground underline underline-offset-4">
+          Not sure how to revise yet? Read the Effective Revision guide.
+        </Link>
 
         <PlanMockup />
 

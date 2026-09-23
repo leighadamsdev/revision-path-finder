@@ -8,6 +8,11 @@ import { ensureProfile, useAuth } from "@/hooks/useAuth";
 import { PublicHeader } from "@/components/PublicHeader";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    mode: search["mode"] === "signup" ? "signup" as const : undefined,
+    context: typeof search["context"] === "string" ? search["context"] : undefined,
+    returnTo: typeof search["returnTo"] === "string" ? search["returnTo"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — rev.plan" },
@@ -28,9 +33,10 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">(search.mode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -43,10 +49,17 @@ function AuthPage() {
         .catch(() => undefined)
         .then(async () => {
           const { data } = await supabase.from("plans").select("id").limit(1);
-          navigate({ to: data && data.length > 0 ? "/plan" : "/setup" });
+          const safeReturnTo = search.returnTo?.startsWith("/") && !search.returnTo.startsWith("//")
+            ? search.returnTo
+            : null;
+          if (safeReturnTo) {
+            navigate({ to: safeReturnTo });
+          } else {
+            navigate({ to: data && data.length > 0 ? "/plan" : "/setup" });
+          }
         });
     }
-  }, [loading, user, navigate]);
+  }, [loading, user, navigate, search.returnTo]);
 
   async function handleReset(event: React.FormEvent) {
     event.preventDefault();
@@ -185,11 +198,13 @@ function AuthPage() {
 
             <>
               <p className="text-lg font-extrabold tracking-tight">
-                {mode === "signin" ? "Welcome back" : "Create your account"}
+                {mode === "signup"
+                  ? search.context === "create-plan" ? "Create your revision plan" : "Create your account"
+                  : search.context === "exams" ? "Sign in to view your exam timetable" : "Welcome back"}
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
                 {mode === "signin"
-                  ? "Sign in to pick up your revision plan."
+                  ? search.context === "exams" ? "We'll bring you back to your exam timetable after sign-in." : "Sign in to pick up your revision plan."
                   : "Your plan is private to your account."}
               </p>
 

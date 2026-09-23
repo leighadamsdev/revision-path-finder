@@ -64,6 +64,13 @@
       "when": 1790019551213,
       "tag": "0008_add_extra_exam_dates",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790154273561,
+      "tag": "0009_plan_topics_intensity_holidays",
+      "breakpoints": true
     }
   ]
 }

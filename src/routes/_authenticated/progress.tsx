@@ -2,7 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 
 import { AppShell } from "@/components/AppShell";
-import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
+import {
+  useActivePlan,
+  usePlanSessions,
+  usePlanSubjects,
+  usePlanTopics,
+} from "@/hooks/useActivePlan";
+import { averageConfidence, confidenceTone } from "@/lib/confidence";
 import { subjectStyle } from "@/lib/subjects";
 
 export const Route = createFileRoute("/_authenticated/progress")({
@@ -30,6 +36,7 @@ function ProgressPage() {
   const { plan } = useActivePlan();
   const sessions = usePlanSessions(plan?.id).data ?? [];
   const subjects = usePlanSubjects(plan?.id).data ?? [];
+  const topics = usePlanTopics(plan?.id).data ?? [];
 
   const withNotes = sessions.filter((s) => s.gap_notes.trim().length > 0);
 
@@ -45,6 +52,10 @@ function ProgressPage() {
           const own = sessions.filter((s) => s.subject_id === subject.id);
           const share = sessions.length ? Math.round((own.length / sessions.length) * 100) : 0;
           const style = subjectStyle(subject.color_key);
+          const ownTopics = topics.filter((topic) => topic.subject_id === subject.id);
+          const rating = ownTopics.length
+            ? averageConfidence(ownTopics.map((topic) => topic.confidence))
+            : subject.confidence;
           const examDates = subject.exam_dates.map((value) => parseISO(value));
           const next = examDates.find((date) => differenceInCalendarDays(date, new Date()) >= 0);
           const examDate = next ?? examDates[examDates.length - 1] ?? null;
@@ -65,8 +76,8 @@ function ProgressPage() {
                 <p className="text-[13px] font-semibold text-muted-foreground">
                   {own.length} sessions · {share}% of your time
                 </p>
-                <p className="ml-auto text-[13px] font-extrabold">
-                  {subject.confidence ? `${subject.confidence}/5` : "Not rated"}
+                <p className={`ml-auto text-[13px] font-extrabold ${confidenceTone(rating).text}`}>
+                  {rating ? `${rating}/5` : "Not rated"}
                 </p>
               </div>
               <p className="mt-1 text-[12px] font-semibold text-muted-foreground">

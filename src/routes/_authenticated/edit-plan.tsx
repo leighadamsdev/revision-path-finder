@@ -9,6 +9,10 @@ import { AppShell } from "@/components/AppShell";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { DatePicker } from "@/components/DatePicker";
 import { ExamDatesField } from "@/components/ExamDatesField";
+import { ExamDateUpload } from "@/components/ExamDateUpload";
+import { HolidayPlanner } from "@/components/HolidayPlanner";
+import { IntensityField } from "@/components/IntensityField";
+import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,14 +23,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
+import { useActivePlan, usePlanSubjects, usePlanTopics } from "@/hooks/useActivePlan";
 import {
   deletePlan,
   fetchSubjects,
   regeneratePlanSessions,
   savePlanSubjects,
+  savePlanTopics,
   updatePlanSettings,
   type DaySetting,
+  type HolidayPeriod,
+  type Intensity,
 } from "@/lib/plan";
 import { SESSION_LENGTHS, WEEK_DAYS, subjectStyle } from "@/lib/subjects";
 
@@ -60,6 +67,13 @@ type Row = {
   confidence: number | null;
 };
 
+type TopicRow = {
+  subjectId: string;
+  topic: string;
+  confidence: number | null;
+  isPriority: boolean;
+};
+
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -68,6 +82,7 @@ function lengthLabel(n: number) {
 function EditPlanPage() {
   const { plan, plans, isLoading } = useActivePlan();
   const planSubjects = usePlanSubjects(plan?.id);
+  const planTopics = usePlanTopics(plan?.id);
   const allSubjects = useQuery({ queryKey: ["subjects"], queryFn: fetchSubjects });
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -77,6 +92,9 @@ function EditPlanPage() {
   const [weeks, setWeeks] = useState(6);
   const [days, setDays] = useState<Record<string, { sessions: number; minutes: number }>>({});
   const [rows, setRows] = useState<Row[]>([]);
+  const [topics, setTopics] = useState<TopicRow[]>([]);
+  const [intensity, setIntensity] = useState<Intensity | null>(null);
+  const [holidays, setHolidays] = useState<HolidayPeriod[]>([]);
   const [addId, setAddId] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -100,7 +118,25 @@ function EditPlanPage() {
         source.map((entry) => [entry.day, { sessions: entry.sessions, minutes: entry.minutes }]),
       ),
     );
+    setIntensity(
+      plan.intensity_weeks && plan.intensity_sessions_per_day
+        ? { weeks: plan.intensity_weeks, sessions: plan.intensity_sessions_per_day }
+        : null,
+    );
+    setHolidays(plan.holiday_periods ?? []);
   }, [plan]);
+
+  useEffect(() => {
+    if (!planTopics.data) return;
+    setTopics(
+      planTopics.data.map((row) => ({
+        subjectId: row.subject_id,
+        topic: row.topic,
+        confidence: row.confidence,
+        isPriority: row.is_priority,
+      })),
+    );
+  }, [planTopics.data]);
 
   useEffect(() => {
     if (!planSubjects.data) return;
@@ -141,17 +177,39 @@ function EditPlanPage() {
         examDates: [...new Set(row.examDates.filter(Boolean))].sort(),
       }));
 
+      const cleanHolidays = holidays.filter((holiday) => holiday.start && holiday.end);
+      const keptTopics = topics.filter((topic) =>
+        cleanRows.some((row) => row.subjectId === topic.subjectId),
+      );
+
       await savePlanSubjects(plan.id, cleanRows);
-      await updatePlanSettings(plan.id, { name, startDate, weeks, days: daySettings });
+      await savePlanTopics(plan.id, keptTopics);
+      await updatePlanSettings(plan.id, {
+        name,
+        startDate,
+        weeks,
+        days: daySettings,
+        intensity,
+        holidays: cleanHolidays,
+      });
       await regeneratePlanSessions(plan.id, {
         startDate,
         weeks,
         days: daySettings,
+        intensity,
+        holidays: cleanHolidays,
         subjects: cleanRows.map((row) => ({
           subjectId: row.subjectId,
           name: row.name,
           examDates: row.examDates,
           confidence: row.confidence,
+          topics: keptTopics
+            .filter((topic) => topic.subjectId === row.subjectId)
+            .map((topic) => ({
+              topic: topic.topic,
+              confidence: topic.confidence,
+              isPriority: topic.isPriority,
+            })),
         })),
       });
 
@@ -327,18 +385,44 @@ function EditPlanPage() {
               </p>
             ) : null}
           </div>
+
+          <div className="mt-4 space-y-2">
+            <IntensityField value={intensity} onChange={setIntensity} />
+            <HolidayPlanner holidays={holidays} onChange={setHolidays} />
+          </div>
         </div>
 
         <div className="mt-4 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
           <p className="text-sm font-extrabold tracking-tight">Subjects, exam dates and confidence</p>
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-            Exam dates are optional — add them whenever your school confirms them. Subjects you feel
+            Exam dates are optional — add them whenever your school confirms them. Topics you feel
             shakiest about, and exams coming up soonest, get more sessions.
           </p>
+
+          <div className="mt-3">
+            <ExamDateUpload
+              subjects={rows.map((row) => row.name)}
+              onApply={(dates) =>
+                setRows((prev) =>
+                  prev.map((row) => {
+                    const found = dates[row.name];
+                    if (!found) return row;
+                    return {
+                      ...row,
+                      examDates: [...new Set([...row.examDates.filter(Boolean), ...found])]
+                        .sort()
+                        .slice(0, 3),
+                    };
+                  }),
+                )
+              }
+            />
+          </div>
 
           <div className="mt-4 space-y-2.5">
             {rows.map((row) => {
               const style = subjectStyle(row.colorKey);
+              const subjectTopics = topics.filter((topic) => topic.subjectId === row.subjectId);
               return (
                 <div key={row.subjectId} className="rounded-[14px] bg-background p-3 ring-1 ring-border">
                   <div className="flex items-center gap-2">
@@ -360,34 +444,55 @@ function EditPlanPage() {
                     </button>
                   </div>
 
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <div>
+                  <div className="mt-3">
+                    <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      Exam dates (up to 3)
+                    </span>
+                    <div className="mt-1">
+                      <ExamDatesField
+                        dates={row.examDates}
+                        onChange={(dates) => patchRow(row.subjectId, { examDates: dates })}
+                      />
+                    </div>
+                  </div>
+
+                  {subjectTopics.length ? (
+                    <div className="mt-3">
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                        Exam dates (up to 3)
+                        Confidence on each topic
                       </span>
-                      <div className="mt-1">
-                        <ExamDatesField
-                          dates={row.examDates}
-                          onChange={(dates) => patchRow(row.subjectId, { examDates: dates })}
+                      <div className="mt-2">
+                        <TopicConfidenceList
+                          topics={subjectTopics.map((topic) => topic.topic)}
+                          ratings={Object.fromEntries(
+                            subjectTopics.map((topic) => [topic.topic, topic.confidence]),
+                          )}
+                          onChange={(topic, value) =>
+                            setTopics((prev) =>
+                              prev.map((item) =>
+                                item.subjectId === row.subjectId && item.topic === topic
+                                  ? { ...item, confidence: value }
+                                  : item,
+                              ),
+                            )
+                          }
                         />
                       </div>
                     </div>
-
-                    <div>
+                  ) : (
+                    <div className="mt-3">
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                        Confidence {row.confidence ? `${row.confidence}/5` : ""}
+                        Confidence in {row.name} {row.confidence ? `${row.confidence}/5` : ""}
                       </span>
                       <div className="mt-2">
                         <ConfidencePicker
                           value={row.confidence}
                           onChange={(value) => patchRow(row.subjectId, { confidence: value })}
-                          fill={style.fill}
-                          ring={style.ring}
                           label={`${row.name} confidence`}
                         />
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}

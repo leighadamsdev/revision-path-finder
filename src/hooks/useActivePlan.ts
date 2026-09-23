@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { fetchPlanSubjects, fetchPlans, fetchSessions, type Plan } from "@/lib/plan";
+import {
+  fetchPlanSubjects,
+  fetchPlanTopics,
+  fetchPlans,
+  fetchSessions,
+  type Plan,
+} from "@/lib/plan";
 
 const STORAGE_KEY = "revisionpath.activePlan";
 
@@ -33,6 +39,14 @@ export function usePlanSubjects(planId: string | undefined) {
   return useQuery({
     queryKey: ["plan-subjects", planId],
     queryFn: () => fetchPlanSubjects(planId!),
+    enabled: Boolean(planId),
+  });
+}
+
+export function usePlanTopics(planId: string | undefined) {
+  return useQuery({
+    queryKey: ["plan-topics", planId],
+    queryFn: () => fetchPlanTopics(planId!),
     enabled: Boolean(planId),
   });
 }

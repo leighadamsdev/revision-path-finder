@@ -2,15 +2,19 @@ import { differenceInCalendarDays, parseISO } from "date-fns";
 
 /**
  * Session weighting. Two things pull a subject up the queue:
- *  - a low confidence rating (1–2 means "I need more of this")
+ *  - low confidence (rated per topic where topics were chosen, otherwise per subject)
  *  - an exam that is close (and nothing at all once every exam has been sat)
  */
+
+export type TopicWeighting = { topic: string; confidence: number | null };
 
 export type SubjectWeighting = {
   subjectId: string;
   /** Up to three exam dates (yyyy-MM-dd), oldest first. */
   examDates?: string[];
   confidence?: number | null;
+  /** Per-topic ratings. When present these replace the subject-level rating. */
+  topics?: TopicWeighting[];
 };
 
 /** 1 (shaky) gets 1.5× the sessions of a 3; 5 (solid) gets half. */
@@ -18,6 +22,16 @@ export function confidenceWeight(confidence: number | null | undefined) {
   if (confidence == null) return 1;
   const clamped = Math.min(5, Math.max(1, confidence));
   return 1 + (3 - clamped) * 0.25;
+}
+
+/** A subject's confidence weight: the mean of its topic weights, or its own rating. */
+export function subjectConfidenceWeight(subject: SubjectWeighting) {
+  const rated = (subject.topics ?? []).filter((topic) => topic.confidence != null);
+  if (rated.length) {
+    const total = rated.reduce((sum, topic) => sum + confidenceWeight(topic.confidence), 0);
+    return total / rated.length;
+  }
+  return confidenceWeight(subject.confidence);
 }
 
 /** Which week of the plan a date falls in (1-based), or null if it isn't readable. */
@@ -59,7 +73,20 @@ export function weekWeight(
   subject: SubjectWeighting,
   week: number,
 ) {
-  return examDateWeight(startDate, subject.examDates, week) * confidenceWeight(subject.confidence);
+  return examDateWeight(startDate, subject.examDates, week) * subjectConfidenceWeight(subject);
+}
+
+/** Topics in the order they should be studied: priorities first, then shakiest first. */
+export function orderTopics(
+  topics: Array<{ topic: string; confidence: number | null; isPriority?: boolean }>,
+) {
+  return [...topics]
+    .sort((a, b) => {
+      const priority = Number(Boolean(b.isPriority)) - Number(Boolean(a.isPriority));
+      if (priority !== 0) return priority;
+      return (a.confidence ?? 3) - (b.confidence ?? 3);
+    })
+    .map((entry) => entry.topic);
 }
 
 /**

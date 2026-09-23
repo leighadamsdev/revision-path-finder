@@ -1,9 +1,18 @@
+import { differenceInCalendarDays, format, parseISO } from "date-fns";
+
 import { supabase } from "@/integrations/supabase/client";
 import { generateTopics } from "@/lib/revision.functions";
 import { catalogueSubject } from "@/lib/gcse-subjects";
 import { subjectUnits } from "@/lib/gcse-topics";
 import { examDateColumns, examDateList } from "@/lib/exam-dates";
-import { allocateWeek, weekWeight, type SubjectWeighting } from "@/lib/scheduling";
+import { planDayDate } from "@/lib/plan-dates";
+import { WEEK_DAYS } from "@/lib/subjects";
+import {
+  allocateWeek,
+  orderTopics,
+  weekWeight,
+  type SubjectWeighting,
+} from "@/lib/scheduling";
 
 export type Subject = {
   id: string;
@@ -27,6 +36,29 @@ export type PlanSubject = Subject & {
 
 export type DaySetting = { day: string; sessions: number; minutes: number };
 
+/** A manually entered holiday stretch with its own daily pattern. */
+export type HolidayPeriod = {
+  name: string;
+  start: string;
+  end: string;
+  /** Days of the week studied during the holiday. */
+  days: string[];
+  sessions: number;
+};
+
+/** Heavier (or lighter) study in the final weeks before the first exam. */
+export type Intensity = { weeks: number; sessions: number };
+
+/** One topic inside a plan, with its own confidence rating. */
+export type PlanTopic = {
+  id: string;
+  subject_id: string;
+  topic: string;
+  confidence: number | null;
+  is_priority: boolean;
+  position: number;
+};
+
 export type Plan = {
   id: string;
   name: string;
@@ -40,6 +72,9 @@ export type Plan = {
   created_at: string;
   start_date: string;
   share_token: string | null;
+  intensity_weeks: number | null;
+  intensity_sessions_per_day: number | null;
+  holiday_periods: HolidayPeriod[];
 };
 
 export type SessionRow = {
@@ -70,11 +105,14 @@ export async function fetchPlans(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("plans")
     .select(
-      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date, share_token",
+      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date, share_token, intensity_weeks, intensity_sessions_per_day, holiday_periods",
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as unknown as Plan[];
+  return ((data ?? []) as unknown as Plan[]).map((plan) => ({
+    ...plan,
+    holiday_periods: Array.isArray(plan.holiday_periods) ? plan.holiday_periods : [],
+  }));
 }
 
 /** Turns sharing on for a plan and returns the new share token. */
@@ -177,12 +215,18 @@ export type PlanDraft = {
   /** Up to three optional exam dates (yyyy-MM-dd) per subject id. */
   examDates?: Record<string, string[]>;
 
-  /** Optional 1–5 confidence per subject id. */
+  /** Optional 1–5 confidence per subject id, used when no topics were chosen. */
   confidence?: Record<string, number | null>;
   /** Topics the student ticked from the GCSE checklist, per subject id. */
   chosenTopics?: Record<string, string[]>;
   /** Up to three chosen topics per subject to place in the earliest available sessions. */
   priorityTopics?: Record<string, string[]>;
+  /** Optional 1–5 confidence per topic, keyed by subject id then topic. */
+  topicConfidence?: Record<string, Record<string, number | null>>;
+  /** Heavier study in the final weeks before the first exam. */
+  intensity?: Intensity | null;
+  /** Manually entered holiday stretches. */
+  holidays?: HolidayPeriod[];
 };
 
 type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };
@@ -192,7 +236,48 @@ type ScheduleInput = {
   weeks: number;
   days: DaySetting[];
   subjects: SubjectWeighting[];
+  /** Heavier study in the final weeks before the first exam. */
+  intensity?: Intensity | null;
+  /** Holiday stretches with their own daily pattern. */
+  holidays?: HolidayPeriod[] | null;
 };
+
+/** The earliest exam date across every subject in the plan, if any. */
+function firstExamDate(subjects: SubjectWeighting[]): string | null {
+  const dates = subjects.flatMap((subject) => subject.examDates ?? []).filter(Boolean).sort();
+  return dates[0] ?? null;
+}
+
+/**
+ * How many sessions one calendar day gets: a holiday pattern wins, then the
+ * pre-exam intensity window, then the student's ordinary term-time pattern.
+ */
+function sessionsForDay(
+  date: Date,
+  day: string,
+  baseSessions: number,
+  input: ScheduleInput,
+  firstExam: string | null,
+) {
+  const iso = format(date, "yyyy-MM-dd");
+
+  const holiday = (input.holidays ?? []).find(
+    (period) => period.start && period.end && iso >= period.start && iso <= period.end,
+  );
+  if (holiday) {
+    if (holiday.days.length && !holiday.days.includes(day)) return 0;
+    return Math.max(0, holiday.sessions);
+  }
+
+  if (input.intensity && input.intensity.weeks > 0 && firstExam) {
+    const gap = differenceInCalendarDays(parseISO(firstExam), date);
+    if (gap >= 0 && gap <= input.intensity.weeks * 7 && baseSessions > 0) {
+      return Math.max(0, input.intensity.sessions);
+    }
+  }
+
+  return baseSessions;
+}
 
 /**
  * Lays out every session slot in the plan and decides which subject each one belongs to,
@@ -204,14 +289,23 @@ export function buildSchedule(input: ScheduleInput): Slot[] {
 
   const slots: Slot[] = [];
   const credit: Record<string, number> = {};
+  const firstExam = firstExamDate(subjects);
+  const byDay = new Map(input.days.map((entry) => [entry.day, entry]));
+  const fallbackMinutes = input.days[0]?.minutes ?? 45;
 
   for (let week = 1; week <= input.weeks; week += 1) {
     const daySlots: Array<{ day: string; slot: number; minutes: number }> = [];
-    for (const day of input.days) {
-      for (let slot = 1; slot <= day.sessions; slot += 1) {
-        daySlots.push({ day: day.day, slot, minutes: day.minutes });
+    for (const day of WEEK_DAYS) {
+      const config = byDay.get(day);
+      const date = planDayDate(input.startDate, week, day);
+      const count = date
+        ? sessionsForDay(date, day, config?.sessions ?? 0, input, firstExam)
+        : (config?.sessions ?? 0);
+      for (let slot = 1; slot <= count; slot += 1) {
+        daySlots.push({ day, slot, minutes: config?.minutes ?? fallbackMinutes });
       }
     }
+    if (daySlots.length === 0) continue;
     const weights = subjects.map((subject) => weekWeight(input.startDate, subject, week));
     const assigned = allocateWeek(subjects, daySlots.length, weights, credit);
     daySlots.forEach((entry, i) => {
@@ -232,7 +326,74 @@ function draftWeightings(draft: PlanDraft): SubjectWeighting[] {
     subjectId,
     examDates: draft.examDates?.[subjectId] ?? [],
     confidence: draft.confidence?.[subjectId] ?? null,
+    topics: (draft.chosenTopics?.[subjectId] ?? []).map((topic) => ({
+      topic,
+      confidence: draft.topicConfidence?.[subjectId]?.[topic] ?? null,
+    })),
   }));
+}
+
+/** Every topic saved against a plan, with its rating. */
+export async function fetchPlanTopics(planId: string): Promise<PlanTopic[]> {
+  const { data, error } = await supabase
+    .from("plan_topics")
+    .select("id, subject_id, topic, confidence, is_priority, position")
+    .eq("plan_id", planId)
+    .order("position");
+  if (error) throw error;
+  return (data ?? []) as unknown as PlanTopic[];
+}
+
+/** Replaces a plan's topic list and ratings. */
+export async function savePlanTopics(
+  planId: string,
+  topics: Array<{
+    subjectId: string;
+    topic: string;
+    confidence: number | null;
+    isPriority: boolean;
+  }>,
+) {
+  const { error: deleteError } = await supabase
+    .from("plan_topics")
+    .delete()
+    .eq("plan_id", planId);
+  if (deleteError) throw deleteError;
+  if (!topics.length) return;
+  const { error } = await supabase.from("plan_topics").insert(
+    topics.map((entry, index) => ({
+      plan_id: planId,
+      subject_id: entry.subjectId,
+      topic: entry.topic,
+      confidence: entry.confidence,
+      is_priority: entry.isPriority,
+      position: index,
+    })),
+  );
+  if (error) throw error;
+}
+
+/** The topic rows a draft wants saved, flattened. */
+function draftTopicRows(draft: PlanDraft) {
+  const rows: Array<{
+    subjectId: string;
+    topic: string;
+    confidence: number | null;
+    isPriority: boolean;
+  }> = [];
+  for (const subjectId of draft.subjectIds) {
+    const topics = draft.chosenTopics?.[subjectId] ?? [];
+    const priorities = draft.priorityTopics?.[subjectId] ?? [];
+    for (const topic of topics) {
+      rows.push({
+        subjectId,
+        topic,
+        confidence: draft.topicConfidence?.[subjectId]?.[topic] ?? null,
+        isPriority: priorities.includes(topic),
+      });
+    }
+  }
+  return rows;
 }
 
 
@@ -254,6 +415,9 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       day_plan: draft.days,
       content_mode: draft.contentMode,
       start_date: draft.startDate,
+      intensity_weeks: draft.intensity?.weeks ?? null,
+      intensity_sessions_per_day: draft.intensity?.sessions ?? null,
+      holiday_periods: draft.holidays ?? [],
     })
     .select("id")
     .single();
@@ -272,11 +436,15 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
 
   if (linkError) throw linkError;
 
+  await savePlanTopics(planId, draftTopicRows(draft));
+
   const slots = buildSchedule({
     startDate: draft.startDate,
     weeks: draft.weeks,
     days: draft.days,
     subjects: draftWeightings(draft),
+    intensity: draft.intensity ?? null,
+    holidays: draft.holidays ?? [],
   });
   const topicsBySubject = await buildTopics(draft, slots);
   const counters: Record<string, number> = {};
@@ -306,16 +474,17 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
 async function buildTopics(draft: PlanDraft, slots: Slot[]) {
   const result: Record<string, string[]> = {};
 
-  // Topics ticked from the GCSE checklist always win.
+  // Topics ticked from the GCSE checklist always win: priorities first, shakiest next.
   for (const [subjectId, topics] of Object.entries(draft.chosenTopics ?? {})) {
     if (topics.length) {
-      const priorities = (draft.priorityTopics?.[subjectId] ?? []).filter((topic) =>
-        topics.includes(topic),
+      const priorities = draft.priorityTopics?.[subjectId] ?? [];
+      result[subjectId] = orderTopics(
+        topics.map((topic) => ({
+          topic,
+          confidence: draft.topicConfidence?.[subjectId]?.[topic] ?? null,
+          isPriority: priorities.includes(topic),
+        })),
       );
-      result[subjectId] = [
-        ...priorities,
-        ...topics.filter((topic) => !priorities.includes(topic)),
-      ];
     }
   }
   if (draft.contentMode === "manual") return result;
@@ -424,7 +593,14 @@ export async function updatePlanDetails(planId: string, name: string, startDate:
 /** Saves plan-wide settings (name, start date, weeks, study days and session lengths). */
 export async function updatePlanSettings(
   planId: string,
-  settings: { name: string; startDate: string; weeks: number; days: DaySetting[] },
+  settings: {
+    name: string;
+    startDate: string;
+    weeks: number;
+    days: DaySetting[];
+    intensity?: Intensity | null;
+    holidays?: HolidayPeriod[];
+  },
 ) {
   const { error } = await supabase
     .from("plans")
@@ -437,6 +613,9 @@ export async function updatePlanSettings(
       sessions_per_day: Math.max(...settings.days.map((d) => d.sessions), 1),
       session_length_minutes: settings.days[0]?.minutes ?? 45,
       day_plan: settings.days,
+      intensity_weeks: settings.intensity?.weeks ?? null,
+      intensity_sessions_per_day: settings.intensity?.sessions ?? null,
+      holiday_periods: settings.holidays ?? [],
     })
     .eq("id", planId);
   if (error) throw error;
@@ -453,17 +632,36 @@ export async function regeneratePlanSessions(
     weeks: number;
     days: DaySetting[];
     subjects: Array<SubjectWeighting & { name: string }>;
+    intensity?: Intensity | null;
+    holidays?: HolidayPeriod[];
   },
 ) {
   const existing = await fetchSessions(planId);
+  const savedTopics = await fetchPlanTopics(planId);
 
   const notes = new Map<string, string>();
   const topicsBySubject: Record<string, string[]> = {};
+
+  // Topics the student chose (with their ratings) set the order for each subject.
+  for (const subject of settings.subjects) {
+    const own = savedTopics.filter((row) => row.subject_id === subject.subjectId);
+    if (own.length) {
+      topicsBySubject[subject.subjectId] = orderTopics(
+        own.map((row) => ({
+          topic: row.topic,
+          confidence: row.confidence,
+          isPriority: row.is_priority,
+        })),
+      );
+    }
+  }
+
   for (const session of existing) {
     if (session.gap_notes) {
       notes.set(`${session.week_number}|${session.day_label}|${session.session_slot}`, session.gap_notes);
     }
-    if (session.subject_id && session.topic_text) {
+    const chosen = savedTopics.some((row) => row.subject_id === session.subject_id);
+    if (session.subject_id && session.topic_text && !chosen) {
       const pool = (topicsBySubject[session.subject_id] ??= []);
       if (!pool.includes(session.topic_text)) pool.push(session.topic_text);
     }
@@ -487,6 +685,8 @@ export async function regeneratePlanSessions(
     weeks: settings.weeks,
     days: settings.days,
     subjects: settings.subjects,
+    intensity: settings.intensity ?? null,
+    holidays: settings.holidays ?? [],
   });
 
   const counters: Record<string, number> = {};
@@ -573,6 +773,8 @@ export async function savePlanSubjects(
 
 /** Permanently deletes a plan along with its sessions and subject links. */
 export async function deletePlan(planId: string) {
+  const { error: topicError } = await supabase.from("plan_topics").delete().eq("plan_id", planId);
+  if (topicError) throw topicError;
   const { error: sessionError } = await supabase.from("sessions").delete().eq("plan_id", planId);
   if (sessionError) throw sessionError;
   const { error: linkError } = await supabase.from("plan_subjects").delete().eq("plan_id", planId);

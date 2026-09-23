@@ -99,6 +99,7 @@ function EditPlanPage() {
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
 
   useEffect(() => {
     if (!plan) return;
@@ -566,7 +567,7 @@ function EditPlanPage() {
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
             Removes the plan and every session in it. This can't be undone.
           </p>
-          <Button variant="destructive" className="mt-3" onClick={() => setDeleteOpen(true)}>
+          <Button variant="destructive" className="mt-3" onClick={() => { setDeleteText(""); setDeleteOpen(true); }}>
             <Trash2 aria-hidden="true" />
             Delete plan
           </Button>
@@ -581,11 +582,14 @@ function EditPlanPage() {
               This will permanently delete this plan and all its sessions — are you sure?
             </DialogDescription>
           </DialogHeader>
+          <label className="block text-sm font-bold">Type <span className="font-extrabold">{plan.name}</span> to confirm
+            <input value={deleteText} onChange={(event) => setDeleteText(event.target.value)} className="mt-2 w-full rounded-[8px] bg-background px-3 py-2.5 font-medium ring-1 ring-border focus:outline-none" />
+          </label>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={deleting}>
               Keep this plan
             </Button>
-            <Button variant="destructive" onClick={() => void remove()} disabled={deleting}>
+            <Button variant="destructive" onClick={() => void remove()} disabled={deleting || deleteText !== plan.name}>
               {deleting ? "Deleting…" : "Yes, delete it"}
             </Button>
           </DialogFooter>

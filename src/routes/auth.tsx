@@ -7,8 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
 import { PublicHeader } from "@/components/PublicHeader";
 
+type AuthSearch = { mode?: "signup"; context?: string; returnTo?: string };
+
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): AuthSearch => ({
     mode: search["mode"] === "signup" ? "signup" as const : undefined,
     context: typeof search["context"] === "string" ? search["context"] : undefined,
     returnTo: typeof search["returnTo"] === "string" ? search["returnTo"] : undefined,

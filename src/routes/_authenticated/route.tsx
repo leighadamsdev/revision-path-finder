@@ -10,6 +10,7 @@ export const Route = createFileRoute("/_authenticated")({
       throw redirect({
         to: "/auth",
         search: {
+          mode: undefined,
           returnTo: location.href,
           context: location.pathname === "/exams" ? "exams" : undefined,
         },

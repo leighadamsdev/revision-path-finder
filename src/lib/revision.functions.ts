@@ -164,3 +164,76 @@ export const extractTopicsFromDocument = createServerFn({ method: "POST" })
       throw error;
     }
   });
+
+const ExamDatesInput = z.object({
+  subjects: z.array(z.string()).max(40).default([]),
+  fileName: z.string().min(1),
+  mimeType: z.string().min(1),
+  dataUrl: z.string().min(16),
+});
+
+/** Reads exam dates out of a school exam timetable (PDF, photo or scan). */
+export const extractExamDates = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ExamDatesInput.parse(input))
+  .handler(async ({ data }) => {
+    const { askForJson, AiError } = await import("@/lib/ai.server");
+    const isPdf = data.mimeType === "application/pdf";
+    try {
+      const result = await askForJson<{
+        exams: Array<{ subject: string; date: string; paper: string }>;
+      }>({
+        instructions:
+          "You read UK school GCSE exam timetables, which vary in layout. Extract every exam sitting with its subject and calendar date. Return each date strictly as yyyy-MM-dd. If the year is not printed, infer it from the exam season (summer GCSE exams run May–June). Use the paper field for the paper name or number when shown, otherwise an empty string. Ignore rooms, times, seat numbers and general instructions. Return an empty list if there are no recognisable exam dates.",
+        schemaName: "exam_dates",
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          required: ["exams"],
+          properties: {
+            exams: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["subject", "date", "paper"],
+                properties: {
+                  subject: { type: "string" },
+                  date: { type: "string" },
+                  paper: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: [
+                  "Extract every exam sitting from this exam timetable, reading tables and images carefully.",
+                  data.subjects.length
+                    ? `The student is sitting these subjects — match names to this list wherever you can: ${data.subjects.join("; ")}.`
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join("\n"),
+              },
+              isPdf
+                ? { type: "input_file", filename: data.fileName, file_data: data.dataUrl }
+                : { type: "input_image", image_url: data.dataUrl },
+            ],
+          },
+        ],
+      });
+      const exams = result.exams
+        .filter((exam) => /^\d{4}-\d{2}-\d{2}$/.test(exam.date))
+        .slice(0, 60);
+      return { exams };
+    } catch (error) {
+      if (error instanceof AiError) throw new Error(error.message);
+      throw error;
+    }
+  });

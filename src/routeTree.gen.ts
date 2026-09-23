@@ -20,7 +20,6 @@ import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedPapersRouteImport } from './routes/_authenticated/papers'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
-import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedSitesRouteImport } from './routes/_authenticated/sites'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
@@ -79,11 +78,6 @@ const AuthenticatedPrintPlanRoute = AuthenticatedPrintPlanRouteImport.update({
   path: '/print-plan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedProgressRoute = AuthenticatedProgressRouteImport.update({
-  id: '/progress',
-  path: '/progress',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
   id: '/setup',
   path: '/setup',
@@ -111,7 +105,6 @@ export interface FileRoutesByFullPath {
   '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
-  '/progress': typeof AuthenticatedProgressRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/sites': typeof AuthenticatedSitesRoute
   '/share/$token': typeof ShareTokenRoute
@@ -127,7 +120,6 @@ export interface FileRoutesByTo {
   '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
-  '/progress': typeof AuthenticatedProgressRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/sites': typeof AuthenticatedSitesRoute
   '/share/$token': typeof ShareTokenRoute
@@ -145,7 +137,6 @@ export interface FileRoutesById {
   '/_authenticated/papers': typeof AuthenticatedPapersRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
-  '/_authenticated/progress': typeof AuthenticatedProgressRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/sites': typeof AuthenticatedSitesRoute
   '/share/$token': typeof ShareTokenRoute
@@ -163,7 +154,6 @@ export interface FileRouteTypes {
     | '/papers'
     | '/plan'
     | '/print-plan'
-    | '/progress'
     | '/setup'
     | '/sites'
     | '/share/$token'
@@ -179,7 +169,6 @@ export interface FileRouteTypes {
     | '/papers'
     | '/plan'
     | '/print-plan'
-    | '/progress'
     | '/setup'
     | '/sites'
     | '/share/$token'
@@ -196,7 +185,6 @@ export interface FileRouteTypes {
     | '/_authenticated/papers'
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
-    | '/_authenticated/progress'
     | '/_authenticated/setup'
     | '/_authenticated/sites'
     | '/share/$token'
@@ -290,13 +278,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrintPlanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/progress': {
-      id: '/_authenticated/progress'
-      path: '/progress'
-      fullPath: '/progress'
-      preLoaderRoute: typeof AuthenticatedProgressRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/setup': {
       id: '/_authenticated/setup'
       path: '/setup'
@@ -328,7 +309,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPapersRoute: typeof AuthenticatedPapersRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
-  AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
   AuthenticatedSitesRoute: typeof AuthenticatedSitesRoute
 }
@@ -340,7 +320,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPapersRoute: AuthenticatedPapersRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,
-  AuthenticatedProgressRoute: AuthenticatedProgressRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
   AuthenticatedSitesRoute: AuthenticatedSitesRoute,
 }

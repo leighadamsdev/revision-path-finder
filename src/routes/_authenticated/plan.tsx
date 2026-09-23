@@ -26,7 +26,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
+import {
+  useActivePlan,
+  usePlanSessions,
+  usePlanSubjects,
+  usePlanTopics,
+} from "@/hooks/useActivePlan";
+import { averageConfidence, confidenceTone } from "@/lib/confidence";
 import type { SessionRow } from "@/lib/plan";
 import { deletePlan, disablePlanShare, enablePlanShare } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";

@@ -65,8 +65,8 @@ function ProgressPage() {
                 <p className="text-[13px] font-semibold text-muted-foreground">
                   {own.length} sessions · {share}% of your time
                 </p>
-                <p className="ml-auto text-[13px] font-extrabold">
-                  {subject.confidence ? `${subject.confidence}/5` : "Not rated"}
+                <p className={`ml-auto text-[13px] font-extrabold ${confidenceTone(rating).text}`}>
+                  {rating ? `${rating}/5` : "Not rated"}
                 </p>
               </div>
               <p className="mt-1 text-[12px] font-semibold text-muted-foreground">

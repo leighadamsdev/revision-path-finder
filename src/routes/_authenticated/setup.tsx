@@ -310,7 +310,6 @@ function SetupPage() {
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
 
   const totalChosen = picks.reduce((sum, p) => sum + topicsFor(p.name).length, 0);
-  const totalPriorities = picks.reduce((sum, p) => sum + prioritiesFor(p.name).length, 0);
 
   const canContinue =
     step === 1

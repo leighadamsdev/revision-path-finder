@@ -16,6 +16,7 @@ import { Route as KnowledgeCheckerRouteImport } from './routes/knowledge-checker
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RevisionGuideRouteImport } from './routes/revision-guide'
 import { Route as RevisionHelpRouteImport } from './routes/revision-help'
+import { Route as RevisionToolsRouteImport } from './routes/revision-tools'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
@@ -58,6 +59,11 @@ const RevisionGuideRoute = RevisionGuideRouteImport.update({
 const RevisionHelpRoute = RevisionHelpRouteImport.update({
   id: '/revision-help',
   path: '/revision-help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RevisionToolsRoute = RevisionToolsRouteImport.update({
+  id: '/revision-tools',
+  path: '/revision-tools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
+  '/revision-tools': typeof RevisionToolsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
+  '/revision-tools': typeof RevisionToolsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
+  '/revision-tools': typeof RevisionToolsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/revision-guide'
     | '/revision-help'
+    | '/revision-tools'
     | '/admin'
     | '/edit-plan'
     | '/exams'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/revision-guide'
     | '/revision-help'
+    | '/revision-tools'
     | '/admin'
     | '/edit-plan'
     | '/exams'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/revision-guide'
     | '/revision-help'
+    | '/revision-tools'
     | '/_authenticated/admin'
     | '/_authenticated/edit-plan'
     | '/_authenticated/exams'
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RevisionGuideRoute: typeof RevisionGuideRoute
   RevisionHelpRoute: typeof RevisionHelpRoute
+  RevisionToolsRoute: typeof RevisionToolsRoute
   ShareTokenRoute: typeof ShareTokenRoute
 }
 
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       path: '/revision-help'
       fullPath: '/revision-help'
       preLoaderRoute: typeof RevisionHelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/revision-tools': {
+      id: '/revision-tools'
+      path: '/revision-tools'
+      fullPath: '/revision-tools'
+      preLoaderRoute: typeof RevisionToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -375,6 +395,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RevisionGuideRoute: RevisionGuideRoute,
   RevisionHelpRoute: RevisionHelpRoute,
+  RevisionToolsRoute: RevisionToolsRoute,
   ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport

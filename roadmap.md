@@ -18,3 +18,5 @@
 - [x] Simplify the Knowledge Checker printout so the website header is removed and repeated pages only show subject/topic/date.
 - [x] Add an option to turn highlighted gaps and corrections into flashcards.
 - [x] Add the "How to Revise Effectively" guide page with nav links everywhere.
+- [x] Add the interactive Revision Tools page with timer, focus audio, and Focus Mode.
+- [x] Add Revision Tools to public and signed-in navigation, then verify all interactions and layouts.

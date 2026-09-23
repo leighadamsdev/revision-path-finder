@@ -10,6 +10,7 @@ const PUBLIC_LINKS = [
   { to: "/revision-help", label: "Leitner Technique" },
   { to: "/knowledge-checker", label: "Knowledge Checker" },
   { to: "/revision-guide", label: "Effective Revision" },
+  { to: "/revision-tools", label: "Revision Tools" },
 ] as const;
 
 export function PublicHeader() {

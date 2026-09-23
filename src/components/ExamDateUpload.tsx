@@ -55,8 +55,15 @@ export function ExamDateUpload({
         toast.error("We couldn't find any exam dates in that file — add them by hand instead.");
         return;
       }
-      setRows(exams.map((exam) => ({ ...exam, assigned: matchSubject(exam.subject) })));
-      toast.success(`Found ${exams.length} exam${exams.length === 1 ? "" : "s"} — check them below.`);
+      const matched = exams
+        .map((exam) => ({ ...exam, assigned: matchSubject(exam.subject) }))
+        .filter((exam) => exam.assigned !== "");
+      if (!matched.length) {
+        toast.error("That timetable didn't include any of your chosen subjects.");
+        return;
+      }
+      setRows(matched);
+      toast.success(`Found ${matched.length} exam${matched.length === 1 ? "" : "s"} — check them below.`);
     } catch (error) {
       console.error(error);
       toast.error("We couldn't read that timetable. Try a clearer file or add the dates by hand.");

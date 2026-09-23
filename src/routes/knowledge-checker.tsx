@@ -187,7 +187,7 @@ function KnowledgeCheckerPage() {
     const {
       AlignmentType,
       BorderStyle,
-      Document,
+      Document: WordDocument,
       HeadingLevel,
       Packer,
       Paragraph,
@@ -205,10 +205,10 @@ function KnowledgeCheckerPage() {
         width: { size: width, type: WidthType.DXA },
         borders,
         margins: { top: 180, bottom: 180, left: 180, right: 180 },
-        shading: heading ? { fill: "94D8CA", type: ShadingType.CLEAR } : undefined,
+        ...(heading ? { shading: { fill: "94D8CA", type: ShadingType.CLEAR } } : {}),
         children: [new Paragraph({ children: [new TextRun({ text, bold: heading, color: "0E333D" })] })],
       });
-    const wordDocument = new Document({
+    const wordDocument = new WordDocument({
       styles: {
         default: { document: { run: { font: "Arial", size: 22, color: "0E333D" } } },
         paragraphStyles: [

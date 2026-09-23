@@ -392,7 +392,9 @@ function RevisionToolsPage() {
         <section className="mx-auto mt-10 max-w-5xl px-5">
           <div className="rounded-[8px] bg-checker-ink p-6 text-checker-paper sm:flex sm:items-center sm:justify-between sm:gap-6">
             <div><h2 className="text-xl font-extrabold">Put your focused sessions into a plan</h2><p className="mt-1 text-sm font-semibold text-checker-paper/70">Turn these tools into a routine you can follow each week.</p></div>
-            <Button asChild className="mt-4 shrink-0 sm:mt-0"><Link to={user ? (plan ? "/plan" : "/setup") : "/auth"} search={user ? undefined : { mode: "signup", context: "create-plan", returnTo: "/setup" }}>{plan ? "Open my plan" : "Create your revision plan"}</Link></Button>
+            <Button asChild className="mt-4 shrink-0 sm:mt-0">
+              {user ? <Link to={plan ? "/plan" : "/setup"}>{plan ? "Open my plan" : "Create your revision plan"}</Link> : <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}>Create your revision plan</Link>}
+            </Button>
           </div>
         </section>
 

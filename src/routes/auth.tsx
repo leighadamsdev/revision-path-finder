@@ -10,11 +10,13 @@ import { PublicHeader } from "@/components/PublicHeader";
 type AuthSearch = { mode?: "signup"; context?: string; returnTo?: string };
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>): AuthSearch => ({
-    mode: search["mode"] === "signup" ? "signup" as const : undefined,
-    context: typeof search["context"] === "string" ? search["context"] : undefined,
-    returnTo: typeof search["returnTo"] === "string" ? search["returnTo"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): AuthSearch => {
+    const next: AuthSearch = {};
+    if (search["mode"] === "signup") next.mode = "signup";
+    if (typeof search["context"] === "string") next.context = search["context"];
+    if (typeof search["returnTo"] === "string") next.returnTo = search["returnTo"];
+    return next;
+  },
   head: () => ({
     meta: [
       { title: "Sign in — rev.plan" },

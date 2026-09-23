@@ -26,7 +26,7 @@ const TABS = [
   { to: "/sites", label: "Revision links", icon: Sparkles },
   { to: "/revision-help", label: "Leitner Technique", icon: Lightbulb },
   { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
-  { to: "/revision-guide", label: "Revision guide", icon: GraduationCap },
+  { to: "/revision-guide", label: "Effective Revision", icon: GraduationCap },
 ] as const;
 
 

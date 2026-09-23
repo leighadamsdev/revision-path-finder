@@ -53,16 +53,22 @@ const POINTS = [
 function Landing() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      <header className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
+      <header className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-5 py-5">
         <div className="flex items-center gap-2.5">
           <span className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 shadow-[0_2px_10px_rgba(3,49,58,0.08)]">
             <Logo className="h-11 w-auto" />
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <nav className="flex w-full items-center justify-end gap-1 sm:w-auto sm:gap-2" aria-label="Public navigation">
+          <Link
+            to="/sites"
+            className="rounded-full px-2.5 py-2 text-[12px] font-bold text-structure hover:bg-structure/5 sm:px-3 sm:text-[13px]"
+          >
+            Revision Links
+          </Link>
           <Link
             to="/revision-help"
-            className="hidden rounded-full px-3 py-2 text-[13px] font-bold text-structure hover:bg-structure/5 sm:inline-flex"
+            className="rounded-full px-2.5 py-2 text-[12px] font-bold text-structure hover:bg-structure/5 sm:px-3 sm:text-[13px]"
           >
             Revision Help
           </Link>
@@ -72,7 +78,7 @@ function Landing() {
           >
             Sign in
           </Link>
-        </div>
+        </nav>
       </header>
 
       <main className="mx-auto max-w-4xl px-5 pb-20 pt-6">

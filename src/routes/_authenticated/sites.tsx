@@ -10,16 +10,16 @@ import { subjectStyle } from "@/lib/subjects";
 export const Route = createFileRoute("/_authenticated/sites")({
   head: () => ({
     meta: [
-      { title: "Revision sites — rev.plan" },
+      { title: "Revision links — rev.plan" },
       {
         name: "description",
         content:
-          "Free revision websites and YouTube channels worth using, grouped by the subjects in your own GCSE plan.",
+          "Free revision links and YouTube channels worth using, grouped by the subjects in your own GCSE plan.",
       },
-      { property: "og:title", content: "Revision sites — rev.plan" },
+      { property: "og:title", content: "Revision links — rev.plan" },
       {
         property: "og:description",
-        content: "Free revision sites and channels for your GCSE subjects.",
+        content: "Free revision links and channels for your GCSE subjects.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -56,7 +56,7 @@ function SitesPage() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-extrabold tracking-tight">Revision sites</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">Revision links</h1>
       <p className="mt-1 text-[13px] font-medium text-muted-foreground">
         Free, currently-active resources — picked for the subjects in your plan.
       </p>

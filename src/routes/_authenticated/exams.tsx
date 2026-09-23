@@ -87,7 +87,7 @@ function ExamCalendarPage() {
       <div className="mx-auto max-w-3xl">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-xl font-extrabold tracking-tight">Exam calendar</h1>
+            <h1 className="text-xl font-extrabold tracking-tight">Exam timetable</h1>
             <p className="mt-1 text-[13px] font-medium text-muted-foreground">
               Every exam date you've added, laid out day by day.
             </p>

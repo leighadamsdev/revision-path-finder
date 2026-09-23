@@ -14,4 +14,4 @@
 - [x] Verify the Knowledge Checker guide on desktop and mobile.
 - [x] Add a usable online Knowledge Checker for students.
 - [x] Create a matching downloadable Knowledge Checker worksheet.
-- [ ] Verify the online checker interactions, persistence, download, and responsive layouts.
+- [x] Verify the online checker interactions, persistence, download, and responsive layouts.

@@ -107,18 +107,18 @@ export function AppShell({
             </div>
           </div>
 
-          <nav className="app-nav mt-3 overflow-x-auto border-t border-structure-foreground/15" aria-label="Main navigation">
-            <div className="flex min-w-max items-stretch gap-1 pt-2">
+          <nav className="app-nav mt-3 border-t border-structure-foreground/15" aria-label="Main navigation">
+            <div className={`grid items-stretch gap-1 pt-2 ${isAdmin ? "grid-cols-5" : "grid-cols-4"}`}>
               {(isAdmin ? [...TABS, ADMIN_TAB] : TABS).map((tab) => (
                 <Link
                   key={tab.to}
                   to={tab.to}
-                  className="flex min-h-10 items-center gap-2 rounded-[8px] px-3 py-2 text-structure-foreground/70"
+                  className="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-[8px] px-1 py-2 text-center text-structure-foreground/70 sm:min-h-10 sm:flex-row sm:gap-2 sm:px-3"
                   activeProps={{ className: "bg-structure-foreground/10 text-primary" }}
                   activeOptions={{ exact: true }}
                 >
                   <tab.icon className="size-4 shrink-0" strokeWidth={2.5} />
-                  <span className="whitespace-nowrap text-[11px] font-bold">{tab.label}</span>
+                  <span className="text-[10px] font-bold leading-tight sm:text-[11px]">{tab.label}</span>
                 </Link>
               ))}
             </div>

@@ -343,7 +343,7 @@
     padding: 0;
   }
 
-  .checker-print-sheet {
+  body:has(.knowledge-checker-print) .checker-print-sheet {
     display: block;
     color: black;
     font-size: 10.5pt;

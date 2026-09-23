@@ -320,6 +320,7 @@
 
   .app-header,
   .app-nav,
+  .public-header,
   .print-preview-actions,
   .saved-flash,
   .print-editable,
@@ -329,6 +330,73 @@
 
   body:has(.knowledge-checker-print) .print\:hidden {
     display: none;
+  }
+
+  body:has(.knowledge-checker-print) {
+    background: white;
+  }
+
+  .knowledge-checker-print {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  body:has(.knowledge-checker-print) .checker-print-sheet {
+    display: block;
+    color: black;
+    font-size: 10.5pt;
+  }
+
+  .checker-print-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .checker-print-table thead {
+    display: table-header-group;
+  }
+
+  .checker-print-table th,
+  .checker-print-table td {
+    border: 1px solid black;
+    padding: 0.35rem;
+    vertical-align: top;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .checker-print-table th {
+    font-size: 9pt;
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .checker-print-table td {
+    min-height: 5.6rem;
+    height: 5.6rem;
+  }
+
+  .checker-print-table th:nth-child(1),
+  .checker-print-table td:nth-child(1) {
+    width: 25%;
+  }
+
+  .checker-print-table th:nth-child(2),
+  .checker-print-table td:nth-child(2),
+  .checker-print-table th:nth-child(3),
+  .checker-print-table td:nth-child(3) {
+    width: 37.5%;
+  }
+
+  .checker-print-repeat-header {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr 0.65fr;
+    gap: 0.5rem;
+    font-size: 10pt;
+    font-weight: 800;
   }
 
   .print-preview-shell {
@@ -355,4 +423,8 @@
     break-inside: avoid;
     page-break-inside: avoid;
   }
+}
+
+.checker-print-sheet {
+  display: none;
 }

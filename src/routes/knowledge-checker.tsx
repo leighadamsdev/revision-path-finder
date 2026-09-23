@@ -2,10 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpen,
-  Check,
   Clock3,
   Download,
   EyeOff,
+  FileDown,
   Highlighter,
   Pause,
   Play,
@@ -55,6 +55,7 @@ export const Route = createFileRoute("/knowledge-checker")({
 
 type CheckerRow = { id: string; component: string; recall: string; gaps: string };
 type CheckerDraft = { subject: string; topic: string; date: string; rows: CheckerRow[] };
+type Flashcard = { id: string; term: string; definition: string; source: string };
 
 const STORAGE_KEY = "revplan.knowledgeChecker";
 const EMPTY_ROWS: CheckerRow[] = [1, 2, 3].map((number) => ({
@@ -73,12 +74,45 @@ function formatClock(seconds: number) {
   return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
 }
 
+function splitGapIntoFlashcard(line: string, row: CheckerRow, index: number): Flashcard {
+  const source = row.component.trim() || "Knowledge gap";
+  const colonIndex = line.indexOf(":");
+  const dashMatch = line.match(/\s[—–-]\s/);
+  const splitIndex = colonIndex > 0 ? colonIndex : dashMatch?.index;
+  const splitLength = colonIndex > 0 ? 1 : dashMatch?.[0].length;
+
+  if (splitIndex && splitLength) {
+    const term = line.slice(0, splitIndex).trim();
+    const definition = line.slice(splitIndex + splitLength).trim();
+    if (term.length > 0 && definition.length > 0) {
+      return { id: `${row.id}-${index}`, term, definition, source };
+    }
+  }
+
+  return { id: `${row.id}-${index}`, term: source, definition: line, source };
+}
+
+function buildFlashcards(rows: CheckerRow[]) {
+  return rows.flatMap((row) =>
+    row.gaps
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line, index) => splitGapIntoFlashcard(line, row, index)),
+  );
+}
+
+function csvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
 function KnowledgeCheckerPage() {
   const [draft, setDraft] = useState<CheckerDraft>({ subject: "", topic: "", date: "", rows: EMPTY_ROWS });
   const [mode, setMode] = useState<"recall" | "check">("recall");
   const [remaining, setRemaining] = useState(30 * 60);
   const [running, setRunning] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [showFlashcards, setShowFlashcards] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -123,6 +157,8 @@ function KnowledgeCheckerPage() {
     [draft.rows],
   );
 
+  const flashcards = useMemo(() => buildFlashcards(draft.rows), [draft.rows]);
+
   function patchRow(id: string, patch: Partial<CheckerRow>) {
     setDraft((current) => ({
       ...current,
@@ -146,14 +182,32 @@ function KnowledgeCheckerPage() {
     setMode("recall");
     setRemaining(30 * 60);
     setRunning(false);
+    setShowFlashcards(false);
     window.localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function downloadFlashcards() {
+    if (flashcards.length === 0) return;
+    const csv = [
+      ["Key term", "Definition", "Component"].map(csvCell).join(","),
+      ...flashcards.map((card) => [card.term, card.definition, card.source].map(csvCell).join(",")),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "revplan-gap-flashcards.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   return (
     <div className="min-h-screen bg-checker-paper font-sans text-checker-ink">
       <PublicHeader />
       <main className="knowledge-checker-print mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
-        <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+        <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end print:hidden">
           <div>
             <p className="text-xs font-extrabold uppercase text-muted-foreground">Online worksheet</p>
             <h1 className="mt-2 text-4xl font-extrabold sm:text-5xl">Revision Knowledge Checker</h1>
@@ -169,7 +223,7 @@ function KnowledgeCheckerPage() {
           </div>
         </header>
 
-        <section className="mt-7 overflow-hidden rounded-[8px] border border-checker-ink bg-card shadow-sm">
+        <section className="mt-7 overflow-hidden rounded-[8px] border border-checker-ink bg-card shadow-sm print:hidden">
           <div className="flex flex-col gap-4 bg-checker-ink p-5 text-checker-paper sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-extrabold uppercase text-checker-mint">revplan. · active recall</p>
@@ -241,8 +295,18 @@ function KnowledgeCheckerPage() {
           </div>
         </section>
 
+        <PrintableChecker draft={draft} />
+
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 print:hidden">
-          <Button asChild variant="ghost"><Link to="/revision-help">How to use this checker</Link></Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="ghost"><Link to="/revision-help">How to use this checker</Link></Button>
+            <Button type="button" variant="outline" disabled={flashcards.length === 0} onClick={() => setShowFlashcards((value) => !value)}>
+              <BookOpen /> {showFlashcards ? "Hide flashcards" : "Make flashcards from gaps"}
+            </Button>
+            <Button type="button" variant="outline" disabled={flashcards.length === 0} onClick={downloadFlashcards}>
+              <FileDown /> Download flashcards
+            </Button>
+          </div>
           <AlertDialog>
             <AlertDialogTrigger asChild><Button type="button" variant="outline"><RotateCcw /> Start a fresh sheet</Button></AlertDialogTrigger>
             <AlertDialogContent>
@@ -257,7 +321,83 @@ function KnowledgeCheckerPage() {
             </AlertDialogContent>
           </AlertDialog>
         </div>
+
+        {showFlashcards ? <FlashcardPanel flashcards={flashcards} /> : null}
       </main>
     </div>
+  );
+}
+
+function PrintableChecker({ draft }: { draft: CheckerDraft }) {
+  const subject = draft.subject.trim() || "____________________________";
+  const topic = draft.topic.trim() || "____________________________";
+  const date = draft.date.trim() || "____________";
+
+  return (
+    <section className="checker-print-sheet" aria-label="Printable Knowledge Checker sheet">
+      <table className="checker-print-table">
+        <thead>
+          <tr>
+            <th colSpan={3}>
+              <div className="checker-print-repeat-header">
+                <span>Subject: {subject}</span>
+                <span>Topic title: {topic}</span>
+                <span>Date: {date}</span>
+              </div>
+            </th>
+          </tr>
+          <tr>
+            <th>Key component</th>
+            <th>What I already know</th>
+            <th>Gaps and corrections</th>
+          </tr>
+        </thead>
+        <tbody>
+          {draft.rows.map((row, index) => (
+            <tr key={row.id}>
+              <td>
+                <strong>{index + 1}. </strong>
+                {row.component.trim() || ""}
+              </td>
+              <td>{row.recall.trim() || ""}</td>
+              <td>{row.gaps.trim() || ""}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+function FlashcardPanel({ flashcards }: { flashcards: Flashcard[] }) {
+  if (flashcards.length === 0) return null;
+
+  return (
+    <section className="mt-5 rounded-[8px] border border-checker-line bg-card p-5 shadow-sm print:hidden">
+      <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs font-extrabold uppercase text-muted-foreground">Flashcards from gaps</p>
+          <h2 className="mt-1 text-2xl font-extrabold text-checker-ink">Key terms and definitions</h2>
+        </div>
+        <span className="inline-flex self-start rounded-full bg-checker-mint px-3 py-1.5 text-xs font-extrabold text-checker-ink">
+          {flashcards.length} {flashcards.length === 1 ? "card" : "cards"}
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        {flashcards.map((card, index) => (
+          <article key={card.id} className="overflow-hidden rounded-[8px] border border-checker-line bg-checker-paper">
+            <div className="border-b border-checker-line bg-checker-ink px-4 py-3 text-checker-paper">
+              <p className="text-xs font-extrabold uppercase text-checker-mint">Card {index + 1} · Front</p>
+              <p className="mt-1 text-lg font-extrabold">{card.term}</p>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-xs font-extrabold uppercase text-muted-foreground">Back</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm font-semibold leading-relaxed text-checker-ink">{card.definition}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }

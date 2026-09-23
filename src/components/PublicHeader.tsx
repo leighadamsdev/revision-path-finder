@@ -13,7 +13,7 @@ const PUBLIC_LINKS = [
 
 export function PublicHeader() {
   return (
-    <header className="border-b border-border bg-background">
+    <header className="public-header border-b border-border bg-background print:hidden">
       <div className="mx-auto max-w-4xl px-5 pb-3 pt-5">
         <div className="flex items-center justify-between gap-3">
           <Link

@@ -385,14 +385,39 @@ function EditPlanPage() {
               </p>
             ) : null}
           </div>
+
+          <div className="mt-4 space-y-2">
+            <IntensityField value={intensity} onChange={setIntensity} />
+            <HolidayPlanner holidays={holidays} onChange={setHolidays} />
+          </div>
         </div>
 
         <div className="mt-4 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
           <p className="text-sm font-extrabold tracking-tight">Subjects, exam dates and confidence</p>
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-            Exam dates are optional — add them whenever your school confirms them. Subjects you feel
+            Exam dates are optional — add them whenever your school confirms them. Topics you feel
             shakiest about, and exams coming up soonest, get more sessions.
           </p>
+
+          <div className="mt-3">
+            <ExamDateUpload
+              subjects={rows.map((row) => row.name)}
+              onApply={(dates) =>
+                setRows((prev) =>
+                  prev.map((row) => {
+                    const found = dates[row.name];
+                    if (!found) return row;
+                    return {
+                      ...row,
+                      examDates: [...new Set([...row.examDates.filter(Boolean), ...found])]
+                        .sort()
+                        .slice(0, 3),
+                    };
+                  }),
+                )
+              }
+            />
+          </div>
 
           <div className="mt-4 space-y-2.5">
             {rows.map((row) => {
@@ -418,34 +443,55 @@ function EditPlanPage() {
                     </button>
                   </div>
 
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <div>
+                  <div className="mt-3">
+                    <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      Exam dates (up to 3)
+                    </span>
+                    <div className="mt-1">
+                      <ExamDatesField
+                        dates={row.examDates}
+                        onChange={(dates) => patchRow(row.subjectId, { examDates: dates })}
+                      />
+                    </div>
+                  </div>
+
+                  {subjectTopics.length ? (
+                    <div className="mt-3">
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                        Exam dates (up to 3)
+                        Confidence on each topic
                       </span>
-                      <div className="mt-1">
-                        <ExamDatesField
-                          dates={row.examDates}
-                          onChange={(dates) => patchRow(row.subjectId, { examDates: dates })}
+                      <div className="mt-2">
+                        <TopicConfidenceList
+                          topics={subjectTopics.map((topic) => topic.topic)}
+                          ratings={Object.fromEntries(
+                            subjectTopics.map((topic) => [topic.topic, topic.confidence]),
+                          )}
+                          onChange={(topic, value) =>
+                            setTopics((prev) =>
+                              prev.map((item) =>
+                                item.subjectId === row.subjectId && item.topic === topic
+                                  ? { ...item, confidence: value }
+                                  : item,
+                              ),
+                            )
+                          }
                         />
                       </div>
                     </div>
-
-                    <div>
+                  ) : (
+                    <div className="mt-3">
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                        Confidence {row.confidence ? `${row.confidence}/5` : ""}
+                        Confidence in {row.name} {row.confidence ? `${row.confidence}/5` : ""}
                       </span>
                       <div className="mt-2">
                         <ConfidencePicker
                           value={row.confidence}
                           onChange={(value) => patchRow(row.subjectId, { confidence: value })}
-                          fill={style.fill}
-                          ring={style.ring}
                           label={`${row.name} confidence`}
                         />
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}

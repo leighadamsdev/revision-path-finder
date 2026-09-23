@@ -326,7 +326,74 @@ function draftWeightings(draft: PlanDraft): SubjectWeighting[] {
     subjectId,
     examDates: draft.examDates?.[subjectId] ?? [],
     confidence: draft.confidence?.[subjectId] ?? null,
+    topics: (draft.chosenTopics?.[subjectId] ?? []).map((topic) => ({
+      topic,
+      confidence: draft.topicConfidence?.[subjectId]?.[topic] ?? null,
+    })),
   }));
+}
+
+/** Every topic saved against a plan, with its rating. */
+export async function fetchPlanTopics(planId: string): Promise<PlanTopic[]> {
+  const { data, error } = await supabase
+    .from("plan_topics")
+    .select("id, subject_id, topic, confidence, is_priority, position")
+    .eq("plan_id", planId)
+    .order("position");
+  if (error) throw error;
+  return (data ?? []) as unknown as PlanTopic[];
+}
+
+/** Replaces a plan's topic list and ratings. */
+export async function savePlanTopics(
+  planId: string,
+  topics: Array<{
+    subjectId: string;
+    topic: string;
+    confidence: number | null;
+    isPriority: boolean;
+  }>,
+) {
+  const { error: deleteError } = await supabase
+    .from("plan_topics")
+    .delete()
+    .eq("plan_id", planId);
+  if (deleteError) throw deleteError;
+  if (!topics.length) return;
+  const { error } = await supabase.from("plan_topics").insert(
+    topics.map((entry, index) => ({
+      plan_id: planId,
+      subject_id: entry.subjectId,
+      topic: entry.topic,
+      confidence: entry.confidence,
+      is_priority: entry.isPriority,
+      position: index,
+    })),
+  );
+  if (error) throw error;
+}
+
+/** The topic rows a draft wants saved, flattened. */
+function draftTopicRows(draft: PlanDraft) {
+  const rows: Array<{
+    subjectId: string;
+    topic: string;
+    confidence: number | null;
+    isPriority: boolean;
+  }> = [];
+  for (const subjectId of draft.subjectIds) {
+    const topics = draft.chosenTopics?.[subjectId] ?? [];
+    const priorities = draft.priorityTopics?.[subjectId] ?? [];
+    for (const topic of topics) {
+      rows.push({
+        subjectId,
+        topic,
+        confidence: draft.topicConfidence?.[subjectId]?.[topic] ?? null,
+        isPriority: priorities.includes(topic),
+      });
+    }
+  }
+  return rows;
 }
 
 
@@ -348,6 +415,9 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       day_plan: draft.days,
       content_mode: draft.contentMode,
       start_date: draft.startDate,
+      intensity_weeks: draft.intensity?.weeks ?? null,
+      intensity_sessions_per_day: draft.intensity?.sessions ?? null,
+      holiday_periods: draft.holidays ?? [],
     })
     .select("id")
     .single();
@@ -366,11 +436,15 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
 
   if (linkError) throw linkError;
 
+  await savePlanTopics(planId, draftTopicRows(draft));
+
   const slots = buildSchedule({
     startDate: draft.startDate,
     weeks: draft.weeks,
     days: draft.days,
     subjects: draftWeightings(draft),
+    intensity: draft.intensity ?? null,
+    holidays: draft.holidays ?? [],
   });
   const topicsBySubject = await buildTopics(draft, slots);
   const counters: Record<string, number> = {};
@@ -400,16 +474,17 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
 async function buildTopics(draft: PlanDraft, slots: Slot[]) {
   const result: Record<string, string[]> = {};
 
-  // Topics ticked from the GCSE checklist always win.
+  // Topics ticked from the GCSE checklist always win: priorities first, shakiest next.
   for (const [subjectId, topics] of Object.entries(draft.chosenTopics ?? {})) {
     if (topics.length) {
-      const priorities = (draft.priorityTopics?.[subjectId] ?? []).filter((topic) =>
-        topics.includes(topic),
+      const priorities = draft.priorityTopics?.[subjectId] ?? [];
+      result[subjectId] = orderTopics(
+        topics.map((topic) => ({
+          topic,
+          confidence: draft.topicConfidence?.[subjectId]?.[topic] ?? null,
+          isPriority: priorities.includes(topic),
+        })),
       );
-      result[subjectId] = [
-        ...priorities,
-        ...topics.filter((topic) => !priorities.includes(topic)),
-      ];
     }
   }
   if (draft.contentMode === "manual") return result;

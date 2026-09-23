@@ -24,6 +24,7 @@ import { HolidayPlanner } from "@/components/HolidayPlanner";
 import { IntensityField } from "@/components/IntensityField";
 import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 import { AppShell } from "@/components/AppShell";
+import { useActivePlan } from "@/hooks/useActivePlan";
 
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 
@@ -66,6 +67,7 @@ function SetupPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { plans } = useActivePlan();
   const subjectsQuery = useQuery({ queryKey: ["subjects"], queryFn: fetchSubjects });
   const subjects = subjectsQuery.data ?? [];
 
@@ -317,6 +319,8 @@ function SetupPage() {
       : step === 3
           ? studyDays.length > 0 && weeks > 0 && Boolean(startDate)
           : true;
+  const missingTierNames = picks.filter((pick) => isTiered(pick.name) && !pick.tier).map((pick) => pick.name);
+  const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
 
   return (
     <AppShell>
@@ -930,6 +934,11 @@ function SetupPage() {
                 Any subject you left blank gets its topics written for you — this takes a few
                 moments.
               </p>
+              {plans.length ? (
+                <p className="mt-3 rounded-[8px] bg-secondary px-3 py-2 text-[12px] font-bold text-foreground">
+                  This creates another plan. Your existing {plans.length === 1 ? "plan stays" : "plans stay"} available in the plan selector.
+                </p>
+              ) : null}
             </>
           ) : null}
 
@@ -956,13 +965,25 @@ function SetupPage() {
             ) : (
               <button
                 onClick={() => void generate()}
-                disabled={generating}
+                disabled={generating || holidayError}
                 className="flex-1 rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-60"
               >
                 {generating ? "Building your timetable…" : "Generate my timetable"}
               </button>
             )}
           </div>
+          {!canContinue ? (
+            <p className="mt-2 text-[12px] font-bold text-destructive" role="alert">
+              {step === 1 && picks.length === 0
+                ? "Choose at least one subject to continue."
+                : step === 1 && missingTierNames.length
+                  ? `Choose a tier for ${missingTierNames.join(", ")}.`
+                  : step === 3 && !startDate
+                    ? "Choose a plan start date to continue."
+                    : "Choose at least one study day to continue."}
+            </p>
+          ) : null}
+          {holidayError ? <p className="mt-2 text-[12px] font-bold text-destructive">Fix the holiday dates before generating your timetable.</p> : null}
         </div>
       </div>
     </AppShell>

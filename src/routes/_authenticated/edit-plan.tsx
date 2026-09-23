@@ -153,6 +153,7 @@ function EditPlanPage() {
   }, [planSubjects.data]);
 
   const studyDays = useMemo(() => WEEK_DAYS.filter((day) => days[day]).map(String), [days]);
+  const holidaysValid = holidays.every((holiday) => !holiday.start || !holiday.end || holiday.end >= holiday.start);
 
   const addable = (allSubjects.data ?? []).filter(
     (subject) => !rows.some((row) => row.subjectId === subject.id),
@@ -163,7 +164,7 @@ function EditPlanPage() {
   }
 
   async function save() {
-    if (!plan || !startDate || rows.length === 0 || studyDays.length === 0) return;
+    if (!plan || !startDate || rows.length === 0 || studyDays.length === 0 || !holidaysValid) return;
     setSaving(true);
     try {
       const daySettings: DaySetting[] = studyDays.map((day) => ({
@@ -246,7 +247,7 @@ function EditPlanPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <p className="text-sm font-semibold text-muted-foreground">Loading your plan…</p>
+        <div className="space-y-3" aria-label="Checking for your plan"><p className="text-sm font-semibold text-muted-foreground">Checking for your plan…</p><div className="h-28 animate-pulse rounded-[8px] bg-card" /></div>
       </AppShell>
     );
   }
@@ -254,7 +255,11 @@ function EditPlanPage() {
   if (!plan) {
     return (
       <AppShell>
-        <p className="text-sm font-semibold">No plan was found.</p>
+        <div className="rounded-[8px] bg-card p-6 ring-1 ring-border">
+          <h1 className="text-lg font-extrabold">Create your first plan</h1>
+          <p className="mt-2 text-[13px] font-medium text-muted-foreground">There isn't a plan to edit yet. Start setup to choose your subjects and study time.</p>
+          <Button asChild className="mt-5"><Link to="/setup">Create your first plan</Link></Button>
+        </div>
       </AppShell>
     );
   }
@@ -549,7 +554,7 @@ function EditPlanPage() {
           </Button>
           <Button
             className="flex-1"
-            disabled={!startDate || saving || rows.length === 0 || studyDays.length === 0}
+            disabled={!startDate || saving || rows.length === 0 || studyDays.length === 0 || !holidaysValid}
             onClick={() => void save()}
           >
             {saving ? "Rebuilding your timetable…" : "Save and rebuild"}

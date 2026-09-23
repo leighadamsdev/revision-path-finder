@@ -268,7 +268,7 @@ function TimetablePage() {
               </p>
               {needsWork.length === 0 ? (
                 <p className="text-[13px] font-medium text-muted-foreground">
-                  No subject rated 1 or 2 — time is shared evenly.
+                  Nothing rated 1 or 2 — time is shared evenly.
                 </p>
               ) : (
                 <ul className="space-y-1.5">
@@ -281,8 +281,10 @@ function TimetablePage() {
                       >
                         <span className={`size-2 shrink-0 rounded-full ${style.dot}`} />
                         <span className="truncate">{subject.name}</span>
-                        <span className={`ml-auto text-[11px] font-extrabold ${style.text}`}>
-                          {subject.confidence}/5
+                        <span
+                          className={`ml-auto text-[11px] font-extrabold ${confidenceTone(subject.rating).text}`}
+                        >
+                          {subject.rating}/5
                         </span>
                       </li>
                     );

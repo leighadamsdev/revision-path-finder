@@ -20,3 +20,14 @@
 - [x] Add the "How to Revise Effectively" guide page with nav links everywhere.
 - [x] Add the interactive Revision Tools page with timer, focus audio, and Focus Mode.
 - [x] Add Revision Tools to public and signed-in navigation, then verify all interactions and layouts.
+
+## Navigation and user journeys
+- [ ] Standardise public and signed-in navigation labels and make mobile navigation readable.
+- [ ] Preserve intended destinations and context through sign-in and account creation.
+- [ ] Make Past Papers and Revision Links public with signed-in subject prioritisation.
+- [ ] Fix no-plan and loading states across plan, edit, exams, and print views.
+- [ ] Add state-aware page endings and improve homepage paths and wording.
+- [ ] Separate destructive plan actions and require typed confirmation.
+- [ ] Explain setup blockers and creation behavior; validate holiday dates.
+- [ ] Make long session topics fully readable and editable.
+- [ ] Verify desktop, 390px mobile, auth, and plan journeys.

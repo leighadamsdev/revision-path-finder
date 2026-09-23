@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, RotateCcw, SquareStack, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Check, Clock3, RotateCcw, SquareStack, X } from "lucide-react";
 
-import { Logo } from "@/components/Logo";
+import { PublicHeader } from "@/components/PublicHeader";
 
 export const Route = createFileRoute("/revision-help")({
   head: () => ({
@@ -28,15 +28,6 @@ export const Route = createFileRoute("/revision-help")({
   component: RevisionHelp,
 });
 
-const STEPS = [
-  "Make flashcards — a question or term on one side, the answer on the other.",
-  "Set up 3 boxes: Box 1 (learning it), Box 2 (getting there), Box 3 (know it well).",
-  "Give each box a review frequency, e.g. Box 1 = every day, Box 2 = every few days, Box 3 = once a week.",
-  "Review Box 1 first. Got it right? Move the card to Box 2. Got it wrong? It stays in Box 1.",
-  "When it's time to review Box 2 or 3: right answer moves the card up a box; wrong answer sends it all the way back to Box 1.",
-  "Keep reviewing each box on its schedule — cards keep moving up as you get more confident, or back down if you forget.",
-];
-
 const GOOD_FOR = [
   "Focusing more time on the topics you find hardest",
   "Seeing your progress as cards move up the boxes",
@@ -53,17 +44,7 @@ const WORTH_KNOWING = [
 function RevisionHelp() {
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
-      <header className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5">
-        <Link to="/" className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 shadow-[0_2px_10px_rgba(3,49,58,0.08)]">
-          <Logo className="h-9 w-auto" />
-        </Link>
-        <Link
-          to="/auth"
-          className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-        >
-          Sign in
-        </Link>
-      </header>
+      <PublicHeader />
 
       <main className="mx-auto max-w-4xl px-5 pb-20 pt-6">
         <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
@@ -86,42 +67,34 @@ function RevisionHelp() {
 
         <section className="mt-12">
           <h2 className="text-2xl font-extrabold tracking-tight">How it works</h2>
-          <div className="relative mt-6 w-full max-w-xl">
-            <div
-              aria-hidden="true"
-              className="absolute left-[26px] bottom-6 top-6 hidden w-1 rounded-full bg-primary/40 sm:block"
-            />
-            <ol className="space-y-6">
-              {STEPS.map((step, i) => (
-                <li key={step} className="relative flex items-start">
-                  <div className="z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-structure text-xl font-bold text-primary ring-4 ring-primary sm:flex">
-                    {i + 1}
-                  </div>
-                  <div className="w-full rounded-r-[24px] border-l-4 border-primary bg-structure p-5 text-lg font-medium leading-relaxed text-structure-foreground shadow-lg sm:ml-8 sm:p-6">
-                    <span className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground sm:hidden">
-                      {i + 1}
-                    </span>
-                    {step}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section className="mt-12">
-          <h2 className="text-2xl font-extrabold tracking-tight">The boxes at a glance</h2>
-          <div className="mt-5 overflow-x-auto pb-2">
-            <div className="flex min-w-[640px] items-stretch gap-2 sm:min-w-0">
-              <BoxCard box="Box 1" name="Learning it" schedule="Daily" tone="bg-conf-low" />
-              <MoveArrows />
-              <BoxCard box="Box 2" name="Getting there" schedule="Every few days" tone="bg-conf-mid" />
-              <MoveArrows />
-              <BoxCard box="Box 3" name="Know it well" schedule="Weekly" tone="bg-conf-high" />
+          <p className="mt-2 text-[14px] font-medium text-muted-foreground">
+            Make a card, start in Box 1, then follow the arrows after each answer.
+          </p>
+          <div className="mt-6 rounded-[8px] bg-card p-4 ring-1 ring-border sm:p-6">
+            <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+              <FlowBox box="Box 1" label="Learning it" schedule="Daily" tone="low" />
+              <FlowArrow />
+              <FlowBox box="Box 2" label="Getting there" schedule="Every few days" tone="mid" />
+              <FlowArrow />
+              <FlowBox box="Box 3" label="Know it well" schedule="Weekly" tone="high" />
             </div>
-            <p className="mt-3 flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
-              <RotateCcw className="size-4 shrink-0" />
-              Got one wrong? The card goes all the way back to Box 1 — and that's the system working.
+            <div className="mt-5 grid gap-2 border-t border-border pt-4 sm:grid-cols-2">
+              <div className="flex items-center gap-3 rounded-[8px] bg-conf-high/10 px-3 py-3 text-[13px] font-extrabold text-conf-high">
+                <Check className="size-5 shrink-0" strokeWidth={3} />
+                Correct answer
+                <ArrowRight className="ml-auto hidden size-5 sm:block" />
+                <ArrowDown className="ml-auto size-5 sm:hidden" />
+                Move to the next box
+              </div>
+              <div className="flex items-center gap-3 rounded-[8px] bg-conf-low/10 px-3 py-3 text-[13px] font-extrabold text-conf-low">
+                <RotateCcw className="size-5 shrink-0" strokeWidth={3} />
+                Incorrect answer
+                <ArrowRight className="ml-auto size-5 rotate-180" />
+                Return to Box 1
+              </div>
+            </div>
+            <p className="mt-4 text-center text-[13px] font-semibold text-muted-foreground">
+              Repeat each box on its schedule. Cards move forward as your memory strengthens.
             </p>
           </div>
         </section>
@@ -177,30 +150,31 @@ function RevisionHelp() {
   );
 }
 
-function BoxCard({ box, name, schedule, tone }: { box: string; name: string; schedule: string; tone: string }) {
+function FlowBox({ box, label, schedule, tone }: { box: string; label: string; schedule: string; tone: "low" | "mid" | "high" }) {
+  const colors = {
+    low: "border-conf-low/35 bg-conf-low/10 text-conf-low",
+    mid: "border-conf-mid/40 bg-conf-mid/10 text-conf-mid",
+    high: "border-conf-high/35 bg-conf-high/10 text-conf-high",
+  };
   return (
-    <div className="flex-1 rounded-[16px] bg-card p-4 shadow-[0_10px_30px_-18px] shadow-structure/40 ring-1 ring-black/5">
-      <span className={`inline-flex size-9 items-center justify-center rounded-full ${tone}`}>
-        <SquareStack className="size-4 text-white" strokeWidth={2.5} />
+    <div className="flex min-h-40 flex-1 flex-col items-center justify-center rounded-[8px] border-2 border-border p-4 text-center">
+      <span className={`grid size-14 place-items-center rounded-[8px] border-2 ${colors[tone]}`}>
+        <SquareStack className="size-6" strokeWidth={2.5} />
       </span>
-      <p className="mt-3 text-[15px] font-extrabold tracking-tight">{box}</p>
-      <p className="text-[12px] font-bold uppercase tracking-wide text-muted-foreground">{name}</p>
-      <p className="mt-2 inline-flex rounded-full bg-secondary px-3 py-1 text-[11px] font-extrabold text-secondary-foreground">
-        Review {schedule.toLowerCase()}
+      <p className="mt-3 text-[16px] font-extrabold">{box}</p>
+      <p className="text-[12px] font-bold text-muted-foreground">{label}</p>
+      <p className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold ${colors[tone]}`}>
+        <Clock3 className="size-3" /> {schedule}
       </p>
     </div>
   );
 }
 
-function MoveArrows() {
+function FlowArrow() {
   return (
-    <div className="flex w-10 shrink-0 flex-col items-center justify-center gap-1 sm:w-12" aria-hidden="true">
-      <span className="grid size-7 place-items-center rounded-full bg-conf-high/15">
-        <Check className="size-3.5 text-conf-high" strokeWidth={3} />
-      </span>
-      <span className="grid size-7 place-items-center rounded-full bg-conf-low/15">
-        <RotateCcw className="size-3.5 text-conf-low" strokeWidth={3} />
-      </span>
+    <div className="grid shrink-0 place-items-center text-conf-high" aria-hidden="true">
+      <ArrowRight className="hidden size-6 sm:block" strokeWidth={3} />
+      <ArrowDown className="size-6 sm:hidden" strokeWidth={3} />
     </div>
   );
 }

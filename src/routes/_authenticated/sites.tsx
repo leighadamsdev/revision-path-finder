@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
-import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
 import { supabase } from "@/integrations/supabase/client";
+import { GCSE_SUBJECTS } from "@/lib/gcse-subjects";
 import { subjectStyle } from "@/lib/subjects";
 
 export const Route = createFileRoute("/_authenticated/sites")({
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/sites")({
       {
         name: "description",
         content:
-          "Free revision links and YouTube channels worth using, grouped by the subjects in your own GCSE plan.",
+          "Free revision links and YouTube channels worth using, grouped across the full GCSE subject list.",
       },
       { property: "og:title", content: "Revision links — rev.plan" },
       {
@@ -37,10 +37,6 @@ type SiteRow = {
 };
 
 function SitesPage() {
-  const { plan } = useActivePlan();
-  const subjects = usePlanSubjects(plan?.id).data ?? [];
-  const names = Array.from(new Set(subjects.map((s) => s.name)));
-
   const sites = useQuery({
     queryKey: ["revision-sites"],
     queryFn: async () => {
@@ -53,34 +49,37 @@ function SitesPage() {
   });
 
   const universal = (sites.data ?? []).filter((s) => !s.subject_name);
+  const subjects = Array.from(new Map(GCSE_SUBJECTS.map((subject) => [subject.name, subject])).values());
 
   return (
     <AppShell>
       <h1 className="text-2xl font-extrabold tracking-tight">Revision links</h1>
       <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-        Free, currently-active resources — picked for the subjects in your plan.
+        Free, currently-active resources for every GCSE subject.
       </p>
 
       <div className="mt-6 space-y-6">
-        {names.map((name) => {
-          const subject = subjects.find((s) => s.name === name)!;
-          const style = subjectStyle(subject.color_key);
-          const rows = (sites.data ?? []).filter((s) => s.subject_name === name);
-          if (rows.length === 0) return null;
+        {subjects.map((subject) => {
+          const style = subjectStyle(subject.colorKey);
+          const rows = (sites.data ?? []).filter((s) => s.subject_name === subject.name);
           return (
-            <section key={name}>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${style.tag}`}
-              >
-                <span className={`size-1.5 rounded-full ${style.dot}`} />
-                {name}
-              </span>
-              <div className="mt-2 space-y-2">
-                {rows.map((row) => (
-                  <SiteCard key={row.id} row={row} />
-                ))}
+            <details key={subject.name} className="group rounded-[8px] bg-card ring-1 ring-border">
+              <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3">
+                <span className={`size-2 shrink-0 rounded-full ${style.dot}`} />
+                <span className="min-w-0 flex-1 text-[14px] font-extrabold">{subject.name}</span>
+                <span className="text-[11px] font-bold text-muted-foreground">
+                  {rows.length || "No links yet"}
+                </span>
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="space-y-2 border-t border-border p-3">
+                {rows.length > 0 ? rows.map((row) => <SiteCard key={row.id} row={row} />) : (
+                  <p className="px-1 py-2 text-[13px] font-medium text-muted-foreground">
+                    Resources for this subject will appear here when they are added.
+                  </p>
+                )}
               </div>
-            </section>
+            </details>
           );
         })}
 

@@ -23,6 +23,7 @@ import { ExamDateUpload } from "@/components/ExamDateUpload";
 import { HolidayPlanner } from "@/components/HolidayPlanner";
 import { IntensityField } from "@/components/IntensityField";
 import { TopicConfidenceList } from "@/components/TopicConfidenceList";
+import { AppShell } from "@/components/AppShell";
 
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 
@@ -319,7 +320,7 @@ function SetupPage() {
           : true;
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground">
+    <AppShell>
       <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
         <div className="mb-5 flex items-center gap-2">
           <span className="text-[11px] font-extrabold text-muted-foreground">
@@ -1014,7 +1015,7 @@ function SetupPage() {
           </div>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }
 

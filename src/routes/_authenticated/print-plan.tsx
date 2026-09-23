@@ -58,9 +58,13 @@ function PrintablePlanPage() {
   return (
     <main className="print-preview-shell">
       <div className="print-preview-actions">
-        <Button asChild variant="outline">
-          <Link to="/plan">Back to timetable</Link>
-        </Button>
+        <nav className="flex flex-wrap items-center gap-1" aria-label="Main navigation">
+          <Button asChild variant="outline"><Link to="/plan">Home</Link></Button>
+          <Button asChild variant="ghost"><Link to="/exams">Exam timetable</Link></Button>
+          <Button asChild variant="ghost"><Link to="/papers">Past Papers</Link></Button>
+          <Button asChild variant="ghost"><Link to="/sites">Revision links</Link></Button>
+          <Button asChild variant="ghost"><Link to="/revision-help">Revision Help</Link></Button>
+        </nav>
         <Button type="button" onClick={() => window.print()}>
           <Printer aria-hidden="true" />
           Print this week / Export as PDF

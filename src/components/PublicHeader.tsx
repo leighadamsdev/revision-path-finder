@@ -7,7 +7,7 @@ const PUBLIC_LINKS = [
   { to: "/exams", label: "Exam timetable" },
   { to: "/papers", label: "Past Papers" },
   { to: "/sites", label: "Revision links" },
-  { to: "/revision-help", label: "Revision Help" },
+  { to: "/revision-help", label: "Leitner Technique" },
   { to: "/knowledge-checker", label: "Knowledge Checker" },
   { to: "/revision-guide", label: "Revision guide" },
 ] as const;

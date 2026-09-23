@@ -1,15 +1,8 @@
-- [x] Add a start date to new plans and calculate each study date
-- [x] Show calculated dates in timetables and print/PDF views
-- [x] Allow existing plans to be edited after generation or printing
-- [x] Remove the requirement and setup step for selecting exam boards
-- [x] Add admin role, gated /admin area and admin write policies
-- [x] Add password reset (forgot link + reset page)
-- [x] Send new sign-ups straight into the setup wizard
-- [x] Optional exam date per subject, set in setup and editable later
-- [x] Subject-level confidence rating replaces per-session ratings
-- [x] Sessions weighted by confidence and exam date, tapering after each exam
-- [x] Calm exam countdown on the timetable, soonest first
-- [x] Full plan editing (subjects, dates, weeks, days) with gap notes preserved
-- [x] Delete a plan with confirmation, returning to setup if it was the last one
-- [x] Client-side session timer with adjustable length and a gentle chime
+# Roadmap
 
+- [ ] Move signed-in navigation to the top on every signed-in page.
+- [ ] Rename Sites to Revision links and Exams to Exam timetable.
+- [ ] Remove the Progress page and all links to it.
+- [ ] Add a Home/back navigation control.
+- [ ] Add Revision Links and Revision Help links to the landing page.
+- [ ] Verify navigation on desktop and mobile.

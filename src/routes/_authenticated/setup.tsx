@@ -954,6 +954,25 @@ function SetupPage() {
                   label="Priority topics"
                   value={totalPriorities ? `${totalPriorities} prioritised` : "None"}
                 />
+                <Row
+                  label="Before exams"
+                  value={
+                    intensity
+                      ? `${intensity.sessions} sessions a day in the last ${intensity.weeks} week${intensity.weeks === 1 ? "" : "s"}`
+                      : "Same as usual"
+                  }
+                />
+                <Row
+                  label="Holidays"
+                  value={
+                    holidays.filter((h) => h.start && h.end).length
+                      ? holidays
+                          .filter((h) => h.start && h.end)
+                          .map((h) => h.name || "Holiday")
+                          .join(", ")
+                      : "None added"
+                  }
+                />
                 <Row label="Total sessions" value={`${totalSessions}`} />
               </div>
               <p className="mt-3 text-[12px] font-medium text-muted-foreground">

@@ -203,6 +203,24 @@ function KnowledgeCheckerPage() {
     URL.revokeObjectURL(url);
   }
 
+  async function downloadBlankPdf() {
+    try {
+      const response = await fetch("/revplan-knowledge-checker.pdf");
+      if (!response.ok) throw new Error("Not found");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "revplan-knowledge-checker.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      window.open("/revplan-knowledge-checker.pdf", "_blank", "noopener");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-checker-paper font-sans text-checker-ink">
       <PublicHeader />
@@ -216,8 +234,8 @@ function KnowledgeCheckerPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 print:hidden">
-            <Button asChild variant="outline">
-              <a href="/revplan-knowledge-checker.pdf" download><Download /> Blank PDF</a>
+            <Button type="button" variant="outline" onClick={downloadBlankPdf}>
+              <Download /> Blank PDF
             </Button>
             <Button type="button" variant="outline" onClick={() => window.print()}><Printer /> Print this sheet</Button>
           </div>

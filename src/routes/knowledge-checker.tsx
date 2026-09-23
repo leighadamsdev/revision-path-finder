@@ -418,7 +418,7 @@ function KnowledgeCheckerPage() {
         <section className="mt-8 rounded-[8px] bg-checker-ink p-6 text-checker-paper print:hidden sm:flex sm:items-center sm:justify-between sm:gap-6">
           <div><h2 className="text-xl font-extrabold">Use these gaps to build your plan</h2><p className="mt-1 text-sm font-semibold text-checker-paper/70">Give the topics you missed a lower confidence rating so they get more revision time.</p></div>
           <Button asChild className="mt-4 shrink-0 sm:mt-0">
-            {user ? <Link to={plan ? "/edit-plan" : "/setup"}>{plan ? "Update my plan" : "Create your revision plan"}</Link> : <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}>Create your revision plan</Link>}
+            {user ? (plan ? <Link to="/edit-plan">Update my plan</Link> : <Link to="/setup">Create your revision plan</Link>) : <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}>Create your revision plan</Link>}
           </Button>
         </section>
       </main>

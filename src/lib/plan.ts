@@ -593,7 +593,14 @@ export async function updatePlanDetails(planId: string, name: string, startDate:
 /** Saves plan-wide settings (name, start date, weeks, study days and session lengths). */
 export async function updatePlanSettings(
   planId: string,
-  settings: { name: string; startDate: string; weeks: number; days: DaySetting[] },
+  settings: {
+    name: string;
+    startDate: string;
+    weeks: number;
+    days: DaySetting[];
+    intensity?: Intensity | null;
+    holidays?: HolidayPeriod[];
+  },
 ) {
   const { error } = await supabase
     .from("plans")
@@ -606,6 +613,9 @@ export async function updatePlanSettings(
       sessions_per_day: Math.max(...settings.days.map((d) => d.sessions), 1),
       session_length_minutes: settings.days[0]?.minutes ?? 45,
       day_plan: settings.days,
+      intensity_weeks: settings.intensity?.weeks ?? null,
+      intensity_sessions_per_day: settings.intensity?.sessions ?? null,
+      holiday_periods: settings.holidays ?? [],
     })
     .eq("id", planId);
   if (error) throw error;
@@ -622,12 +632,30 @@ export async function regeneratePlanSessions(
     weeks: number;
     days: DaySetting[];
     subjects: Array<SubjectWeighting & { name: string }>;
+    intensity?: Intensity | null;
+    holidays?: HolidayPeriod[];
   },
 ) {
   const existing = await fetchSessions(planId);
+  const savedTopics = await fetchPlanTopics(planId);
 
   const notes = new Map<string, string>();
   const topicsBySubject: Record<string, string[]> = {};
+
+  // Topics the student chose (with their ratings) set the order for each subject.
+  for (const subject of settings.subjects) {
+    const own = savedTopics.filter((row) => row.subject_id === subject.subjectId);
+    if (own.length) {
+      topicsBySubject[subject.subjectId] = orderTopics(
+        own.map((row) => ({
+          topic: row.topic,
+          confidence: row.confidence,
+          isPriority: row.is_priority,
+        })),
+      );
+    }
+  }
+
   for (const session of existing) {
     if (session.gap_notes) {
       notes.set(`${session.week_number}|${session.day_label}|${session.session_slot}`, session.gap_notes);
@@ -656,6 +684,8 @@ export async function regeneratePlanSessions(
     weeks: settings.weeks,
     days: settings.days,
     subjects: settings.subjects,
+    intensity: settings.intensity ?? null,
+    holidays: settings.holidays ?? [],
   });
 
   const counters: Record<string, number> = {};

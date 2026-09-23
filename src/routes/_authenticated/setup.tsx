@@ -310,7 +310,6 @@ function SetupPage() {
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
 
   const totalChosen = picks.reduce((sum, p) => sum + topicsFor(p.name).length, 0);
-  const totalPriorities = picks.reduce((sum, p) => sum + prioritiesFor(p.name).length, 0);
 
   const canContinue =
     step === 1
@@ -694,57 +693,12 @@ function SetupPage() {
 
                           {finalTopics.length ? (
                             <div className="mt-4 border-t border-border pt-3">
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                                  Priority topics
-                                </p>
-                                <p className="text-[11px] font-bold text-muted-foreground">
-                                  {subjectPriorities.length} of 3
-                                </p>
-                              </div>
-                              <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-                                Choose up to three to place in the earliest weeks.
-                              </p>
-                              <div className="mt-2 space-y-1">
-                                {finalTopics.map((topic) => {
-                                  const priority = subjectPriorities.includes(topic);
-                                  const disabled = !priority && subjectPriorities.length >= 3;
-                                  return (
-                                    <button
-                                      key={topic}
-                                      type="button"
-                                      onClick={() => togglePriority(pick.name, topic)}
-                                      disabled={disabled}
-                                      className={`flex w-full items-start gap-2.5 rounded-[10px] px-2 py-1.5 text-left disabled:opacity-45 ${
-                                        priority ? "bg-card" : "hover:bg-card"
-                                      }`}
-                                    >
-                                      <span
-                                        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-extrabold ${
-                                          priority
-                                            ? "bg-biz text-background"
-                                            : "ring-1 ring-border"
-                                        }`}
-                                      >
-                                        {priority ? subjectPriorities.indexOf(topic) + 1 : ""}
-                                      </span>
-                                      <span className="line-clamp-2 text-[12px] font-bold leading-relaxed">
-                                        {topic}
-                                      </span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ) : null}
-
-                          {finalTopics.length ? (
-                            <div className="mt-4 border-t border-border pt-3">
                               <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                                How confident are you on each topic?
+                                Rate each topic
                               </p>
                               <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-                                Optional. Red topics get the most sessions, green ones the fewest.
+                                Red means you need it most, green means you're confident. Red topics
+                                come first and get the most sessions — this builds your priority order.
                               </p>
                               <div className="mt-2">
                                 <TopicConfidenceList
@@ -950,10 +904,6 @@ function SetupPage() {
                 <Row
                   label="Topics chosen"
                   value={totalChosen ? `${totalChosen} topics` : "None — filled for you"}
-                />
-                <Row
-                  label="Priority topics"
-                  value={totalPriorities ? `${totalPriorities} prioritised` : "None"}
                 />
                 <Row
                   label="Before exams"

@@ -736,6 +736,48 @@ function SetupPage() {
                               </div>
                             </div>
                           ) : null}
+
+                          {finalTopics.length ? (
+                            <div className="mt-4 border-t border-border pt-3">
+                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                                How confident are you on each topic?
+                              </p>
+                              <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+                                Optional. Red topics get the most sessions, green ones the fewest.
+                              </p>
+                              <div className="mt-2">
+                                <TopicConfidenceList
+                                  topics={finalTopics}
+                                  ratings={topicRatings[pick.name] ?? {}}
+                                  onChange={(topic, value) =>
+                                    setTopicRatings((prev) => ({
+                                      ...prev,
+                                      [pick.name]: { ...(prev[pick.name] ?? {}), [topic]: value },
+                                    }))
+                                  }
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-4 border-t border-border pt-3">
+                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                                How confident are you in {pick.name}?
+                              </p>
+                              <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+                                No topics chosen, so we'll plan around the whole subject. Rate it and
+                                shakier subjects get more sessions.
+                              </p>
+                              <div className="mt-2">
+                                <ConfidencePicker
+                                  value={confidences[pick.name] ?? null}
+                                  onChange={(value) =>
+                                    setConfidences((prev) => ({ ...prev, [pick.name]: value }))
+                                  }
+                                  label={`${pick.name} confidence`}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : null}
                     </div>
@@ -876,6 +918,11 @@ function SetupPage() {
                     Pick at least one study day.
                   </p>
                 ) : null}
+              </div>
+
+              <div className="mt-4 space-y-2">
+                <IntensityField value={intensity} onChange={setIntensity} />
+                <HolidayPlanner holidays={holidays} onChange={setHolidays} />
               </div>
             </>
           ) : null}

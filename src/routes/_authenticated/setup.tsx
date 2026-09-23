@@ -6,13 +6,23 @@ import { Check, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth, ensureProfile } from "@/hooks/useAuth";
-import { createPlan, fetchSubjects, resolveSubjectId } from "@/lib/plan";
+import {
+  createPlan,
+  fetchSubjects,
+  resolveSubjectId,
+  type HolidayPeriod,
+  type Intensity,
+} from "@/lib/plan";
 import { SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
 import { DatePicker } from "@/components/DatePicker";
 import { ExamDatesField } from "@/components/ExamDatesField";
+import { ExamDateUpload } from "@/components/ExamDateUpload";
+import { HolidayPlanner } from "@/components/HolidayPlanner";
+import { IntensityField } from "@/components/IntensityField";
+import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 
@@ -76,8 +86,14 @@ function SetupPage() {
   /** Up to three optional exam dates per subject name. */
   const [examDates, setExamDates] = useState<Record<string, string[]>>({});
 
-  /** Optional 1–5 confidence per subject name. */
+  /** Optional 1–5 confidence per subject name — only used when no topics are chosen. */
   const [confidences, setConfidences] = useState<Record<string, number | null>>({});
+  /** Optional 1–5 confidence per topic, keyed by subject name then topic. */
+  const [topicRatings, setTopicRatings] = useState<Record<string, Record<string, number | null>>>(
+    {},
+  );
+  const [intensity, setIntensity] = useState<Intensity | null>(null);
+  const [holidays, setHolidays] = useState<HolidayPeriod[]>([]);
 
 
   const [name, setName] = useState("Finals plan");
@@ -232,14 +248,22 @@ function SetupPage() {
       const confidenceMap: Record<string, number | null> = {};
       const chosenTopics: Record<string, string[]> = {};
       const priorityTopics: Record<string, string[]> = {};
+      const topicConfidence: Record<string, Record<string, number | null>> = {};
       for (const pick of picks) {
         const id = await resolveSubjectId(pick.name, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
         examDateMap[id] = [...new Set((examDates[pick.name] ?? []).filter(Boolean))].sort();
-        confidenceMap[id] = confidences[pick.name] ?? null;
         const topics = topicsFor(pick.name);
-        if (topics.length) chosenTopics[id] = topics;
+        // A subject-wide rating only matters when no specific topics were chosen.
+        confidenceMap[id] = topics.length ? null : (confidences[pick.name] ?? null);
+        if (topics.length) {
+          chosenTopics[id] = topics;
+          const ratings = topicRatings[pick.name] ?? {};
+          topicConfidence[id] = Object.fromEntries(
+            topics.map((topic) => [topic, ratings[topic] ?? null]),
+          );
+        }
         const priority = prioritiesFor(pick.name);
         if (priority.length) priorityTopics[id] = priority;
       }
@@ -262,6 +286,9 @@ function SetupPage() {
         confidence: confidenceMap,
         chosenTopics,
         priorityTopics,
+        topicConfidence,
+        intensity,
+        holidays: holidays.filter((holiday) => holiday.start && holiday.end),
       });
 
       window.localStorage.setItem("revisionpath.activePlan", planId);
@@ -418,9 +445,27 @@ function SetupPage() {
                     Your subjects
                   </p>
                   <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-                    Add an exam date and how confident you feel — both optional. Shakier subjects
-                    and sooner exams get more sessions.
+                    Add exam dates — optional, and sooner exams get more sessions. You'll rate how
+                    confident you feel on the next step.
                   </p>
+
+                  <div className="mt-2">
+                    <ExamDateUpload
+                      subjects={picks.map((p) => p.name)}
+                      onApply={(dates) =>
+                        setExamDates((prev) => {
+                          const next = { ...prev };
+                          for (const [subject, list] of Object.entries(dates)) {
+                            const merged = [
+                              ...new Set([...(next[subject] ?? []).filter(Boolean), ...list]),
+                            ].sort();
+                            next[subject] = merged.slice(0, 3);
+                          }
+                          return next;
+                        })
+                      }
+                    />
+                  </div>
                   <div className="mt-2 space-y-2">
                     {picks.map((pick) => (
                       <div
@@ -458,35 +503,18 @@ function SetupPage() {
                           </button>
                         </div>
 
-                        <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
-                          <div>
-                            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                              Exam dates (optional, up to 3)
-                            </span>
-                            <div className="mt-1">
-                              <ExamDatesField
-                                dates={examDates[pick.name] ?? []}
-                                onChange={(dates) =>
-                                  setExamDates((prev) => ({ ...prev, [pick.name]: dates }))
-                                }
-                                label="Not sure yet"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                              How confident are you? {confidences[pick.name] ? `${confidences[pick.name]}/5` : ""}
-                            </span>
-                            <div className="mt-2">
-                              <ConfidencePicker
-                                value={confidences[pick.name] ?? null}
-                                onChange={(value) =>
-                                  setConfidences((prev) => ({ ...prev, [pick.name]: value }))
-                                }
-                                label={`${pick.name} confidence`}
-                              />
-                            </div>
+                        <div className="mt-2.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                            Exam dates (optional, up to 3)
+                          </span>
+                          <div className="mt-1">
+                            <ExamDatesField
+                              dates={examDates[pick.name] ?? []}
+                              onChange={(dates) =>
+                                setExamDates((prev) => ({ ...prev, [pick.name]: dates }))
+                              }
+                              label="Not sure yet"
+                            />
                           </div>
                         </div>
                       </div>

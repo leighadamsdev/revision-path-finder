@@ -102,10 +102,6 @@ function buildFlashcards(rows: CheckerRow[]) {
   );
 }
 
-function csvCell(value: string) {
-  return `"${value.replace(/"/g, '""')}"`;
-}
-
 function KnowledgeCheckerPage() {
   const [draft, setDraft] = useState<CheckerDraft>({ subject: "", topic: "", date: "", rows: EMPTY_ROWS });
   const [mode, setMode] = useState<"recall" | "check">("recall");
@@ -186,17 +182,91 @@ function KnowledgeCheckerPage() {
     window.localStorage.removeItem(STORAGE_KEY);
   }
 
-  function downloadFlashcards() {
+  async function downloadFlashcards() {
     if (flashcards.length === 0) return;
-    const csv = [
-      ["Key term", "Definition", "Component"].map(csvCell).join(","),
-      ...flashcards.map((card) => [card.term, card.definition, card.source].map(csvCell).join(",")),
-    ].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const {
+      AlignmentType,
+      BorderStyle,
+      Document,
+      HeadingLevel,
+      Packer,
+      Paragraph,
+      ShadingType,
+      Table,
+      TableCell,
+      TableRow,
+      TextRun,
+      WidthType,
+    } = await import("docx");
+    const border = { style: BorderStyle.SINGLE, size: 6, color: "0E333D" };
+    const borders = { top: border, bottom: border, left: border, right: border };
+    const cell = (text: string, width: number, heading = false) =>
+      new TableCell({
+        width: { size: width, type: WidthType.DXA },
+        borders,
+        margins: { top: 180, bottom: 180, left: 180, right: 180 },
+        shading: heading ? { fill: "94D8CA", type: ShadingType.CLEAR } : undefined,
+        children: [new Paragraph({ children: [new TextRun({ text, bold: heading, color: "0E333D" })] })],
+      });
+    const document = new Document({
+      styles: {
+        default: { document: { run: { font: "Arial", size: 22, color: "0E333D" } } },
+        paragraphStyles: [
+          {
+            id: "Heading1",
+            name: "Heading 1",
+            basedOn: "Normal",
+            next: "Normal",
+            quickFormat: true,
+            run: { font: "Arial", size: 34, bold: true, color: "0E333D" },
+            paragraph: { spacing: { after: 160 }, outlineLevel: 0 },
+          },
+        ],
+      },
+      sections: [
+        {
+          properties: {
+            page: {
+              size: { width: 12240, height: 15840 },
+              margin: { top: 1080, right: 1080, bottom: 1080, left: 1080 },
+            },
+          },
+          children: [
+            new Paragraph({
+              heading: HeadingLevel.HEADING_1,
+              children: [new TextRun("Revision gap flashcards")],
+            }),
+            new Paragraph({
+              spacing: { after: 280 },
+              children: [
+                new TextRun({ text: draft.subject.trim() || "Subject not added", bold: true }),
+                new TextRun({ text: draft.topic.trim() ? ` · ${draft.topic.trim()}` : "" }),
+              ],
+            }),
+            new Table({
+              width: { size: 10080, type: WidthType.DXA },
+              columnWidths: [3360, 6720],
+              rows: [
+                new TableRow({ children: [cell("Front — key term", 3360, true), cell("Back — definition", 6720, true)] }),
+                ...flashcards.map(
+                  (card) => new TableRow({ children: [cell(card.term, 3360), cell(card.definition, 6720)] }),
+                ),
+              ],
+            }),
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 240 },
+              children: [new TextRun({ text: "revplan. · made from highlighted knowledge gaps", size: 18, color: "527078" })],
+            }),
+          ],
+        },
+      ],
+    });
+    const blob = await Packer.toBlob(document);
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "revplan-gap-flashcards.csv";
+    link.download = "revplan-gap-flashcards.docx";
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -322,7 +392,7 @@ function KnowledgeCheckerPage() {
               <BookOpen /> {showFlashcards ? "Hide flashcards" : "Make flashcards from gaps"}
             </Button>
             <Button type="button" variant="outline" disabled={flashcards.length === 0} onClick={downloadFlashcards}>
-              <FileDown /> Download flashcards
+              <FileDown /> Download flashcards document
             </Button>
           </div>
           <AlertDialog>

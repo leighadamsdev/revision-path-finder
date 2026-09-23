@@ -9,7 +9,6 @@ const PUBLIC_LINKS = [
   { to: "/", label: "Home" },
   { to: "/revision-guide", label: "Effective Revision" },
   { to: "/knowledge-checker", label: "Knowledge Checker" },
-  { to: "/revision-help", label: "Knowledge Checker Guide" },
   { to: "/revision-tools", label: "Revision Tools" },
   { to: "/papers", label: "Past Papers" },
   { to: "/sites", label: "Revision Links" },

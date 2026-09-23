@@ -193,14 +193,8 @@ function RevisionGuide() {
             </div>
             <p className="mt-4 text-sm font-semibold leading-relaxed text-muted-foreground sm:text-base">
               Rereading notes doesn't work. Active recall does. For facts, quotes, and equations,
-              use the{" "}
-              <Link
-                to="/revision-help"
-                className="font-extrabold text-primary underline decoration-checker-mint decoration-2 underline-offset-2 hover:text-primary/80"
-              >
-                Leitner System
-              </Link>{" "}
-              with physical flashcards.
+              use the <strong className="font-extrabold text-primary">Leitner System</strong> with
+              physical flashcards.
             </p>
             <ul className="mt-4 space-y-3 text-sm font-semibold leading-relaxed sm:text-base">
               <li className="flex items-start gap-3">

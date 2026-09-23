@@ -354,9 +354,6 @@ function TimetablePage() {
               your weeks, topics and gaps — but can't change anything.
             </DialogDescription>
           </DialogHeader>
-          <label className="block text-sm font-bold">Type <span className="font-extrabold">{plan.name}</span> to confirm
-            <input value={deleteText} onChange={(event) => setDeleteText(event.target.value)} className="mt-2 w-full rounded-[8px] bg-background px-3 py-2.5 font-medium ring-1 ring-border focus:outline-none" />
-          </label>
           {shareUrl ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2 rounded-[12px] bg-background p-2 ring-1 ring-border">
@@ -397,6 +394,10 @@ function TimetablePage() {
               gap notes. This can't be undone.
             </DialogDescription>
           </DialogHeader>
+          <label className="block text-sm font-bold">
+            Type <span className="font-extrabold">{plan.name}</span> to confirm
+            <input value={deleteText} onChange={(event) => setDeleteText(event.target.value)} className="mt-2 w-full rounded-[8px] bg-background px-3 py-2.5 font-medium ring-1 ring-border focus:outline-none" />
+          </label>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={deleting}>
               Keep this plan

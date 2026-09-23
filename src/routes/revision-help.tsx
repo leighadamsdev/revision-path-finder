@@ -298,7 +298,7 @@ function RevisionHelp() {
               <p className="mt-2 text-sm font-semibold text-checker-ink/75">Use what your highlighter found to shape your next revision sessions.</p>
             </div>
             <Button asChild size="lg" className="mt-5 bg-checker-ink font-extrabold text-checker-paper hover:bg-checker-ink/90 sm:mt-0">
-              <Link to="/auth">Create your plan <ArrowRight /></Link>
+              <Link to="/auth">Create your revision plan <ArrowRight /></Link>
             </Button>
           </div>
         </section>

@@ -140,8 +140,28 @@ function RevisionHelp() {
               <Button asChild variant="outline" className="border-checker-mint/40 bg-transparent text-checker-mint hover:bg-checker-mint/10 hover:text-checker-mint">
                 <Link to="/knowledge-checker">Use online <ArrowRight /></Link>
               </Button>
-              <Button asChild variant="ghost" className="text-checker-paper hover:bg-checker-mint/10 hover:text-checker-paper">
-                <a href="/revplan-knowledge-checker.pdf" download><Download /> Download PDF</a>
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-checker-paper hover:bg-checker-mint/10 hover:text-checker-paper"
+                onClick={async () => {
+                  try {
+                    const response = await fetch("/revplan-knowledge-checker.pdf");
+                    if (!response.ok) throw new Error("Not found");
+                    const url = URL.createObjectURL(await response.blob());
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "revplan-knowledge-checker.pdf";
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                  } catch {
+                    window.open("/revplan-knowledge-checker.pdf", "_blank", "noopener");
+                  }
+                }}
+              >
+                <Download /> Download PDF
               </Button>
             </div>
           </div>

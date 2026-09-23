@@ -17,3 +17,4 @@
 - [x] Verify the online checker interactions, persistence, download, and responsive layouts.
 - [x] Simplify the Knowledge Checker printout so the website header is removed and repeated pages only show subject/topic/date.
 - [x] Add an option to turn highlighted gaps and corrections into flashcards.
+- [x] Add the "How to Revise Effectively" guide page with nav links everywhere.

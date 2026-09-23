@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Pencil, RefreshCw, RotateCcw, SquareStack, X } from "lucide-react";
+import { Check, RotateCcw, SquareStack, X } from "lucide-react";
+
+import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/revision-help")({
   head: () => ({

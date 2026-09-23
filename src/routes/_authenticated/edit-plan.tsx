@@ -118,7 +118,25 @@ function EditPlanPage() {
         source.map((entry) => [entry.day, { sessions: entry.sessions, minutes: entry.minutes }]),
       ),
     );
+    setIntensity(
+      plan.intensity_weeks && plan.intensity_sessions_per_day
+        ? { weeks: plan.intensity_weeks, sessions: plan.intensity_sessions_per_day }
+        : null,
+    );
+    setHolidays(plan.holiday_periods ?? []);
   }, [plan]);
+
+  useEffect(() => {
+    if (!planTopics.data) return;
+    setTopics(
+      planTopics.data.map((row) => ({
+        subjectId: row.subject_id,
+        topic: row.topic,
+        confidence: row.confidence,
+        isPriority: row.is_priority,
+      })),
+    );
+  }, [planTopics.data]);
 
   useEffect(() => {
     if (!planSubjects.data) return;
@@ -159,17 +177,39 @@ function EditPlanPage() {
         examDates: [...new Set(row.examDates.filter(Boolean))].sort(),
       }));
 
+      const cleanHolidays = holidays.filter((holiday) => holiday.start && holiday.end);
+      const keptTopics = topics.filter((topic) =>
+        cleanRows.some((row) => row.subjectId === topic.subjectId),
+      );
+
       await savePlanSubjects(plan.id, cleanRows);
-      await updatePlanSettings(plan.id, { name, startDate, weeks, days: daySettings });
+      await savePlanTopics(plan.id, keptTopics);
+      await updatePlanSettings(plan.id, {
+        name,
+        startDate,
+        weeks,
+        days: daySettings,
+        intensity,
+        holidays: cleanHolidays,
+      });
       await regeneratePlanSessions(plan.id, {
         startDate,
         weeks,
         days: daySettings,
+        intensity,
+        holidays: cleanHolidays,
         subjects: cleanRows.map((row) => ({
           subjectId: row.subjectId,
           name: row.name,
           examDates: row.examDates,
           confidence: row.confidence,
+          topics: keptTopics
+            .filter((topic) => topic.subjectId === row.subjectId)
+            .map((topic) => ({
+              topic: topic.topic,
+              confidence: topic.confidence,
+              isPriority: topic.isPriority,
+            })),
         })),
       });
 

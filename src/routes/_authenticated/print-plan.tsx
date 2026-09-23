@@ -47,6 +47,9 @@ function PrintablePlanPage() {
         <Button asChild variant="outline">
           <Link to="/plan">Back to timetable</Link>
         </Button>
+        <Button asChild>
+          <Link to="/setup">Create a plan</Link>
+        </Button>
       </main>
     );
   }
@@ -59,11 +62,11 @@ function PrintablePlanPage() {
     <main className="print-preview-shell">
       <div className="print-preview-actions">
         <nav className="flex flex-wrap items-center gap-1" aria-label="Main navigation">
-          <Button asChild variant="outline"><Link to="/plan">Home</Link></Button>
+          <Button asChild variant="outline"><Link to="/plan">My plan</Link></Button>
           <Button asChild variant="ghost"><Link to="/exams">Exam timetable</Link></Button>
           <Button asChild variant="ghost"><Link to="/papers">Past Papers</Link></Button>
-          <Button asChild variant="ghost"><Link to="/sites">Revision links</Link></Button>
-          <Button asChild variant="ghost"><Link to="/revision-help">Revision Help</Link></Button>
+          <Button asChild variant="ghost"><Link to="/sites">Revision Links</Link></Button>
+          <Button asChild variant="ghost"><Link to="/revision-help">Knowledge Checker Guide</Link></Button>
           <Button asChild variant="ghost"><Link to="/knowledge-checker">Knowledge Checker</Link></Button>
         </nav>
         <Button type="button" onClick={() => window.print()}>

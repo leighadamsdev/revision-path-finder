@@ -99,6 +99,7 @@ function EditPlanPage() {
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
 
   useEffect(() => {
     if (!plan) return;
@@ -153,6 +154,7 @@ function EditPlanPage() {
   }, [planSubjects.data]);
 
   const studyDays = useMemo(() => WEEK_DAYS.filter((day) => days[day]).map(String), [days]);
+  const holidaysValid = holidays.every((holiday) => !holiday.start || !holiday.end || holiday.end >= holiday.start);
 
   const addable = (allSubjects.data ?? []).filter(
     (subject) => !rows.some((row) => row.subjectId === subject.id),
@@ -163,7 +165,7 @@ function EditPlanPage() {
   }
 
   async function save() {
-    if (!plan || !startDate || rows.length === 0 || studyDays.length === 0) return;
+    if (!plan || !startDate || rows.length === 0 || studyDays.length === 0 || !holidaysValid) return;
     setSaving(true);
     try {
       const daySettings: DaySetting[] = studyDays.map((day) => ({
@@ -246,7 +248,7 @@ function EditPlanPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <p className="text-sm font-semibold text-muted-foreground">Loading your plan…</p>
+        <div className="space-y-3" aria-label="Checking for your plan"><p className="text-sm font-semibold text-muted-foreground">Checking for your plan…</p><div className="h-28 animate-pulse rounded-[8px] bg-card" /></div>
       </AppShell>
     );
   }
@@ -254,7 +256,11 @@ function EditPlanPage() {
   if (!plan) {
     return (
       <AppShell>
-        <p className="text-sm font-semibold">No plan was found.</p>
+        <div className="rounded-[8px] bg-card p-6 ring-1 ring-border">
+          <h1 className="text-lg font-extrabold">Create your first plan</h1>
+          <p className="mt-2 text-[13px] font-medium text-muted-foreground">There isn't a plan to edit yet. Start setup to choose your subjects and study time.</p>
+          <Button asChild className="mt-5"><Link to="/setup">Create your first plan</Link></Button>
+        </div>
       </AppShell>
     );
   }
@@ -549,7 +555,7 @@ function EditPlanPage() {
           </Button>
           <Button
             className="flex-1"
-            disabled={!startDate || saving || rows.length === 0 || studyDays.length === 0}
+            disabled={!startDate || saving || rows.length === 0 || studyDays.length === 0 || !holidaysValid}
             onClick={() => void save()}
           >
             {saving ? "Rebuilding your timetable…" : "Save and rebuild"}
@@ -561,7 +567,7 @@ function EditPlanPage() {
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
             Removes the plan and every session in it. This can't be undone.
           </p>
-          <Button variant="destructive" className="mt-3" onClick={() => setDeleteOpen(true)}>
+          <Button variant="destructive" className="mt-3" onClick={() => { setDeleteText(""); setDeleteOpen(true); }}>
             <Trash2 aria-hidden="true" />
             Delete plan
           </Button>
@@ -576,11 +582,14 @@ function EditPlanPage() {
               This will permanently delete this plan and all its sessions — are you sure?
             </DialogDescription>
           </DialogHeader>
+          <label className="block text-sm font-bold">Type <span className="font-extrabold">{plan.name}</span> to confirm
+            <input value={deleteText} onChange={(event) => setDeleteText(event.target.value)} className="mt-2 w-full rounded-[8px] bg-background px-3 py-2.5 font-medium ring-1 ring-border focus:outline-none" />
+          </label>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={deleting}>
               Keep this plan
             </Button>
-            <Button variant="destructive" onClick={() => void remove()} disabled={deleting}>
+            <Button variant="destructive" onClick={() => void remove()} disabled={deleting || deleteText !== plan.name}>
               {deleting ? "Deleting…" : "Yes, delete it"}
             </Button>
           </DialogFooter>

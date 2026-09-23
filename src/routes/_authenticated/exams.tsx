@@ -74,10 +74,25 @@ function ExamCalendarPage() {
     end: endOfWeek(endOfMonth(shown), { weekStartsOn: 1 }),
   });
 
-  if (isLoading) {
+  if (isLoading || (plan && subjectsQuery.isLoading)) {
     return (
       <AppShell>
-        <p className="text-sm font-semibold text-muted-foreground">Loading your exams…</p>
+        <div className="space-y-3" aria-label="Checking for your plan">
+          <p className="text-sm font-semibold text-muted-foreground">Checking for your plan…</p>
+          <div className="h-24 animate-pulse rounded-[8px] bg-card" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!plan) {
+    return (
+      <AppShell>
+        <div className="rounded-[8px] bg-card p-6 ring-1 ring-border">
+          <h1 className="text-lg font-extrabold">Create your plan first</h1>
+          <p className="mt-2 text-[13px] font-medium text-muted-foreground">Create a plan first so rev.plan knows your subjects and exam dates.</p>
+          <Button asChild className="mt-5"><Link to="/setup">Start setup</Link></Button>
+        </div>
       </AppShell>
     );
   }

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Brain,
@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 
 import { PublicHeader } from "@/components/PublicHeader";
+import { useAuth } from "@/hooks/useAuth";
+import { useActivePlan } from "@/hooks/useActivePlan";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -192,6 +194,8 @@ function AudioTool({
 }
 
 function RevisionToolsPage() {
+  const { user } = useAuth();
+  const { plan } = useActivePlan();
   const [timerMode, setTimerMode] = useState<TimerMode>("focus");
   const [remaining, setRemaining] = useState(TIMER_SECONDS.focus);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -377,7 +381,7 @@ function RevisionToolsPage() {
               <span>Focus built in</span>
             </p>
             <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-tight sm:text-6xl">
-              Your Revision Toolkit
+               Handy Revision Tools
             </h1>
             <p className="mt-4 max-w-2xl text-lg font-semibold leading-relaxed text-checker-paper/75 sm:text-xl">
               Knowing how to revise is step one. Having the right tools to actually do it is step
@@ -385,7 +389,6 @@ function RevisionToolsPage() {
             </p>
           </div>
         </section>
-
         <section className="mx-auto grid max-w-5xl gap-6 px-5 pt-10 lg:grid-cols-2">
           <article className="rounded-[8px] border border-checker-line bg-card p-6 shadow-sm sm:p-8">
             <div className="flex items-start gap-3">
@@ -436,6 +439,14 @@ function RevisionToolsPage() {
             </div>
             <ScienceBox>Every time you switch tasks to check a notification, you suffer from “Attention Residue.” It takes an average of 23 minutes to fully regain your deep focus after being distracted. Blocking websites removes the temptation entirely.</ScienceBox>
           </article>
+        </section>
+        <section className="mx-auto mt-10 max-w-5xl px-5">
+          <div className="rounded-[8px] bg-checker-ink p-6 text-checker-paper sm:flex sm:items-center sm:justify-between sm:gap-6">
+            <div><h2 className="text-xl font-extrabold">Put your focused sessions into a plan</h2><p className="mt-1 text-sm font-semibold text-checker-paper/70">Turn these tools into a routine you can follow each week.</p></div>
+            <Button asChild className="mt-4 shrink-0 sm:mt-0">
+              {user ? (plan ? <Link to="/plan">Open my plan</Link> : <Link to="/setup">Create your revision plan</Link>) : <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}>Create your revision plan</Link>}
+            </Button>
+          </div>
         </section>
       </main>
 

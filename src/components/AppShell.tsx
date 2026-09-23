@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import {
   CalendarDays,
   FileText,
@@ -8,10 +9,11 @@ import {
   Pencil,
   Settings,
   Sparkles,
-  Lightbulb,
   ClipboardCheck,
   GraduationCap,
   Wrench,
+  Menu,
+  X,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -21,11 +23,10 @@ import { LogoOnDark } from "@/components/Logo";
 
 
 const TABS = [
-  { to: "/plan", label: "Home", icon: House },
+  { to: "/plan", label: "My plan", icon: House },
   { to: "/exams", label: "Exam timetable", icon: CalendarDays },
   { to: "/papers", label: "Past Papers", icon: FileText },
-  { to: "/sites", label: "Revision links", icon: Sparkles },
-  { to: "/revision-help", label: "Leitner Technique", icon: Lightbulb },
+  { to: "/sites", label: "Revision Links", icon: Sparkles },
   { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
   { to: "/revision-guide", label: "Effective Revision", icon: GraduationCap },
   { to: "/revision-tools", label: "Revision Tools", icon: Wrench },
@@ -45,12 +46,13 @@ export function AppShell({
   const queryClient = useQueryClient();
   const { plan, plans, setActive } = useActivePlan();
   const { isAdmin } = useIsAdmin();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", search: {}, replace: true });
   }
 
 
@@ -104,32 +106,56 @@ export function AppShell({
                 to="/setup"
                 className="hidden rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground sm:inline-flex"
               >
-                New plan
+                {plan ? "Create another plan" : "Create plan"}
               </Link>
               <button
                 onClick={signOut}
-                className="rounded-full px-3 py-2 text-[13px] font-bold text-structure-foreground/75 hover:bg-structure-foreground/10"
+                className="hidden rounded-full px-3 py-2 text-[13px] font-bold text-structure-foreground/75 hover:bg-structure-foreground/10 sm:inline-flex"
               >
                 Sign out
               </button>
             </div>
           </div>
 
-          <nav className="app-nav mt-3 border-t border-structure-foreground/15" aria-label="Main navigation">
-            <div className={`grid items-stretch gap-1 pt-2 ${isAdmin ? "grid-cols-9" : "grid-cols-8"}`}>
+          <nav className="app-nav mt-3 hidden border-t border-structure-foreground/15 sm:block" aria-label="Main navigation">
+            <div className="flex items-stretch gap-1 overflow-x-auto pt-2">
               {(isAdmin ? [...TABS, ADMIN_TAB] : TABS).map((tab) => (
                 <Link
                   key={tab.to}
                   to={tab.to}
-                  className="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-[8px] px-1 py-2 text-center text-structure-foreground/70 sm:min-h-10 sm:flex-row sm:gap-2 sm:px-3"
+                  className="flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-[8px] px-3 py-2 text-center text-structure-foreground/70"
                   activeProps={{ className: "bg-structure-foreground/10 text-primary" }}
                   activeOptions={{ exact: true }}
                 >
                   <tab.icon className="size-4 shrink-0" strokeWidth={2.5} />
-                  <span className="text-[10px] font-bold leading-tight sm:text-[11px]">{tab.label}</span>
+                  <span className="whitespace-nowrap text-[11px] font-bold leading-tight">{tab.label}</span>
                 </Link>
               ))}
             </div>
+          </nav>
+          <nav className="relative mt-3 border-t border-structure-foreground/15 pt-2 sm:hidden" aria-label="Mobile navigation">
+            <div className="grid grid-cols-4 gap-1">
+              {TABS.filter((tab) => ["/plan", "/knowledge-checker", "/papers"].includes(tab.to)).map((tab) => (
+                <Link key={tab.to} to={tab.to} className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-[8px] px-1 text-structure-foreground/70" activeProps={{ className: "bg-structure-foreground/10 text-primary" }} activeOptions={{ exact: true }}>
+                  <tab.icon className="size-4" strokeWidth={2.5} />
+                  <span className="whitespace-nowrap text-[10px] font-bold">{tab.label}</span>
+                </Link>
+              ))}
+              <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-[8px] px-1 text-structure-foreground/70 hover:bg-structure-foreground/10">
+                {moreOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+                <span className="text-[10px] font-bold">More</span>
+              </button>
+            </div>
+            {moreOpen ? (
+              <div className="absolute inset-x-0 top-full z-30 mt-2 rounded-[8px] bg-structure p-2 shadow-lg ring-1 ring-structure-foreground/15">
+                {[...TABS.filter((tab) => !["/plan", "/knowledge-checker", "/papers"].includes(tab.to)), ...(isAdmin ? [ADMIN_TAB] : [])].map((tab) => (
+                  <Link key={tab.to} to={tab.to} onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10" activeProps={{ className: "bg-structure-foreground/10 text-primary" }}>
+                    <tab.icon className="size-4 shrink-0" />{tab.label}
+                  </Link>
+                ))}
+                <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-[8px] px-3 py-3 text-left text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10">Sign out</button>
+              </div>
+            ) : null}
           </nav>
         </div>
       </div>

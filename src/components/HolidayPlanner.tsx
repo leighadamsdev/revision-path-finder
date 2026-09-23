@@ -52,6 +52,11 @@ export function HolidayPlanner({
                 Remove
               </button>
             </div>
+            {holiday.start && holiday.end && holiday.end < holiday.start ? (
+              <p className="mt-2 text-[12px] font-bold text-destructive" role="alert">
+                The last day must be on or after the first day.
+              </p>
+            ) : null}
 
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <div>

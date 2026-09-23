@@ -7,7 +7,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
 import { PublicHeader } from "@/components/PublicHeader";
 
+type AuthSearch = { mode?: "signup"; context?: string; returnTo?: string };
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>): AuthSearch => {
+    const next: AuthSearch = {};
+    if (search["mode"] === "signup") next.mode = "signup";
+    if (typeof search["context"] === "string") next.context = search["context"];
+    if (typeof search["returnTo"] === "string") next.returnTo = search["returnTo"];
+    return next;
+  },
   head: () => ({
     meta: [
       { title: "Sign in — rev.plan" },
@@ -28,9 +37,10 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">(search.mode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -43,10 +53,17 @@ function AuthPage() {
         .catch(() => undefined)
         .then(async () => {
           const { data } = await supabase.from("plans").select("id").limit(1);
-          navigate({ to: data && data.length > 0 ? "/plan" : "/setup" });
+          const safeReturnTo = search.returnTo?.startsWith("/") && !search.returnTo.startsWith("//")
+            ? search.returnTo
+            : null;
+          if (safeReturnTo) {
+            navigate({ to: safeReturnTo });
+          } else {
+            navigate({ to: data && data.length > 0 ? "/plan" : "/setup" });
+          }
         });
     }
-  }, [loading, user, navigate]);
+  }, [loading, user, navigate, search.returnTo]);
 
   async function handleReset(event: React.FormEvent) {
     event.preventDefault();
@@ -73,7 +90,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: window.location.href },
         });
         if (error) throw error;
         if (!data.session) {
@@ -94,7 +111,7 @@ function AuthPage() {
   async function handleGoogle() {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: window.location.href,
     });
     if (result.error) {
       setBusy(false);
@@ -185,11 +202,13 @@ function AuthPage() {
 
             <>
               <p className="text-lg font-extrabold tracking-tight">
-                {mode === "signin" ? "Welcome back" : "Create your account"}
+                {mode === "signup"
+                  ? search.context === "create-plan" ? "Create your revision plan" : "Create your account"
+                  : search.context === "exams" ? "Sign in to view your exam timetable" : "Welcome back"}
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
                 {mode === "signin"
-                  ? "Sign in to pick up your revision plan."
+                  ? search.context === "exams" ? "We'll bring you back to your exam timetable after sign-in." : "Sign in to pick up your revision plan."
                   : "Your plan is private to your account."}
               </p>
 

@@ -13,18 +13,18 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as KnowledgeCheckerRouteImport } from './routes/knowledge-checker'
+import { Route as PapersRouteImport } from './routes/papers'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RevisionGuideRouteImport } from './routes/revision-guide'
 import { Route as RevisionHelpRouteImport } from './routes/revision-help'
 import { Route as RevisionToolsRouteImport } from './routes/revision-tools'
+import { Route as SitesRouteImport } from './routes/sites'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
-import { Route as AuthenticatedPapersRouteImport } from './routes/_authenticated/papers'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
-import { Route as AuthenticatedSitesRouteImport } from './routes/_authenticated/sites'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -44,6 +44,11 @@ const AuthRoute = AuthRouteImport.update({
 const KnowledgeCheckerRoute = KnowledgeCheckerRouteImport.update({
   id: '/knowledge-checker',
   path: '/knowledge-checker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PapersRoute = PapersRouteImport.update({
+  id: '/papers',
+  path: '/papers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -66,6 +71,11 @@ const RevisionToolsRoute = RevisionToolsRouteImport.update({
   path: '/revision-tools',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitesRoute = SitesRouteImport.update({
+  id: '/sites',
+  path: '/sites',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -79,11 +89,6 @@ const AuthenticatedEditPlanRoute = AuthenticatedEditPlanRouteImport.update({
 const AuthenticatedExamsRoute = AuthenticatedExamsRouteImport.update({
   id: '/exams',
   path: '/exams',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPapersRoute = AuthenticatedPapersRouteImport.update({
-  id: '/papers',
-  path: '/papers',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPlanRoute = AuthenticatedPlanRouteImport.update({
@@ -101,11 +106,6 @@ const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSitesRoute = AuthenticatedSitesRouteImport.update({
-  id: '/sites',
-  path: '/sites',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const ShareTokenRoute = ShareTokenRouteImport.update({
   id: '/share/$token',
   path: '/share/$token',
@@ -116,36 +116,36 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/knowledge-checker': typeof KnowledgeCheckerRoute
+  '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
   '/revision-tools': typeof RevisionToolsRoute
+  '/sites': typeof SitesRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
-  '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/setup': typeof AuthenticatedSetupRoute
-  '/sites': typeof AuthenticatedSitesRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/knowledge-checker': typeof KnowledgeCheckerRoute
+  '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
   '/revision-tools': typeof RevisionToolsRoute
+  '/sites': typeof SitesRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
-  '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/setup': typeof AuthenticatedSetupRoute
-  '/sites': typeof AuthenticatedSitesRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesById {
@@ -154,18 +154,18 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/knowledge-checker': typeof KnowledgeCheckerRoute
+  '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
   '/revision-tools': typeof RevisionToolsRoute
+  '/sites': typeof SitesRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
-  '/_authenticated/papers': typeof AuthenticatedPapersRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
-  '/_authenticated/sites': typeof AuthenticatedSitesRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRouteTypes {
@@ -174,36 +174,36 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/knowledge-checker'
+    | '/papers'
     | '/reset-password'
     | '/revision-guide'
     | '/revision-help'
     | '/revision-tools'
+    | '/sites'
     | '/admin'
     | '/edit-plan'
     | '/exams'
-    | '/papers'
     | '/plan'
     | '/print-plan'
     | '/setup'
-    | '/sites'
     | '/share/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/knowledge-checker'
+    | '/papers'
     | '/reset-password'
     | '/revision-guide'
     | '/revision-help'
     | '/revision-tools'
+    | '/sites'
     | '/admin'
     | '/edit-plan'
     | '/exams'
-    | '/papers'
     | '/plan'
     | '/print-plan'
     | '/setup'
-    | '/sites'
     | '/share/$token'
   id:
     | '__root__'
@@ -211,18 +211,18 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/knowledge-checker'
+    | '/papers'
     | '/reset-password'
     | '/revision-guide'
     | '/revision-help'
     | '/revision-tools'
+    | '/sites'
     | '/_authenticated/admin'
     | '/_authenticated/edit-plan'
     | '/_authenticated/exams'
-    | '/_authenticated/papers'
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
     | '/_authenticated/setup'
-    | '/_authenticated/sites'
     | '/share/$token'
   fileRoutesById: FileRoutesById
 }
@@ -231,10 +231,12 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   KnowledgeCheckerRoute: typeof KnowledgeCheckerRoute
+  PapersRoute: typeof PapersRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RevisionGuideRoute: typeof RevisionGuideRoute
   RevisionHelpRoute: typeof RevisionHelpRoute
   RevisionToolsRoute: typeof RevisionToolsRoute
+  SitesRoute: typeof SitesRoute
   ShareTokenRoute: typeof ShareTokenRoute
 }
 
@@ -268,6 +270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KnowledgeCheckerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/papers': {
+      id: '/papers'
+      path: '/papers'
+      fullPath: '/papers'
+      preLoaderRoute: typeof PapersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -296,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RevisionToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sites': {
+      id: '/sites'
+      path: '/sites'
+      fullPath: '/sites'
+      preLoaderRoute: typeof SitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -315,13 +331,6 @@ declare module '@tanstack/react-router' {
       path: '/exams'
       fullPath: '/exams'
       preLoaderRoute: typeof AuthenticatedExamsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/papers': {
-      id: '/_authenticated/papers'
-      path: '/papers'
-      fullPath: '/papers'
-      preLoaderRoute: typeof AuthenticatedPapersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/plan': {
@@ -345,13 +354,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/sites': {
-      id: '/_authenticated/sites'
-      path: '/sites'
-      fullPath: '/sites'
-      preLoaderRoute: typeof AuthenticatedSitesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/share/$token': {
       id: '/share/$token'
       path: '/share/$token'
@@ -366,22 +368,18 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedEditPlanRoute: typeof AuthenticatedEditPlanRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
-  AuthenticatedPapersRoute: typeof AuthenticatedPapersRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
-  AuthenticatedSitesRoute: typeof AuthenticatedSitesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedEditPlanRoute: AuthenticatedEditPlanRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,
-  AuthenticatedPapersRoute: AuthenticatedPapersRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
-  AuthenticatedSitesRoute: AuthenticatedSitesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -392,10 +390,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   KnowledgeCheckerRoute: KnowledgeCheckerRoute,
+  PapersRoute: PapersRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RevisionGuideRoute: RevisionGuideRoute,
   RevisionHelpRoute: RevisionHelpRoute,
   RevisionToolsRoute: RevisionToolsRoute,
+  SitesRoute: SitesRoute,
   ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport

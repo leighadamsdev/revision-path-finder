@@ -11,6 +11,7 @@ import {
   Printer,
   Share2,
   Trash2,
+  MoreHorizontal,
   X,
 } from "lucide-react";
 
@@ -67,6 +68,8 @@ function TimetablePage() {
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
   const subjectsQuery = usePlanSubjects(plan?.id);
   const topicsQuery = usePlanTopics(plan?.id);
   const sessionsQuery = usePlanSessions(plan?.id);
@@ -165,10 +168,10 @@ function TimetablePage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || (plan && (subjectsQuery.isLoading || topicsQuery.isLoading || sessionsQuery.isLoading))) {
     return (
       <AppShell>
-        <p className="text-sm font-semibold text-muted-foreground">Loading your plan…</p>
+        <div className="space-y-3" aria-label="Checking for your plan"><p className="text-sm font-semibold text-muted-foreground">Checking for your plan…</p><div className="h-28 animate-pulse rounded-[8px] bg-card" /><div className="h-48 animate-pulse rounded-[8px] bg-card" /></div>
       </AppShell>
     );
   }
@@ -225,7 +228,7 @@ function TimetablePage() {
           <h1 className="text-xl font-extrabold tracking-tight">Week {week}</h1>
           <p className="text-[13px] font-semibold text-muted-foreground">{plan.name}</p>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+        <div className="relative grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <Button asChild variant="outline">
             <Link to="/edit-plan">
               <Pencil aria-hidden="true" />
@@ -242,10 +245,8 @@ function TimetablePage() {
               Print this week / Export as PDF
             </Link>
           </Button>
-          <Button variant="ghost" onClick={() => setDeleteOpen(true)}>
-            <Trash2 aria-hidden="true" />
-            Delete plan
-          </Button>
+          <Button variant="ghost" size="icon" aria-label="More plan actions" title="More plan actions" onClick={() => setActionsOpen((open) => !open)}><MoreHorizontal aria-hidden="true" /></Button>
+          {actionsOpen ? <div className="absolute right-0 top-full z-10 mt-2 min-w-44 rounded-[8px] bg-card p-1 shadow-lg ring-1 ring-border"><button type="button" onClick={() => { setActionsOpen(false); setDeleteText(""); setDeleteOpen(true); }} className="flex w-full items-center gap-2 rounded-[6px] px-3 py-2 text-left text-sm font-bold text-destructive hover:bg-secondary"><Trash2 className="size-4" />Delete plan</button></div> : null}
         </div>
       </div>
 
@@ -393,11 +394,15 @@ function TimetablePage() {
               gap notes. This can't be undone.
             </DialogDescription>
           </DialogHeader>
+          <label className="block text-sm font-bold">
+            Type <span className="font-extrabold">{plan.name}</span> to confirm
+            <input value={deleteText} onChange={(event) => setDeleteText(event.target.value)} className="mt-2 w-full rounded-[8px] bg-background px-3 py-2.5 font-medium ring-1 ring-border focus:outline-none" />
+          </label>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={deleting}>
               Keep this plan
             </Button>
-            <Button variant="destructive" onClick={() => void handleDelete()} disabled={deleting}>
+            <Button variant="destructive" onClick={() => void handleDelete()} disabled={deleting || deleteText !== plan.name}>
               <Trash2 aria-hidden="true" />
               {deleting ? "Deleting…" : "Yes, delete it"}
             </Button>

@@ -67,6 +67,13 @@ type Row = {
   confidence: number | null;
 };
 
+type TopicRow = {
+  subjectId: string;
+  topic: string;
+  confidence: number | null;
+  isPriority: boolean;
+};
+
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -75,6 +82,7 @@ function lengthLabel(n: number) {
 function EditPlanPage() {
   const { plan, plans, isLoading } = useActivePlan();
   const planSubjects = usePlanSubjects(plan?.id);
+  const planTopics = usePlanTopics(plan?.id);
   const allSubjects = useQuery({ queryKey: ["subjects"], queryFn: fetchSubjects });
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -84,6 +92,9 @@ function EditPlanPage() {
   const [weeks, setWeeks] = useState(6);
   const [days, setDays] = useState<Record<string, { sessions: number; minutes: number }>>({});
   const [rows, setRows] = useState<Row[]>([]);
+  const [topics, setTopics] = useState<TopicRow[]>([]);
+  const [intensity, setIntensity] = useState<Intensity | null>(null);
+  const [holidays, setHolidays] = useState<HolidayPeriod[]>([]);
   const [addId, setAddId] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);

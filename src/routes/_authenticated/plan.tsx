@@ -62,6 +62,7 @@ function TimetablePage() {
   const [copied, setCopied] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
   const subjectsQuery = usePlanSubjects(plan?.id);
+  const topicsQuery = usePlanTopics(plan?.id);
   const sessionsQuery = usePlanSessions(plan?.id);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -75,9 +76,19 @@ function TimetablePage() {
   );
 
   const days = plan ? sortPlanDays(plan.start_date, week, plan.study_days) : [];
+
+  // Topic ratings decide the priority list; a subject-wide rating is the fallback.
+  const topics = topicsQuery.data ?? [];
   const needsWork = subjects
-    .filter((subject) => subject.confidence != null && subject.confidence <= 2)
-    .sort((a, b) => (a.confidence ?? 5) - (b.confidence ?? 5));
+    .map((subject) => {
+      const own = topics.filter((topic) => topic.subject_id === subject.id);
+      const rating = own.length
+        ? averageConfidence(own.map((topic) => topic.confidence))
+        : subject.confidence;
+      return { ...subject, rating };
+    })
+    .filter((subject) => subject.rating != null && subject.rating <= 2.5)
+    .sort((a, b) => (a.rating ?? 5) - (b.rating ?? 5));
 
   function patchSession(id: string, patch: Partial<SessionRow>) {
     queryClient.setQueryData<SessionRow[]>(["sessions", plan?.id], (old) =>

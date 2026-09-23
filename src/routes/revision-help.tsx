@@ -111,7 +111,7 @@ const SCIENCE = [
 function RevisionHelp() {
   const [activeStep, setActiveStep] = useState(0);
   const [demoOpen, setDemoOpen] = useState(false);
-  const step = STEPS[activeStep];
+  const step = STEPS[activeStep] ?? STEPS[0];
   const StepIcon = step.icon;
 
   return (

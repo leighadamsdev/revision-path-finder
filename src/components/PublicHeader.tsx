@@ -6,11 +6,11 @@ const PUBLIC_LINKS = [
   { to: "/", label: "Home" },
   { to: "/exams", label: "Exam timetable" },
   { to: "/papers", label: "Past Papers" },
-  { to: "/sites", label: "Revision links" },
+  { to: "/sites", label: "Links" },
   { to: "/revision-help", label: "Leitner Technique" },
   { to: "/knowledge-checker", label: "Knowledge Checker" },
-  { to: "/revision-guide", label: "Effective Revision" },
-  { to: "/revision-tools", label: "Revision Tools" },
+  { to: "/revision-guide", label: "Techniques" },
+  { to: "/revision-tools", label: "Tools" },
 ] as const;
 
 export function PublicHeader() {

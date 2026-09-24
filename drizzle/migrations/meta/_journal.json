@@ -71,6 +71,13 @@
       "when": 1790154273561,
       "tag": "0009_plan_topics_intensity_holidays",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790233859836,
+      "tag": "0010_public_revision_sites_read",
+      "breakpoints": true
     }
   ]
 }

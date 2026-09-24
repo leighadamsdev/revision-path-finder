@@ -23,12 +23,12 @@ import { LogoOnDark } from "@/components/Logo";
 
 
 const TABS = [
-  { to: "/plan", label: "My plan", icon: House },
+  { to: "/revision-guide", label: "Effective Revision", icon: GraduationCap },
+  { to: "/plan", label: "Revision Planner", icon: House },
+  { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
   { to: "/exams", label: "Exam timetable", icon: CalendarDays },
   { to: "/papers", label: "Past Papers", icon: FileText },
   { to: "/sites", label: "Revision Links", icon: Sparkles },
-  { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
-  { to: "/revision-guide", label: "Effective Revision", icon: GraduationCap },
   { to: "/revision-tools", label: "Revision Tools", icon: Wrench },
 ] as const;
 

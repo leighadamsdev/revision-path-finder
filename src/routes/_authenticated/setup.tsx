@@ -68,9 +68,6 @@ function SetupPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { plans } = useActivePlan();
-  const trimmedName = name.trim();
-  const nameTaken = plans.some((p) => p.name.trim().toLowerCase() === trimmedName.toLowerCase());
-  const nameError = !trimmedName ? "Give this plan a name so you can tell your plans apart." : nameTaken ? "You already have a plan with this name — choose a different one." : null;
   const subjectsQuery = useQuery({ queryKey: ["subjects"], queryFn: fetchSubjects });
   const subjects = subjectsQuery.data ?? [];
 
@@ -103,6 +100,9 @@ function SetupPage() {
 
 
   const [name, setName] = useState("");
+  const trimmedName = name.trim();
+  const nameTaken = plans.some((p) => p.name.trim().toLowerCase() === trimmedName.toLowerCase());
+  const nameError = !trimmedName ? "Give this plan a name so you can tell your plans apart." : nameTaken ? "You already have a plan with this name — choose a different one." : null;
   const [startDate, setStartDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [weeks, setWeeks] = useState(6);
   const [dayConfigs, setDayConfigs] = useState<Record<string, DayConfig>>({

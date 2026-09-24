@@ -2626,7 +2626,7 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
       ],
     },
   ],
-  "Single Science (Biology, Chemistry, Physics)": [
+  Biology: [
     {
       unit: "Biology",
       elements: [
@@ -2667,6 +2667,8 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
         },
       ],
     },
+  ],
+  Chemistry: [
     {
       unit: "Chemistry",
       elements: [
@@ -2702,6 +2704,8 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
         },
       ],
     },
+  ],
+  Physics: [
     {
       unit: "Physics",
       elements: [

@@ -308,6 +308,9 @@ function KnowledgeCheckerPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 print:hidden">
+            <Button asChild variant="outline">
+              <Link to="/library"><BookOpen /> Manage Subjects and Topics</Link>
+            </Button>
             <Button type="button" variant="outline" onClick={downloadBlankPdf}>
               <Download /> Blank PDF
             </Button>
@@ -332,6 +335,29 @@ function KnowledgeCheckerPage() {
               </Button>
             </div>
           </div>
+
+          {library.subjects.length ? (
+            <div className="grid gap-3 border-b border-checker-line bg-card p-5 sm:grid-cols-3">
+              <label className="text-xs font-extrabold uppercase text-muted-foreground">From my library: subject
+                <select value={libSubjectId} onChange={(e) => { setLibSubjectId(e.target.value); setLibTopicId(""); const s = library.subjects.find((x) => x.id === e.target.value); if (s) setDraft((c) => ({ ...c, subject: s.name })); }} className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border">
+                  <option value="">Choose…</option>
+                  {library.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-extrabold uppercase text-muted-foreground">Topic
+                <select value={libTopicId} disabled={!libSubject} onChange={(e) => { setLibTopicId(e.target.value); const t = libSubject?.topics.find((x) => x.id === e.target.value); if (t) setDraft((c) => ({ ...c, topic: t.title, rows: t.items.length ? t.items.map((i) => ({ id: i.id, component: i.title, recall: "", gaps: "" })) : c.rows })); }} className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border">
+                  <option value="">Choose…</option>
+                  {libSubject?.topics.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-extrabold uppercase text-muted-foreground">Content item (optional)
+                <select value="" disabled={!libTopic} onChange={(e) => { const i = libTopic?.items.find((x) => x.id === e.target.value); if (i) setDraft((c) => ({ ...c, rows: [{ id: i.id, component: i.title, recall: "", gaps: "" }] })); }} className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border">
+                  <option value="">All items in this Topic</option>
+                  {libTopic?.items.map((i) => <option key={i.id} value={i.id}>{i.title}</option>)}
+                </select>
+              </label>
+            </div>
+          ) : null}
 
           <div className="grid gap-4 border-b border-checker-line bg-checker-paper p-5 sm:grid-cols-[1fr_1.4fr_0.7fr]">
             <label className="text-xs font-extrabold uppercase text-muted-foreground">Subject

@@ -14,7 +14,7 @@ import {
   type Intensity,
 } from "@/lib/plan";
 import { SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
-import { isTiered, type Tier } from "@/lib/gcse-subjects";
+import { GCSE_SUBJECTS, isTiered, type Tier } from "@/lib/gcse-subjects";
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
 import { DatePicker } from "@/components/DatePicker";
@@ -127,8 +127,8 @@ function SetupPage() {
     [dayConfigs],
   );
 
-  /** Only the subjects the student added to their Topic Library are listed here. */
-  const listedNames = useMemo(() => {
+  /** The student's own subjects first, then the rest of the GCSE catalogue. */
+  const myNames = useMemo(() => {
     const seen = new Set<string>();
     const names: string[] = [];
     for (const s of library.subjects) {
@@ -141,6 +141,12 @@ function SetupPage() {
     }
     return names.sort((a, b) => a.localeCompare(b));
   }, [library.subjects]);
+
+  const listedNames = useMemo(() => {
+    const seen = new Set(myNames.map((n) => n.toLowerCase()));
+    const rest = GCSE_SUBJECTS.map((s) => s.name).filter((n) => !seen.has(n.toLowerCase()));
+    return [...myNames, ...rest];
+  }, [myNames]);
 
   const visibleNames = useMemo(() => {
     const q = search.trim().toLowerCase();

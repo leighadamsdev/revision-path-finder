@@ -28,13 +28,15 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type TabKey = "subjects" | "topics" | "papers" | "sites";
+type TabKey = "subjects" | "topics" | "papers" | "sites" | "exams" | "schools";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "subjects", label: "Subjects" },
   { key: "topics", label: "Topic lists" },
   { key: "papers", label: "Past papers" },
   { key: "sites", label: "Revision links" },
+  { key: "exams", label: "Official exam dates" },
+  { key: "schools", label: "Schools" },
 ];
 
 const input =
@@ -87,6 +89,8 @@ function AdminPage() {
         {tab === "topics" ? <TopicsPanel /> : null}
         {tab === "papers" ? <PapersPanel /> : null}
         {tab === "sites" ? <SitesPanel /> : null}
+        {tab === "exams" ? <OfficialExamsPanel /> : null}
+        {tab === "schools" ? <SchoolsPanel /> : null}
       </div>
     </AppShell>
   );
@@ -570,5 +574,135 @@ function EditableRow({
         </button>
       </div>
     </div>
+  );
+}
+
+function OfficialExamsPanel() {
+  const qc = useQueryClient();
+  const { data: subjects = [] } = useSubjectList();
+  const rows = useQuery({
+    queryKey: ["official-exams"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("official_exams")
+        .select("id, subject_id, exam_board, tier, paper, series, exam_date")
+        .order("exam_date");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const [form, setForm] = useState({ subject_id: "", exam_board: "", tier: "", paper: "", series: "Summer 2027", exam_date: "" });
+
+  async function add() {
+    if (!form.subject_id || !form.paper.trim() || !form.exam_date) {
+      toast.error("Subject, paper and date are needed.");
+      return;
+    }
+    const { error } = await supabase.from("official_exams").insert({ ...form, tier: form.tier || null });
+    if (error) return toast.error(error.message);
+    setForm((f) => ({ ...f, paper: "", exam_date: "" }));
+    await qc.invalidateQueries({ queryKey: ["official-exams"] });
+  }
+
+  async function remove(id: string) {
+    const { error } = await supabase.from("official_exams").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    await qc.invalidateQueries({ queryKey: ["official-exams"] });
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <p className="text-sm font-extrabold">Add an official exam paper</p>
+        <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+          Students pick final exam dates from this list instead of typing them.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1"><span className={label}>Subject</span>
+            <select className={input} value={form.subject_id} onChange={(e) => setForm({ ...form, subject_id: e.target.value })}>
+              <option value="">Choose…</option>
+              {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </label>
+          <label className="space-y-1"><span className={label}>Paper</span>
+            <input className={input} value={form.paper} placeholder="Paper 1" onChange={(e) => setForm({ ...form, paper: e.target.value })} />
+          </label>
+          <label className="space-y-1"><span className={label}>Exam board</span>
+            <input className={input} value={form.exam_board} placeholder="AQA" onChange={(e) => setForm({ ...form, exam_board: e.target.value })} />
+          </label>
+          <label className="space-y-1"><span className={label}>Tier (optional)</span>
+            <input className={input} value={form.tier} placeholder="Higher" onChange={(e) => setForm({ ...form, tier: e.target.value })} />
+          </label>
+          <label className="space-y-1"><span className={label}>Series</span>
+            <input className={input} value={form.series} onChange={(e) => setForm({ ...form, series: e.target.value })} />
+          </label>
+          <label className="space-y-1"><span className={label}>Date</span>
+            <input type="date" className={input} value={form.exam_date} onChange={(e) => setForm({ ...form, exam_date: e.target.value })} />
+          </label>
+        </div>
+        <button onClick={() => void add()} className={`${pill} mt-4 bg-primary text-primary-foreground`}>Add paper</button>
+      </Card>
+      <Card>
+        {(rows.data ?? []).length === 0 ? (
+          <p className="text-[13px] font-medium text-muted-foreground">No official papers yet.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {(rows.data ?? []).map((r) => (
+              <li key={r.id} className="flex items-center gap-3 py-2 text-[13px]">
+                <span className="font-extrabold">{subjects.find((s) => s.id === r.subject_id)?.name ?? "—"}</span>
+                <span className="font-medium text-muted-foreground">{[r.paper, r.exam_board, r.tier, r.series].filter(Boolean).join(" · ")}</span>
+                <span className="ml-auto font-bold">{r.exam_date}</span>
+                <button onClick={() => void remove(r.id)} className="text-[12px] font-bold text-destructive">Remove</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function SchoolsPanel() {
+  const qc = useQueryClient();
+  const [name, setName] = useState("");
+  const rows = useQuery({
+    queryKey: ["schools"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("schools").select("id, name").order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  async function add() {
+    if (!name.trim()) return;
+    const { error } = await supabase.from("schools").insert({ name: name.trim() });
+    if (error) return toast.error(error.message);
+    setName("");
+    await qc.invalidateQueries({ queryKey: ["schools"] });
+  }
+
+  async function remove(id: string) {
+    const { error } = await supabase.from("schools").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    await qc.invalidateQueries({ queryKey: ["schools"] });
+  }
+
+  return (
+    <Card>
+      <p className="text-sm font-extrabold">Schools on the sign-up list</p>
+      <div className="mt-3 flex gap-2">
+        <input className={input} value={name} placeholder="School name" onChange={(e) => setName(e.target.value)} />
+        <button onClick={() => void add()} className={`${pill} bg-primary text-primary-foreground`}>Add</button>
+      </div>
+      <ul className="mt-3 divide-y divide-border">
+        {(rows.data ?? []).map((r) => (
+          <li key={r.id} className="flex items-center py-2 text-[13px] font-semibold">
+            {r.name}
+            <button onClick={() => void remove(r.id)} className="ml-auto text-[12px] font-bold text-destructive">Remove</button>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

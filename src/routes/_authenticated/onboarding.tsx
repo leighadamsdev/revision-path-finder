@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PublicHeader } from "@/components/PublicHeader";
@@ -100,10 +100,9 @@ function OnboardingPage() {
               <div className="mt-3"><SubjectFields value={value} onChange={setValue} /></div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button onClick={() => void saveSubject()}><Plus /> {editing ? "Save changes" : "Add subject"}</Button>
-                {!editing ? <Button variant="outline" onClick={() => void saveSubject(true)}><Upload /> Import a contents page</Button> : null}
                 {editing ? <Button variant="ghost" onClick={() => { setEditing(null); setValue(blank); }}>Cancel</Button> : null}
               </div>
-              {!editing ? <p className="mt-2 text-[12px] font-medium text-muted-foreground">To import, type the subject name first — the Topics will be added to it.</p> : null}
+              {!editing ? <p className="mt-2 text-[12px] font-medium text-muted-foreground">Add all your subjects first — you'll add topics in the next step.</p> : null}
             </div>
 
             {subjects.length ? (

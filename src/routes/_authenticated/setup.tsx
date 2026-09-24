@@ -127,25 +127,25 @@ function SetupPage() {
     [dayConfigs],
   );
 
-  /** The national GCSE catalogue, grouped. */
-  const allNames = useMemo(() => {
-    const groups = new Map<string, string[]>();
-    for (const group of SUBJECT_GROUPS) groups.set(group, []);
-    for (const s of GCSE_SUBJECTS) groups.get(s.group)!.push(s.name);
-    return groups;
-  }, []);
-
-  const filteredGroups = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const out: { group: string; names: string[] }[] = [];
-    for (const [group, names] of allNames) {
-      const list = (q ? names.filter((n) => n.toLowerCase().includes(q)) : names).sort((a, b) =>
-        a.localeCompare(b),
-      );
-      if (list.length) out.push({ group, names: list });
+  /** Only the subjects the student added to their Topic Library are listed here. */
+  const listedNames = useMemo(() => {
+    const seen = new Set<string>();
+    const names: string[] = [];
+    for (const s of library.subjects) {
+      const subjectName = s.name.trim();
+      if (!subjectName) continue;
+      const key = subjectName.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      names.push(subjectName);
     }
-    return out;
-  }, [allNames, search]);
+    return names.sort((a, b) => a.localeCompare(b));
+  }, [library.subjects]);
+
+  const visibleNames = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? listedNames.filter((n) => n.toLowerCase().includes(q)) : listedNames;
+  }, [listedNames, search]);
 
   function toggleName(subjectName: string) {
     setPicks((prev) => {
@@ -361,8 +361,8 @@ function SetupPage() {
                 Which subjects are you revising?
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Search the full GCSE list and tick everything you're sitting. For tiered subjects,
-                tell us whether you're on Foundation or Higher papers.
+                These are the subjects you added — tick everything you're sitting. For tiered
+                subjects, tell us whether you're on Foundation or Higher papers.
               </p>
 
               <div className="mt-4 flex items-center gap-2 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border">

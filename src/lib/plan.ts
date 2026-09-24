@@ -413,7 +413,10 @@ export async function fetchPlanTopics(planId: string): Promise<PlanTopic[]> {
   return (data ?? []) as unknown as PlanTopic[];
 }
 
-/** Replaces a plan's topic list and ratings. */
+/**
+ * Replaces a plan's topic list and ratings in place: matching topics are updated
+ * (so their subtopics, exam scope and flashcards survive), new ones added, removed ones dropped.
+ */
 export async function savePlanTopics(
   planId: string,
   topics: Array<{
@@ -423,23 +426,54 @@ export async function savePlanTopics(
     isPriority: boolean;
   }>,
 ) {
-  const { error: deleteError } = await supabase
-    .from("plan_topics")
-    .delete()
-    .eq("plan_id", planId);
-  if (deleteError) throw deleteError;
-  if (!topics.length) return;
-  const { error } = await supabase.from("plan_topics").insert(
-    topics.map((entry, index) => ({
-      plan_id: planId,
-      subject_id: entry.subjectId,
-      topic: entry.topic,
-      confidence: entry.confidence,
-      is_priority: entry.isPriority,
-      position: index,
-    })),
-  );
-  if (error) throw error;
+  const existing = await fetchPlanTopics(planId);
+  const key = (subjectId: string, topic: string) => `${subjectId}|${topic}`;
+  const byKey = new Map(existing.map((row) => [key(row.subject_id, row.topic), row]));
+  const wanted = new Set(topics.map((t) => key(t.subjectId, t.topic)));
+
+  const remove = existing.filter((row) => !wanted.has(key(row.subject_id, row.topic))).map((r) => r.id);
+  if (remove.length) {
+    const { error } = await supabase.from("plan_topics").delete().in("id", remove);
+    if (error) throw error;
+  }
+
+  const inserts: Array<{
+    plan_id: string;
+    subject_id: string;
+    topic: string;
+    confidence: number | null;
+    is_priority: boolean;
+    position: number;
+  }> = [];
+  for (const [index, entry] of topics.entries()) {
+    const match = byKey.get(key(entry.subjectId, entry.topic));
+    if (match) {
+      if (
+        match.confidence !== entry.confidence ||
+        match.is_priority !== entry.isPriority ||
+        match.position !== index
+      ) {
+        const { error } = await supabase
+          .from("plan_topics")
+          .update({ confidence: entry.confidence, is_priority: entry.isPriority, position: index })
+          .eq("id", match.id);
+        if (error) throw error;
+      }
+    } else {
+      inserts.push({
+        plan_id: planId,
+        subject_id: entry.subjectId,
+        topic: entry.topic,
+        confidence: entry.confidence,
+        is_priority: entry.isPriority,
+        position: index,
+      });
+    }
+  }
+  if (inserts.length) {
+    const { error } = await supabase.from("plan_topics").insert(inserts);
+    if (error) throw error;
+  }
 }
 
 /** The topic rows a draft wants saved, flattened. */

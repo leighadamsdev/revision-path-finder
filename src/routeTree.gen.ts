@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as KnowledgeCheckerRouteImport } from './routes/knowledge-checker'
 import { Route as PapersRouteImport } from './routes/papers'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RevisionGuideRouteImport } from './routes/revision-guide'
@@ -22,6 +21,7 @@ import { Route as SitesRouteImport } from './routes/sites'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
+import { Route as AuthenticatedKnowledgeCheckerRouteImport } from './routes/_authenticated/knowledge-checker'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
@@ -39,11 +39,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KnowledgeCheckerRoute = KnowledgeCheckerRouteImport.update({
-  id: '/knowledge-checker',
-  path: '/knowledge-checker',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PapersRoute = PapersRouteImport.update({
@@ -91,6 +86,12 @@ const AuthenticatedExamsRoute = AuthenticatedExamsRouteImport.update({
   path: '/exams',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedKnowledgeCheckerRoute =
+  AuthenticatedKnowledgeCheckerRouteImport.update({
+    id: '/knowledge-checker',
+    path: '/knowledge-checker',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPlanRoute = AuthenticatedPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -115,7 +116,6 @@ const ShareTokenRoute = ShareTokenRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/knowledge-checker': typeof KnowledgeCheckerRoute
   '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
@@ -125,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
+  '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -133,7 +134,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/knowledge-checker': typeof KnowledgeCheckerRoute
   '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
@@ -143,6 +143,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
+  '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -153,7 +154,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/knowledge-checker': typeof KnowledgeCheckerRoute
   '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
@@ -163,6 +163,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
+  '/_authenticated/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
@@ -173,7 +174,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/knowledge-checker'
     | '/papers'
     | '/reset-password'
     | '/revision-guide'
@@ -183,6 +183,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/edit-plan'
     | '/exams'
+    | '/knowledge-checker'
     | '/plan'
     | '/print-plan'
     | '/setup'
@@ -191,7 +192,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/knowledge-checker'
     | '/papers'
     | '/reset-password'
     | '/revision-guide'
@@ -201,6 +201,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/edit-plan'
     | '/exams'
+    | '/knowledge-checker'
     | '/plan'
     | '/print-plan'
     | '/setup'
@@ -210,7 +211,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/knowledge-checker'
     | '/papers'
     | '/reset-password'
     | '/revision-guide'
@@ -220,6 +220,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/edit-plan'
     | '/_authenticated/exams'
+    | '/_authenticated/knowledge-checker'
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
     | '/_authenticated/setup'
@@ -230,7 +231,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  KnowledgeCheckerRoute: typeof KnowledgeCheckerRoute
   PapersRoute: typeof PapersRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RevisionGuideRoute: typeof RevisionGuideRoute
@@ -261,13 +261,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/knowledge-checker': {
-      id: '/knowledge-checker'
-      path: '/knowledge-checker'
-      fullPath: '/knowledge-checker'
-      preLoaderRoute: typeof KnowledgeCheckerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/papers': {
@@ -333,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExamsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/knowledge-checker': {
+      id: '/_authenticated/knowledge-checker'
+      path: '/knowledge-checker'
+      fullPath: '/knowledge-checker'
+      preLoaderRoute: typeof AuthenticatedKnowledgeCheckerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/plan': {
       id: '/_authenticated/plan'
       path: '/plan'
@@ -368,6 +368,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedEditPlanRoute: typeof AuthenticatedEditPlanRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
+  AuthenticatedKnowledgeCheckerRoute: typeof AuthenticatedKnowledgeCheckerRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
@@ -377,6 +378,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedEditPlanRoute: AuthenticatedEditPlanRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,
+  AuthenticatedKnowledgeCheckerRoute: AuthenticatedKnowledgeCheckerRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
@@ -389,7 +391,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  KnowledgeCheckerRoute: KnowledgeCheckerRoute,
   PapersRoute: PapersRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RevisionGuideRoute: RevisionGuideRoute,

@@ -44,7 +44,7 @@ function OnboardingPage() {
   const totalItems = subjects.reduce((n, s) => n + s.topics.reduce((m, t) => m + t.items.length, 0), 0);
 
   async function saveSubject(thenImport = false) {
-    if (!value.name.trim()) return toast.error("Enter the subject name first.");
+    if (!value.name.trim()) return void toast.error("Enter the subject name first.");
     try {
       if (editing) await updateSubject(editing, { name: value.name.trim(), exam_board: value.exam_board || null, qualification_level: value.qualification_level || null });
       else {

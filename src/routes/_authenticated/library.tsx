@@ -43,7 +43,7 @@ function LibraryPage() {
               <div className="flex gap-2">
                 <Button
                   onClick={async () => {
-                    if (!value.name.trim()) return toast.error("Subject name is required.");
+                    if (!value.name.trim()) return void toast.error("Subject name is required.");
                     await addSubject(value);
                     setValue({ name: "", exam_board: "", qualification_level: "" });
                     setAdding(false);

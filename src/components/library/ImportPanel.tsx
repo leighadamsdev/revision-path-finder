@@ -63,7 +63,7 @@ export function ImportPanel({
 
   async function takeFile(f: File) {
     const ok = /\.(jpe?g|png|hei[cf]|pdf)$/i.test(f.name) || /image\/|application\/pdf/.test(f.type);
-    if (!ok) return toast.error("Please upload a JPG, PNG, HEIC or PDF.");
+    if (!ok) return void toast.error("Please upload a JPG, PNG, HEIC or PDF.");
     setBusy(true);
     try {
       setImg(await fileToImage(f));
@@ -81,7 +81,7 @@ export function ImportPanel({
     setBusy(true);
     const result = await extract({ data: { dataUrl: renderPrepared(img, rotation, crop, enhance) } }).catch(() => null);
     setBusy(false);
-    if (!result || !result.ok) return toast.error(result?.error ?? "We couldn't read that page. Try again.");
+    if (!result || !result.ok) return void toast.error(result?.error ?? "We couldn't read that page. Try again.");
     if (!result.topics.length) {
       toast.error("No numbered “Topic” headings were found. Try straightening or cropping the photo, or add Topics manually.");
       return;

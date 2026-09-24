@@ -163,8 +163,8 @@ function ManualTopicDialog({ subject, onClose, onSaved }: { subject: LibSubject 
   const [busy, setBusy] = useState(false);
   async function save(another: boolean) {
     const t = draft[0];
-    if (!subject || !t?.title.trim()) return toast.error("Give the Topic a title.");
-    if (!t.items.some((i) => i.title.trim())) return toast.error("Add at least one content item.");
+    if (!subject || !t?.title.trim()) return void toast.error("Give the Topic a title.");
+    if (!t.items.some((i) => i.title.trim())) return void toast.error("Add at least one content item.");
     setBusy(true);
     try {
       await saveTopics(subject.id, [t], { type: "manual", path: null }, subject.topics.length);
@@ -230,7 +230,7 @@ function EditSubjectDialog({ subject, onClose, onSaved }: { subject: LibSubject 
         <DialogFooter>
           <Button
             onClick={async () => {
-              if (!subject || !v.name.trim()) return toast.error("Subject name is required.");
+              if (!subject || !v.name.trim()) return void toast.error("Subject name is required.");
               await updateSubject(subject.id, { name: v.name.trim(), exam_board: v.exam_board || null, qualification_level: v.qualification_level || null });
               setValue(null);
               onSaved();

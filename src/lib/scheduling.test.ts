@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { allocateWeek, nextBoxLabel, pinUrgent, urgencyMultiplier, weaknessWeight } from "./scheduling.testkit";
+import { allocateWeek, pinUrgent, urgencyMultiplier, weaknessWeight } from "./scheduling";
+import { nextBox as nextBoxLabel } from "./leitner";
 describe("engine", () => {
   it("urgency ramps inside 28 days", () => {
     expect(urgencyMultiplier(40)).toBe(1);

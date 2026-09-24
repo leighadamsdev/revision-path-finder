@@ -99,7 +99,10 @@ function SetupPage() {
   const [holidays, setHolidays] = useState<HolidayPeriod[]>([]);
 
 
-  const [name, setName] = useState("Finals plan");
+  const [name, setName] = useState("");
+  const trimmedName = name.trim();
+  const nameTaken = plans.some((p) => p.name.trim().toLowerCase() === trimmedName.toLowerCase());
+  const nameError = !trimmedName ? "Give this plan a name so you can tell your plans apart." : nameTaken ? "You already have a plan with this name — choose a different one." : null;
   const [startDate, setStartDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [weeks, setWeeks] = useState(6);
   const [dayConfigs, setDayConfigs] = useState<Record<string, DayConfig>>({
@@ -273,7 +276,7 @@ function SetupPage() {
       await queryClient.invalidateQueries({ queryKey: ["subjects"] });
 
       const planId = await createPlan(user.id, {
-        name: name.trim() || "My revision plan",
+        name: trimmedName,
         startDate,
         weeks,
         days: studyDays.map((day) => ({
@@ -934,9 +937,14 @@ function SetupPage() {
                 Any subject you left blank gets its topics written for you — this takes a few
                 moments.
               </p>
+              <label className="mt-4 block">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Save this plan as</span>
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mock exams plan" className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none" />
+                {nameError ? <span className="mt-1 block text-[12px] font-bold text-destructive">{nameError}</span> : null}
+              </label>
               {plans.length ? (
                 <p className="mt-3 rounded-[8px] bg-secondary px-3 py-2 text-[12px] font-bold text-foreground">
-                  This creates another plan. Your existing {plans.length === 1 ? "plan stays" : "plans stay"} available in the plan selector.
+                  This saves a new plan. Your existing {plans.length === 1 ? "plan is" : "plans are"} kept — switch between them any time from the plan selector at the top of the page.
                 </p>
               ) : null}
             </>
@@ -965,7 +973,7 @@ function SetupPage() {
             ) : (
               <button
                 onClick={() => void generate()}
-                disabled={generating || holidayError}
+                disabled={generating || holidayError || Boolean(nameError)}
                 className="flex-1 rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-60"
               >
                 {generating ? "Building your timetable…" : "Generate my timetable"}

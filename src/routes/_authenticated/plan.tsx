@@ -307,7 +307,7 @@ function TimetablePage() {
                         <span
                           className={`ml-auto text-[11px] font-extrabold ${confidenceTone(subject.rating).text}`}
                         >
-                          {subject.rating}/5 · {subject.rating <= 2 ? "Red" : subject.rating < 5 ? "Amber" : "Green"}
+                          {subject.rating}/5 · {(subject.rating ?? 0) <= 2 ? "Red" : (subject.rating ?? 0) < 5 ? "Amber" : "Green"}
                         </span>
                       </li>
                     );

@@ -93,6 +93,11 @@ function AuthPage() {
           options: { emailRedirectTo: window.location.href },
         });
         if (error) throw error;
+        if (data.user && (data.user.identities?.length ?? 0) === 0) {
+          toast.error("You already have an account with this email. Sign in instead, or use “Forgot password” to reset it.");
+          setMode("signin");
+          return;
+        }
         if (!data.session) {
           setCheckEmail(true);
           return;

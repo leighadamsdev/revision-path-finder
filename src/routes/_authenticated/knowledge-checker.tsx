@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { PublicHeader } from "@/components/PublicHeader";
+import { ItemMultiSelect } from "@/components/ItemMultiSelect";
 import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan } from "@/hooks/useActivePlan";
 import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
@@ -357,12 +358,9 @@ function KnowledgeCheckerPage() {
                   {libSubject?.topics.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
                 </select>
               </label>
-              <label className="text-xs font-extrabold uppercase text-muted-foreground">Content item (optional)
-                <select value="" disabled={!libTopic} onChange={(e) => { const i = libTopic?.items.find((x) => x.id === e.target.value); if (i) setDraft((c) => ({ ...c, rows: [{ id: i.id, component: i.title, recall: "", gaps: "" }] })); }} className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border">
-                  <option value="">All items in this Topic</option>
-                  {libTopic?.items.map((i) => <option key={i.id} value={i.id}>{i.title}</option>)}
-                </select>
-              </label>
+              <div className="text-xs font-extrabold uppercase text-muted-foreground">Content items
+                <ItemMultiSelect items={libTopic?.items ?? []} disabled={!libTopic || !libTopic.items.length} onAdd={(sel) => setDraft((c) => ({ ...c, rows: sel.map((i) => ({ id: i.id, component: i.title, recall: "", gaps: "" })) }))} />
+              </div>
             </div>
           ) : null}
 

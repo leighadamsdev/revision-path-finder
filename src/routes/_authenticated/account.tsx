@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
+import { SchoolSearch } from "@/components/SchoolSearch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -87,14 +88,7 @@ function AccountPage() {
         <div className="mt-5 space-y-4 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
           <label className="block">
             <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">School</span>
-            <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} className={field}>
-              <option value="">Not set</option>
-              {(schools.data ?? []).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            <SchoolSearch schools={schools.data ?? []} value={schoolId} onChange={setSchoolId} />
           </label>
           <label className="block">
             <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">

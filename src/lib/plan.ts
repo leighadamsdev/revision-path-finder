@@ -6,6 +6,7 @@ import { catalogueSubject } from "@/lib/gcse-subjects";
 import { subjectUnits } from "@/lib/gcse-topics";
 import { examDateColumns, examDateList } from "@/lib/exam-dates";
 import { syncExamsFromColumns } from "@/lib/exams";
+import { fetchSubtopics } from "@/lib/leitner";
 import { planDayDate } from "@/lib/plan-dates";
 import { WEEK_DAYS } from "@/lib/subjects";
 import {
@@ -748,6 +749,24 @@ export async function regeneratePlanSessions(
     .select("weekly_minutes_budget, holiday_boost, pre_exam_boost, pre_exam_weeks")
     .eq("id", planId)
     .maybeSingle();
+  // Subtopic ratings, where they exist, replace their topic's rating in the weighting.
+  const subtopics = await fetchSubtopics(planId).catch(() => []);
+  if (subtopics.length) {
+    settings = {
+      ...settings,
+      subjects: settings.subjects.map((subject) => ({
+        ...subject,
+        topics: savedTopics
+          .filter((t) => t.subject_id === subject.subjectId)
+          .flatMap((t) => {
+            const subs = subtopics.filter((s) => s.plan_topic_id === t.id);
+            return subs.length
+              ? subs.map((s) => ({ topic: `${t.topic} — ${s.name}`, confidence: s.confidence }))
+              : [{ topic: t.topic, confidence: t.confidence }];
+          }),
+      })),
+    };
+  }
   const completed = new Map<string, string>();
   for (const session of existing) {
     if (session.completed_at) {

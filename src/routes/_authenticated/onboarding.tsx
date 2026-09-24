@@ -134,14 +134,15 @@ function OnboardingPage() {
         {step === 1 ? (
           <section className="mt-6 space-y-4">
             <LibraryManager subjects={subjects} refresh={refresh} />
-            <div className="flex justify-between">
+            <div className="flex flex-wrap justify-between gap-2">
               <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
-              <Button disabled={!withContent.length} onClick={() => setStep(2)}>Continue</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="ghost" disabled={saving} onClick={() => void finish()}>Skip for now</Button>
+                <Button onClick={() => setStep(2)}>Continue</Button>
+              </div>
             </div>
             <p className="text-right text-[12px] font-medium text-muted-foreground">
-              {withContent.length
-                ? subjects.length > withContent.length ? "You can skip the rest for now and finish them later in My Topic Library." : ""
-                : "Add at least one Topic with a content item to continue."}
+              Topics are optional here — you can add them later in My Topic Library or when you build a knowledge checker.
             </p>
           </section>
         ) : null}
@@ -157,7 +158,7 @@ function OnboardingPage() {
             <LibraryManager subjects={subjects} refresh={refresh} />
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-              <Button disabled={saving || !subjects.length || !totalTopics || !totalItems} onClick={() => void finish()}>
+              <Button disabled={saving || !subjects.length} onClick={() => void finish()}>
                 {saving ? "Saving…" : "Save and Finish Setup"}
               </Button>
             </div>

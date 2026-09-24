@@ -7,6 +7,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
 import { PublicHeader } from "@/components/PublicHeader";
+import { SchoolSearch } from "@/components/SchoolSearch";
 
 type AuthSearch = { mode?: "signup"; context?: string; returnTo?: string };
 
@@ -282,18 +283,7 @@ function AuthPage() {
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                         School
                       </span>
-                      <select
-                        value={schoolId}
-                        onChange={(e) => setSchoolId(e.target.value)}
-                        className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring"
-                      >
-                        <option value="">Choose your school (optional)</option>
-                        {(schools.data ?? []).map((school) => (
-                          <option key={school.id} value={school.id}>
-                            {school.name}
-                          </option>
-                        ))}
-                      </select>
+                      <SchoolSearch schools={schools.data ?? []} value={schoolId} onChange={setSchoolId} />
                     </label>
                     <label className="block">
                       <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">

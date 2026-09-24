@@ -25,6 +25,8 @@ import { IntensityField } from "@/components/IntensityField";
 import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan } from "@/hooks/useActivePlan";
+import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
+import { topicText as libraryTopicText } from "@/lib/library";
 
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 
@@ -569,7 +571,9 @@ function SetupPage() {
                   const options =
                     mode === "upload"
                       ? (uploaded[pick.name] ?? [])
-                      : units.flatMap((u) => u.elements.map((e) => e.label));
+                      : mode === "library"
+                        ? libraryOptions(pick.name)
+                        : units.flatMap((u) => u.elements.map((e) => e.label));
                   const picked =
                     mode === "manual" ? manualLines(manualText[pick.name]).length : ticked.length;
                    const finalTopics = topicsFor(pick.name);
@@ -594,6 +598,7 @@ function SetupPage() {
                           <div className="flex flex-wrap gap-1.5">
                             {(
                               [
+                                ["library", "My Topic Library"],
                                 ["dfe", "DfE content list"],
                                 ["manual", "Type my own"],
                                 ["upload", "Upload a document"],
@@ -625,6 +630,12 @@ function SetupPage() {
                               }
                               className="mt-3 w-full rounded-[12px] bg-card p-3 text-[13px] font-medium ring-1 ring-border focus:outline-none"
                             />
+                          ) : null}
+
+                          {mode === "library" && options.length === 0 ? (
+                            <p className="mt-3 text-[12px] font-bold text-muted-foreground">
+                              Your Topic Library has no Topics for a subject called “{pick.name}” yet. Add them in My Topic Library, or pick another source.
+                            </p>
                           ) : null}
 
                           {mode === "upload" ? (

@@ -21,12 +21,9 @@ export const GCSE_SUBJECTS: CatalogueSubject[] = [
     tiered: true,
     group: "Core",
   },
-  {
-    name: "Single Science (Biology, Chemistry, Physics)",
-    colorKey: "sci",
-    tiered: true,
-    group: "Core",
-  },
+  { name: "Biology", colorKey: "sci", tiered: true, group: "Core" },
+  { name: "Chemistry", colorKey: "sci", tiered: true, group: "Core" },
+  { name: "Physics", colorKey: "phys", tiered: true, group: "Core" },
 
   // Sciences
   { name: "Astronomy", colorKey: "phys", group: "Sciences" },

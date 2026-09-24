@@ -166,7 +166,7 @@ function OnboardingPage() {
       </main>
 
       {importAfterCreate ? (
-        <ImportPanel open onOpenChange={(v) => !v && setImportAfterCreate(null)} subjectId={importAfterCreate.id} subjectName={importAfterCreate.name} existingCount={0} onSaved={refresh} />
+        <ImportPanel open onOpenChange={(v) => !v && setImportAfterCreate(null)} subjectId={importAfterCreate.id} subjectName={importAfterCreate.name} existingCount={subjects.find((s) => s.id === importAfterCreate.id)?.topics.length ?? 0} onSaved={refresh} />
       ) : null}
     </div>
   );

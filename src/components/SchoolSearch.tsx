@@ -77,3 +77,15 @@ export function SchoolSearch({
     </div>
   );
 }
+
+/** Loads every school (the list is larger than one page of results). */
+export async function fetchAllSchools(): Promise<School[]> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const all: School[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data } = await supabase.from("schools").select("id, name").order("name").range(from, from + 999);
+    all.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  return all;
+}

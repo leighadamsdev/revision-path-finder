@@ -9,7 +9,10 @@ import { planDayDate } from "@/lib/plan-dates";
 import { WEEK_DAYS } from "@/lib/subjects";
 import {
   allocateWeek,
+  daysToNextExam,
   orderTopics,
+  PIN_WINDOW_DAYS,
+  pinUrgent,
   weekWeight,
   type SubjectWeighting,
 } from "@/lib/scheduling";
@@ -75,6 +78,10 @@ export type Plan = {
   intensity_weeks: number | null;
   intensity_sessions_per_day: number | null;
   holiday_periods: HolidayPeriod[];
+  weekly_minutes_budget: number | null;
+  holiday_boost: boolean;
+  pre_exam_boost: boolean;
+  pre_exam_weeks: number;
 };
 
 export type SessionRow = {
@@ -89,6 +96,9 @@ export type SessionRow = {
   confidence: number | null;
   gap_notes: string;
   length_minutes: number | null;
+  completed_at: string | null;
+  kind: string;
+  pinned: boolean;
 };
 
 export async function fetchSubjects(): Promise<Subject[]> {
@@ -229,7 +239,22 @@ export type PlanDraft = {
   holidays?: HolidayPeriod[];
 };
 
-type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };
+type Slot = {
+  week: number;
+  day: string;
+  slot: number;
+  subjectId: string;
+  minutes: number;
+  pinned: boolean;
+};
+
+/** Opt-in capacity controls saved on the plan. */
+export type Capacity = {
+  weeklyMinutesBudget?: number | null;
+  holidayBoost?: boolean;
+  preExamBoost?: boolean;
+  preExamWeeks?: number;
+};
 
 type ScheduleInput = {
   startDate: string;
@@ -240,6 +265,7 @@ type ScheduleInput = {
   intensity?: Intensity | null;
   /** Holiday stretches with their own daily pattern. */
   holidays?: HolidayPeriod[] | null;
+  capacity?: Capacity | null;
 };
 
 /** The earliest exam date across every subject in the plan, if any. */
@@ -266,17 +292,29 @@ function sessionsForDay(
   );
   if (holiday) {
     if (holiday.days.length && !holiday.days.includes(day)) return 0;
-    return Math.max(0, holiday.sessions);
+    return Math.max(0, holiday.sessions) + (input.capacity?.holidayBoost ? 1 : 0);
   }
+
+  let count = baseSessions;
 
   if (input.intensity && input.intensity.weeks > 0 && firstExam) {
     const gap = differenceInCalendarDays(parseISO(firstExam), date);
     if (gap >= 0 && gap <= input.intensity.weeks * 7 && baseSessions > 0) {
-      return Math.max(0, input.intensity.sessions);
+      count = Math.max(0, input.intensity.sessions);
     }
   }
 
-  return baseSessions;
+  // Pre-exam boost: one extra session a day inside N weeks of any upcoming exam.
+  const cap = input.capacity;
+  if (cap?.preExamBoost && count > 0) {
+    const gap = daysToNextExam(
+      input.subjects.flatMap((s) => s.examDates ?? []),
+      date,
+    );
+    if (gap != null && gap <= (cap.preExamWeeks ?? 4) * 7) count += 1;
+  }
+
+  return count;
 }
 
 /**
@@ -305,16 +343,45 @@ export function buildSchedule(input: ScheduleInput): Slot[] {
         daySlots.push({ day, slot, minutes: config?.minutes ?? fallbackMinutes });
       }
     }
+    // Optional weekly time budget: trim the busiest days first.
+    const budget = input.capacity?.weeklyMinutesBudget;
+    if (budget && budget > 0) {
+      let total = daySlots.reduce((sum, s) => sum + s.minutes, 0);
+      while (total > budget && daySlots.length > 1) {
+        const perDay = new Map<string, number>();
+        daySlots.forEach((s) => perDay.set(s.day, (perDay.get(s.day) ?? 0) + 1));
+        const busiest = [...perDay.entries()].sort((a, b) => b[1] - a[1])[0]![0];
+        const idx = daySlots.map((s) => s.day).lastIndexOf(busiest);
+        total -= daySlots[idx]!.minutes;
+        daySlots.splice(idx, 1);
+      }
+    }
     if (daySlots.length === 0) continue;
     const weights = subjects.map((subject) => weekWeight(input.startDate, subject, week));
     const assigned = allocateWeek(subjects, daySlots.length, weights, credit);
+    const pinFor = daySlots.map((entry) => {
+      const date = planDayDate(input.startDate, week, entry.day);
+      if (!date) return null;
+      let best: string | null = null;
+      let bestGap = Infinity;
+      for (const subject of subjects) {
+        const gap = daysToNextExam(subject.examDates, date);
+        if (gap != null && gap <= PIN_WINDOW_DAYS && gap < bestGap) {
+          bestGap = gap;
+          best = subject.subjectId;
+        }
+      }
+      return best;
+    });
+    const { ids, pinned } = pinUrgent(assigned, pinFor);
     daySlots.forEach((entry, i) => {
       slots.push({
         week,
         day: entry.day,
         slot: entry.slot,
-        subjectId: assigned[i] ?? subjects[0]!.subjectId,
+        subjectId: ids[i] ?? subjects[0]!.subjectId,
         minutes: entry.minutes,
+        pinned: pinned[i] ?? false,
       });
     });
   }
@@ -462,6 +529,7 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       topic_text: pool.length ? (pool[used % pool.length] ?? "") : "",
       gap_notes: "",
       length_minutes: slot.minutes,
+      pinned: slot.pinned,
     };
   });
 
@@ -703,6 +771,7 @@ export async function regeneratePlanSessions(
       topic_text: pool.length ? (pool[used % pool.length] ?? "") : "",
       gap_notes: notes.get(`${slot.week}|${slot.day}|${slot.slot}`) ?? "",
       length_minutes: slot.minutes,
+      pinned: slot.pinned,
     };
   });
 

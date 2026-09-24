@@ -17,6 +17,7 @@ import {
 
 import { PublicHeader } from "@/components/PublicHeader";
 import { ItemMultiSelect } from "@/components/ItemMultiSelect";
+import { SavedCheckers } from "@/components/SavedCheckers";
 import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan } from "@/hooks/useActivePlan";
 import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
@@ -446,6 +447,15 @@ function KnowledgeCheckerPage() {
         </div>
 
         {showFlashcards ? <FlashcardPanel flashcards={flashcards} /> : null}
+        <SavedCheckers
+          subject={draft.subject}
+          topic={draft.topic}
+          components={draft.rows.map((r) => r.component)}
+          onLoad={({ subject, topic, components }) => {
+            setDraft((c) => ({ ...c, subject, topic, rows: components.map((component, i) => ({ id: `row-${Date.now()}-${i}`, component, recall: "", gaps: "" })) }));
+            setMode("recall");
+          }}
+        />
         <section className="mt-8 rounded-[8px] bg-checker-ink p-6 text-checker-paper print:hidden sm:flex sm:items-center sm:justify-between sm:gap-6">
           <div><h2 className="text-xl font-extrabold">Use these gaps to build your plan</h2><p className="mt-1 text-sm font-semibold text-checker-paper/70">Give the topics you missed a lower confidence rating so they get more revision time.</p></div>
           <Button asChild className="mt-4 shrink-0 sm:mt-0">

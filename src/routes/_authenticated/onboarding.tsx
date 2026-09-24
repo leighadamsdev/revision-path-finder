@@ -39,7 +39,6 @@ function OnboardingPage() {
   const [importAfterCreate, setImportAfterCreate] = useState<LibSubject | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const withContent = subjects.filter((s) => s.topics.some((t) => t.items.length > 0));
   const totalTopics = subjects.reduce((n, s) => n + s.topics.length, 0);
   const totalItems = subjects.reduce((n, s) => n + s.topics.reduce((m, t) => m + t.items.length, 0), 0);
 

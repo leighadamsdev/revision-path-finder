@@ -5,6 +5,7 @@ import { generateTopics } from "@/lib/revision.functions";
 import { catalogueSubject } from "@/lib/gcse-subjects";
 import { subjectUnits } from "@/lib/gcse-topics";
 import { examDateColumns, examDateList } from "@/lib/exam-dates";
+import { syncExamsFromColumns } from "@/lib/exams";
 import { planDayDate } from "@/lib/plan-dates";
 import { WEEK_DAYS } from "@/lib/subjects";
 import {
@@ -186,6 +187,7 @@ export async function updatePlanSubjectMeta(
     .eq("plan_id", planId)
     .eq("subject_id", subjectId);
   if (error) throw error;
+  if (patch.examDates) await syncExamsFromColumns(planId);
 }
 
 
@@ -535,6 +537,7 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
 
   const { error: sessionError } = await supabase.from("sessions").insert(rows);
   if (sessionError) throw sessionError;
+  await syncExamsFromColumns(planId);
 
   return planId;
 }

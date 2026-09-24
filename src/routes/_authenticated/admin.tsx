@@ -599,14 +599,14 @@ function OfficialExamsPanel() {
       return;
     }
     const { error } = await supabase.from("official_exams").insert({ ...form, tier: form.tier || null });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setForm((f) => ({ ...f, paper: "", exam_date: "" }));
     await qc.invalidateQueries({ queryKey: ["official-exams"] });
   }
 
   async function remove(id: string) {
     const { error } = await supabase.from("official_exams").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["official-exams"] });
   }
 
@@ -677,14 +677,14 @@ function SchoolsPanel() {
   async function add() {
     if (!name.trim()) return;
     const { error } = await supabase.from("schools").insert({ name: name.trim() });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setName("");
     await qc.invalidateQueries({ queryKey: ["schools"] });
   }
 
   async function remove(id: string) {
     const { error } = await supabase.from("schools").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["schools"] });
   }
 

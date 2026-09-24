@@ -115,7 +115,7 @@ export async function fetchPlans(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("plans")
     .select(
-      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date, share_token, intensity_weeks, intensity_sessions_per_day, holiday_periods",
+      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date, share_token, intensity_weeks, intensity_sessions_per_day, holiday_periods, weekly_minutes_budget, holiday_boost, pre_exam_boost, pre_exam_weeks",
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -193,7 +193,7 @@ export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   const { data, error } = await supabase
     .from("sessions")
     .select(
-      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence_before, confidence, gap_notes, length_minutes",
+      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence_before, confidence, gap_notes, length_minutes, completed_at, kind, pinned",
     )
     .eq("plan_id", planId)
     .order("week_number")
@@ -706,6 +706,17 @@ export async function regeneratePlanSessions(
 ) {
   const existing = await fetchSessions(planId);
   const savedTopics = await fetchPlanTopics(planId);
+  const { data: capRow } = await supabase
+    .from("plans")
+    .select("weekly_minutes_budget, holiday_boost, pre_exam_boost, pre_exam_weeks")
+    .eq("id", planId)
+    .maybeSingle();
+  const completed = new Map<string, string>();
+  for (const session of existing) {
+    if (session.completed_at) {
+      completed.set(`${session.week_number}|${session.day_label}|${session.session_slot}`, session.completed_at);
+    }
+  }
 
   const notes = new Map<string, string>();
   const topicsBySubject: Record<string, string[]> = {};
@@ -755,6 +766,14 @@ export async function regeneratePlanSessions(
     subjects: settings.subjects,
     intensity: settings.intensity ?? null,
     holidays: settings.holidays ?? [],
+    capacity: capRow
+      ? {
+          weeklyMinutesBudget: capRow.weekly_minutes_budget,
+          holidayBoost: capRow.holiday_boost,
+          preExamBoost: capRow.pre_exam_boost,
+          preExamWeeks: capRow.pre_exam_weeks,
+        }
+      : null,
   });
 
   const counters: Record<string, number> = {};
@@ -772,6 +791,7 @@ export async function regeneratePlanSessions(
       gap_notes: notes.get(`${slot.week}|${slot.day}|${slot.slot}`) ?? "",
       length_minutes: slot.minutes,
       pinned: slot.pinned,
+      completed_at: completed.get(`${slot.week}|${slot.day}|${slot.slot}`) ?? null,
     };
   });
 
@@ -849,5 +869,19 @@ export async function deletePlan(planId: string) {
   const { error: linkError } = await supabase.from("plan_subjects").delete().eq("plan_id", planId);
   if (linkError) throw linkError;
   const { error } = await supabase.from("plans").delete().eq("id", planId);
+  if (error) throw error;
+}
+
+/** Saves the opt-in capacity controls (weekly budget and the two boosts). */
+export async function updatePlanCapacity(planId: string, capacity: Capacity) {
+  const { error } = await supabase
+    .from("plans")
+    .update({
+      weekly_minutes_budget: capacity.weeklyMinutesBudget ?? null,
+      holiday_boost: Boolean(capacity.holidayBoost),
+      pre_exam_boost: Boolean(capacity.preExamBoost),
+      pre_exam_weeks: capacity.preExamWeeks ?? 4,
+    })
+    .eq("id", planId);
   if (error) throw error;
 }

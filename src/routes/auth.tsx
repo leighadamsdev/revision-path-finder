@@ -235,21 +235,9 @@ function AuthPage() {
                   : "Your plan is private to your account."}
               </p>
 
-              <button
-                onClick={handleGoogle}
-                disabled={busy}
-                className="mt-5 w-full rounded-full border border-border bg-background py-3 text-sm font-bold text-foreground disabled:opacity-60"
-              >
-                Continue with Google
-              </button>
+              <div className="mt-5" />
 
-              <div className="my-4 flex items-center gap-3">
-                <span className="h-px flex-1 bg-border" />
-                <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  or
-                </span>
-                <span className="h-px flex-1 bg-border" />
-              </div>
+
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 <label className="block">

@@ -359,6 +359,11 @@
     display: table-header-group;
   }
 
+  .checker-print-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
   .checker-print-table th,
   .checker-print-table td {
     border: 1px solid black;

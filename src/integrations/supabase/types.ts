@@ -234,6 +234,36 @@ export type Database = {
           },
         ]
       }
+      knowledge_checkers: {
+        Row: {
+          created_at: string
+          id: string
+          rows: Json
+          subject: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rows?: Json
+          subject?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rows?: Json
+          subject?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       library_items: {
         Row: {
           created_at: string

@@ -34,7 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/knowledge-checker")({
+export const Route = createFileRoute("/_authenticated/knowledge-checker")({
   head: () => ({
     meta: [
       { title: "Online Revision Knowledge Checker | rev.plan" },

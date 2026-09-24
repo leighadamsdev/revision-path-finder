@@ -39,8 +39,8 @@ export function SubjectFields({
 }) {
   const inCatalogue = Boolean(catalogueSubject(value.name));
   const [custom, setCustom] = useState(Boolean(value.name) && !inCatalogue);
-  const tiered = !custom && isTiered(value.name);
-  const selectValue = custom ? OTHER : inCatalogue ? catalogueSubject(value.name)!.name : "";
+  const tiered = isTiered(value.name);
+  const selectValue = inCatalogue ? catalogueSubject(value.name)!.name : custom && value.name !== "" || custom ? OTHER : "";
 
   return (
     <div className="grid gap-2 sm:grid-cols-3">

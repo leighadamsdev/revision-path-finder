@@ -18,6 +18,7 @@ import {
 import { PublicHeader } from "@/components/PublicHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan } from "@/hooks/useActivePlan";
+import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -105,6 +106,12 @@ function buildFlashcards(rows: CheckerRow[]) {
 }
 
 function KnowledgeCheckerPage() {
+  useOnboardingGate();
+  const library = useLibrary();
+  const [libSubjectId, setLibSubjectId] = useState("");
+  const [libTopicId, setLibTopicId] = useState("");
+  const libSubject = library.subjects.find((s) => s.id === libSubjectId);
+  const libTopic = libSubject?.topics.find((t) => t.id === libTopicId);
   const { user } = useAuth();
   const { plan } = useActivePlan();
   const [draft, setDraft] = useState<CheckerDraft>({ subject: "", topic: "", date: "", rows: EMPTY_ROWS });

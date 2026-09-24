@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -65,6 +66,16 @@ function AuthPage() {
     }
   }, [loading, user, navigate, search.returnTo]);
 
+  const [schoolId, setSchoolId] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
+  const schools = useQuery({
+    queryKey: ["schools"],
+    queryFn: async () => {
+      const { data } = await supabase.from("schools").select("id, name").order("name");
+      return data ?? [];
+    },
+  });
+
   async function handleReset(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -90,7 +101,13 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.href },
+          options: {
+            emailRedirectTo: window.location.href,
+            data: {
+              ...(schoolId ? { school_id: schoolId } : {}),
+              ...(parentEmail.trim() ? { parent_email: parentEmail.trim() } : {}),
+            },
+          },
         });
         if (error) throw error;
         if (data.user && (data.user.identities?.length ?? 0) === 0) {
@@ -259,6 +276,41 @@ function AuthPage() {
                     className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring"
                   />
                 </label>
+                {mode === "signup" ? (
+                  <>
+                    <label className="block">
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                        School
+                      </span>
+                      <select
+                        value={schoolId}
+                        onChange={(e) => setSchoolId(e.target.value)}
+                        className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring"
+                      >
+                        <option value="">Choose your school (optional)</option>
+                        {(schools.data ?? []).map((school) => (
+                          <option key={school.id} value={school.id}>
+                            {school.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                        Parent or carer email (optional)
+                      </span>
+                      <input
+                        type="email"
+                        value={parentEmail}
+                        onChange={(e) => setParentEmail(e.target.value)}
+                        className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring"
+                      />
+                      <span className="mt-1 block text-[11px] font-medium text-muted-foreground">
+                        They'll get a short weekly summary. You can change this any time.
+                      </span>
+                    </label>
+                  </>
+                ) : null}
                 <button
                   type="submit"
                   disabled={busy}

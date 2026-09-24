@@ -37,6 +37,10 @@ export async function ensureProfile(user: User) {
         (user.user_metadata?.["full_name"] as string | undefined) ??
         user.email?.split("@")[0] ??
         null,
+      ...(user.user_metadata?.["school_id"] ? { school_id: user.user_metadata["school_id"] as string } : {}),
+      ...(user.user_metadata?.["parent_email"]
+        ? { parent_email: user.user_metadata["parent_email"] as string }
+        : {}),
     },
     { onConflict: "id" },
   );

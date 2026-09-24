@@ -23,6 +23,8 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
 import { Route as AuthenticatedKnowledgeCheckerRouteImport } from './routes/_authenticated/knowledge-checker'
+import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
@@ -98,6 +100,16 @@ const AuthenticatedKnowledgeCheckerRoute =
     path: '/knowledge-checker',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPlanRoute = AuthenticatedPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -133,6 +145,8 @@ export interface FileRoutesByFullPath {
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
   '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
+  '/library': typeof AuthenticatedLibraryRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -152,6 +166,8 @@ export interface FileRoutesByTo {
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
   '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
+  '/library': typeof AuthenticatedLibraryRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -173,6 +189,8 @@ export interface FileRoutesById {
   '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
   '/_authenticated/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
+  '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
@@ -194,6 +212,8 @@ export interface FileRouteTypes {
     | '/edit-plan'
     | '/exams'
     | '/knowledge-checker'
+    | '/library'
+    | '/onboarding'
     | '/plan'
     | '/print-plan'
     | '/setup'
@@ -213,6 +233,8 @@ export interface FileRouteTypes {
     | '/edit-plan'
     | '/exams'
     | '/knowledge-checker'
+    | '/library'
+    | '/onboarding'
     | '/plan'
     | '/print-plan'
     | '/setup'
@@ -233,6 +255,8 @@ export interface FileRouteTypes {
     | '/_authenticated/edit-plan'
     | '/_authenticated/exams'
     | '/_authenticated/knowledge-checker'
+    | '/_authenticated/library'
+    | '/_authenticated/onboarding'
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
     | '/_authenticated/setup'
@@ -352,6 +376,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKnowledgeCheckerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/library': {
+      id: '/_authenticated/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AuthenticatedLibraryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/plan': {
       id: '/_authenticated/plan'
       path: '/plan'
@@ -389,6 +427,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEditPlanRoute: typeof AuthenticatedEditPlanRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
   AuthenticatedKnowledgeCheckerRoute: typeof AuthenticatedKnowledgeCheckerRoute
+  AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
@@ -400,6 +440,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEditPlanRoute: AuthenticatedEditPlanRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,
   AuthenticatedKnowledgeCheckerRoute: AuthenticatedKnowledgeCheckerRoute,
+  AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,

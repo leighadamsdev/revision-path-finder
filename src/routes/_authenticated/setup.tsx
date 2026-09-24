@@ -391,51 +391,60 @@ function SetupPage() {
                 />
               </div>
 
-              <div className="mt-3 max-h-[26rem] space-y-1 overflow-y-auto pr-1">
-                {visibleNames.map((subjectName) => {
-                  const pick = picks.find((p) => p.name === subjectName);
-                  const isOn = Boolean(pick);
-                  return (
-                    <div key={subjectName} className="rounded-[10px] hover:bg-background">
-                      <button
-                        onClick={() => toggleName(subjectName)}
-                        className="flex w-full items-center gap-2.5 px-2.5 py-2 text-left"
-                      >
-                        <span
-                          className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
-                            isOn ? "bg-structure" : "ring-1 ring-border"
-                          }`}
-                        >
-                          {isOn ? (
-                            <Check className="size-3 text-structure-foreground" strokeWidth={3} />
-                          ) : null}
-                        </span>
-                        <span className="text-sm font-bold">{subjectName}</span>
-                      </button>
-                      {isOn && isTiered(subjectName) ? (
-                        <div className="flex flex-wrap items-center gap-1 px-2.5 pb-2 pl-10">
-                          <span className="mr-1 text-[11px] font-bold text-muted-foreground">
-                            Tier
-                          </span>
-                          {(["Foundation", "Higher"] as const).map((tier) => (
+              <div className="mt-3 max-h-[26rem] space-y-3 overflow-y-auto pr-1">
+                {visibleGroups.map((group) => (
+                  <div key={group.label}>
+                    <p className="px-2.5 pb-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                      {group.label}
+                    </p>
+                    <div className="space-y-1">
+                      {group.names.map((subjectName) => {
+                        const pick = picks.find((p) => p.name === subjectName);
+                        const isOn = Boolean(pick);
+                        return (
+                          <div key={subjectName} className="rounded-[10px] hover:bg-background">
                             <button
-                              key={tier}
-                              onClick={() => setTier(subjectName, tier)}
-                              className={`rounded-full px-3 py-1 text-[12px] font-bold ${
-                                pick?.tier === tier
-                                  ? "bg-structure text-structure-foreground"
-                                  : "bg-card text-muted-foreground ring-1 ring-border"
-                              }`}
+                              onClick={() => toggleName(subjectName)}
+                              className="flex w-full items-center gap-2.5 px-2.5 py-2 text-left"
                             >
-                              {tier}
+                              <span
+                                className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
+                                  isOn ? "bg-structure" : "ring-1 ring-border"
+                                }`}
+                              >
+                                {isOn ? (
+                                  <Check className="size-3 text-structure-foreground" strokeWidth={3} />
+                                ) : null}
+                              </span>
+                              <span className="text-sm font-bold">{subjectName}</span>
                             </button>
-                          ))}
-                        </div>
-                      ) : null}
+                            {isOn && isTiered(subjectName) ? (
+                              <div className="flex flex-wrap items-center gap-1 px-2.5 pb-2 pl-10">
+                                <span className="mr-1 text-[11px] font-bold text-muted-foreground">
+                                  Tier
+                                </span>
+                                {(["Foundation", "Higher"] as const).map((tier) => (
+                                  <button
+                                    key={tier}
+                                    onClick={() => setTier(subjectName, tier)}
+                                    className={`rounded-full px-3 py-1 text-[12px] font-bold ${
+                                      pick?.tier === tier
+                                        ? "bg-structure text-structure-foreground"
+                                        : "bg-card text-muted-foreground ring-1 ring-border"
+                                    }`}
+                                  >
+                                    {tier}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-                {visibleNames.length === 0 ? (
+                  </div>
+                ))}
+                {visibleGroups.length === 0 ? (
                   <p className="text-[12px] font-bold text-muted-foreground">
                     Nothing matched — add it as a custom subject below.
                   </p>

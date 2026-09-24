@@ -78,10 +78,10 @@ function OnboardingPage() {
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-16 pt-6">
         <h1 className="text-2xl font-extrabold tracking-tight">Set Up Your Revision Subjects</h1>
         <p className="mt-2 text-[14px] font-medium text-muted-foreground">
-          Add the subjects, Topics and content you are studying. This will personalise your Knowledge Checker and Revision Planner.
+          Add the subjects, topics and content you are studying. This will personalise your Knowledge Checker and Revision Planner.
         </p>
         <p className="mt-2 text-[13px] font-medium text-muted-foreground">
-          Your subjects and Topics provide the content for your revision tools. You will continue to choose and manage your revision priorities using the app’s existing priority process.
+          Your subjects and topics provide the content for your revision tools. You will continue to choose and manage your revision priorities using the app’s existing priority process.
         </p>
 
         <div className="mt-5">

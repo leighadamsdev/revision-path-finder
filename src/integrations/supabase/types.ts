@@ -234,6 +234,124 @@ export type Database = {
           },
         ]
       }
+      library_items: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          title: string
+          topic_id: string
+          uncertain: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          title: string
+          topic_id: string
+          uncertain?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          title?: string
+          topic_id?: string
+          uncertain?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_items_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "library_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_subjects: {
+        Row: {
+          created_at: string
+          exam_board: string | null
+          id: string
+          name: string
+          position: number
+          qualification_level: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exam_board?: string | null
+          id?: string
+          name: string
+          position?: number
+          qualification_level?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          exam_board?: string | null
+          id?: string
+          name?: string
+          position?: number
+          qualification_level?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      library_topics: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          source_path: string | null
+          source_type: Database["public"]["Enums"]["library_source"]
+          subject_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          source_path?: string | null
+          source_type?: Database["public"]["Enums"]["library_source"]
+          subject_id: string
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          source_path?: string | null
+          source_type?: Database["public"]["Enums"]["library_source"]
+          subject_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_topics_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "library_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mastery_snapshots: {
         Row: {
           id: string
@@ -444,6 +562,7 @@ export type Database = {
           confidence: number | null
           created_at: string
           id: string
+          library_item_id: string | null
           name: string
           plan_topic_id: string
           position: number
@@ -452,6 +571,7 @@ export type Database = {
           confidence?: number | null
           created_at?: string
           id?: string
+          library_item_id?: string | null
           name: string
           plan_topic_id: string
           position?: number
@@ -460,11 +580,19 @@ export type Database = {
           confidence?: number | null
           created_at?: string
           id?: string
+          library_item_id?: string | null
           name?: string
           plan_topic_id?: string
           position?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "plan_subtopics_library_item_id_fkey"
+            columns: ["library_item_id"]
+            isOneToOne: false
+            referencedRelation: "library_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "plan_subtopics_plan_topic_id_fkey"
             columns: ["plan_topic_id"]
@@ -480,6 +608,7 @@ export type Database = {
           created_at: string
           id: string
           is_priority: boolean
+          library_topic_id: string | null
           plan_id: string
           position: number
           subject_id: string
@@ -490,6 +619,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_priority?: boolean
+          library_topic_id?: string | null
           plan_id: string
           position?: number
           subject_id: string
@@ -500,12 +630,20 @@ export type Database = {
           created_at?: string
           id?: string
           is_priority?: boolean
+          library_topic_id?: string | null
           plan_id?: string
           position?: number
           subject_id?: string
           topic?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "plan_topics_library_topic_id_fkey"
+            columns: ["library_topic_id"]
+            isOneToOne: false
+            referencedRelation: "library_topics"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "plan_topics_plan_id_fkey"
             columns: ["plan_id"]
@@ -605,6 +743,7 @@ export type Database = {
           digest_opt_in: boolean
           display_name: string | null
           id: string
+          onboarding_completed_at: string | null
           parent_email: string | null
           school_id: string | null
         }
@@ -613,6 +752,7 @@ export type Database = {
           digest_opt_in?: boolean
           display_name?: string | null
           id: string
+          onboarding_completed_at?: string | null
           parent_email?: string | null
           school_id?: string | null
         }
@@ -621,6 +761,7 @@ export type Database = {
           digest_opt_in?: boolean
           display_name?: string | null
           id?: string
+          onboarding_completed_at?: string | null
           parent_email?: string | null
           school_id?: string | null
         }
@@ -841,6 +982,7 @@ export type Database = {
     Enums: {
       app_role: "student" | "admin"
       content_mode: "ai" | "manual" | "library"
+      library_source: "image" | "pdf" | "manual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -970,6 +1112,7 @@ export const Constants = {
     Enums: {
       app_role: ["student", "admin"],
       content_mode: ["ai", "manual", "library"],
+      library_source: ["image", "pdf", "manual"],
     },
   },
 } as const

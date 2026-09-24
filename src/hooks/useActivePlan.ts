@@ -8,6 +8,8 @@ import {
   fetchSessions,
   type Plan,
 } from "@/lib/plan";
+import { fetchFlashcards, fetchSubtopics } from "@/lib/leitner";
+import { fetchExams, fetchOfficialExams } from "@/lib/exams";
 
 const STORAGE_KEY = "revisionpath.activePlan";
 
@@ -57,4 +59,32 @@ export function usePlanSessions(planId: string | undefined) {
     queryFn: () => fetchSessions(planId!),
     enabled: Boolean(planId),
   });
+}
+
+export function useFlashcards(planId: string | undefined) {
+  return useQuery({
+    queryKey: ["flashcards", planId],
+    queryFn: () => fetchFlashcards(planId!),
+    enabled: Boolean(planId),
+  });
+}
+
+export function useSubtopics(planId: string | undefined) {
+  return useQuery({
+    queryKey: ["subtopics", planId],
+    queryFn: () => fetchSubtopics(planId!),
+    enabled: Boolean(planId),
+  });
+}
+
+export function useExams(planId: string | undefined) {
+  return useQuery({
+    queryKey: ["exams", planId],
+    queryFn: () => fetchExams(planId!),
+    enabled: Boolean(planId),
+  });
+}
+
+export function useOfficialExams() {
+  return useQuery({ queryKey: ["official-exams"], queryFn: fetchOfficialExams });
 }

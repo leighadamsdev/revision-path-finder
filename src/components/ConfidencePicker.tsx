@@ -1,6 +1,6 @@
-import { confidenceTone } from "@/lib/confidence";
+import { confidenceTone, LIKERT } from "@/lib/confidence";
 
-/** A calm 1–5 confidence control. 1–2 red, 3–4 amber, 5 green. */
+/** A calm 1–5 Likert confidence control (1 = not confident at all, 5 = very confident). 1–2 red, 3–4 amber, 5 green. */
 export function ConfidencePicker({
   value,
   onChange,
@@ -26,7 +26,8 @@ export function ConfidencePicker({
           <button
             key={step}
             type="button"
-            aria-label={`${label} ${step} of 5`}
+            aria-label={`${label} ${step} of 5 — ${LIKERT[step]}`}
+            title={`${step} — ${LIKERT[step]}`}
             aria-pressed={on}
             onClick={() => onChange(value === step ? null : step)}
             className={`${dot} rounded-full transition-colors ${

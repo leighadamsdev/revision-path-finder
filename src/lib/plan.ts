@@ -5,11 +5,16 @@ import { generateTopics } from "@/lib/revision.functions";
 import { catalogueSubject } from "@/lib/gcse-subjects";
 import { subjectUnits } from "@/lib/gcse-topics";
 import { examDateColumns, examDateList } from "@/lib/exam-dates";
+import { syncExamsFromColumns } from "@/lib/exams";
+import { fetchSubtopics } from "@/lib/leitner";
 import { planDayDate } from "@/lib/plan-dates";
 import { WEEK_DAYS } from "@/lib/subjects";
 import {
   allocateWeek,
+  daysToNextExam,
   orderTopics,
+  PIN_WINDOW_DAYS,
+  pinUrgent,
   weekWeight,
   type SubjectWeighting,
 } from "@/lib/scheduling";
@@ -75,6 +80,10 @@ export type Plan = {
   intensity_weeks: number | null;
   intensity_sessions_per_day: number | null;
   holiday_periods: HolidayPeriod[];
+  weekly_minutes_budget: number | null;
+  holiday_boost: boolean;
+  pre_exam_boost: boolean;
+  pre_exam_weeks: number;
 };
 
 export type SessionRow = {
@@ -89,6 +98,9 @@ export type SessionRow = {
   confidence: number | null;
   gap_notes: string;
   length_minutes: number | null;
+  completed_at: string | null;
+  kind: string;
+  pinned: boolean;
 };
 
 export async function fetchSubjects(): Promise<Subject[]> {
@@ -105,7 +117,7 @@ export async function fetchPlans(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("plans")
     .select(
-      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date, share_token, intensity_weeks, intensity_sessions_per_day, holiday_periods",
+      "id, name, weeks, days_per_week, study_days, sessions_per_day, session_length_minutes, day_plan, content_mode, created_at, start_date, share_token, intensity_weeks, intensity_sessions_per_day, holiday_periods, weekly_minutes_budget, holiday_boost, pre_exam_boost, pre_exam_weeks",
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -176,6 +188,7 @@ export async function updatePlanSubjectMeta(
     .eq("plan_id", planId)
     .eq("subject_id", subjectId);
   if (error) throw error;
+  if (patch.examDates) await syncExamsFromColumns(planId);
 }
 
 
@@ -183,7 +196,7 @@ export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   const { data, error } = await supabase
     .from("sessions")
     .select(
-      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence_before, confidence, gap_notes, length_minutes",
+      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence_before, confidence, gap_notes, length_minutes, completed_at, kind, pinned",
     )
     .eq("plan_id", planId)
     .order("week_number")
@@ -229,7 +242,22 @@ export type PlanDraft = {
   holidays?: HolidayPeriod[];
 };
 
-type Slot = { week: number; day: string; slot: number; subjectId: string; minutes: number };
+type Slot = {
+  week: number;
+  day: string;
+  slot: number;
+  subjectId: string;
+  minutes: number;
+  pinned: boolean;
+};
+
+/** Opt-in capacity controls saved on the plan. */
+export type Capacity = {
+  weeklyMinutesBudget?: number | null;
+  holidayBoost?: boolean;
+  preExamBoost?: boolean;
+  preExamWeeks?: number;
+};
 
 type ScheduleInput = {
   startDate: string;
@@ -240,6 +268,7 @@ type ScheduleInput = {
   intensity?: Intensity | null;
   /** Holiday stretches with their own daily pattern. */
   holidays?: HolidayPeriod[] | null;
+  capacity?: Capacity | null;
 };
 
 /** The earliest exam date across every subject in the plan, if any. */
@@ -266,17 +295,29 @@ function sessionsForDay(
   );
   if (holiday) {
     if (holiday.days.length && !holiday.days.includes(day)) return 0;
-    return Math.max(0, holiday.sessions);
+    return Math.max(0, holiday.sessions) + (input.capacity?.holidayBoost ? 1 : 0);
   }
+
+  let count = baseSessions;
 
   if (input.intensity && input.intensity.weeks > 0 && firstExam) {
     const gap = differenceInCalendarDays(parseISO(firstExam), date);
     if (gap >= 0 && gap <= input.intensity.weeks * 7 && baseSessions > 0) {
-      return Math.max(0, input.intensity.sessions);
+      count = Math.max(0, input.intensity.sessions);
     }
   }
 
-  return baseSessions;
+  // Pre-exam boost: one extra session a day inside N weeks of any upcoming exam.
+  const cap = input.capacity;
+  if (cap?.preExamBoost && count > 0) {
+    const gap = daysToNextExam(
+      input.subjects.flatMap((s) => s.examDates ?? []),
+      date,
+    );
+    if (gap != null && gap <= (cap.preExamWeeks ?? 4) * 7) count += 1;
+  }
+
+  return count;
 }
 
 /**
@@ -305,16 +346,45 @@ export function buildSchedule(input: ScheduleInput): Slot[] {
         daySlots.push({ day, slot, minutes: config?.minutes ?? fallbackMinutes });
       }
     }
+    // Optional weekly time budget: trim the busiest days first.
+    const budget = input.capacity?.weeklyMinutesBudget;
+    if (budget && budget > 0) {
+      let total = daySlots.reduce((sum, s) => sum + s.minutes, 0);
+      while (total > budget && daySlots.length > 1) {
+        const perDay = new Map<string, number>();
+        daySlots.forEach((s) => perDay.set(s.day, (perDay.get(s.day) ?? 0) + 1));
+        const busiest = [...perDay.entries()].sort((a, b) => b[1] - a[1])[0]![0];
+        const idx = daySlots.map((s) => s.day).lastIndexOf(busiest);
+        total -= daySlots[idx]!.minutes;
+        daySlots.splice(idx, 1);
+      }
+    }
     if (daySlots.length === 0) continue;
     const weights = subjects.map((subject) => weekWeight(input.startDate, subject, week));
     const assigned = allocateWeek(subjects, daySlots.length, weights, credit);
+    const pinFor = daySlots.map((entry) => {
+      const date = planDayDate(input.startDate, week, entry.day);
+      if (!date) return null;
+      let best: string | null = null;
+      let bestGap = Infinity;
+      for (const subject of subjects) {
+        const gap = daysToNextExam(subject.examDates, date);
+        if (gap != null && gap <= PIN_WINDOW_DAYS && gap < bestGap) {
+          bestGap = gap;
+          best = subject.subjectId;
+        }
+      }
+      return best;
+    });
+    const { ids, pinned } = pinUrgent(assigned, pinFor);
     daySlots.forEach((entry, i) => {
       slots.push({
         week,
         day: entry.day,
         slot: entry.slot,
-        subjectId: assigned[i] ?? subjects[0]!.subjectId,
+        subjectId: ids[i] ?? subjects[0]!.subjectId,
         minutes: entry.minutes,
+        pinned: pinned[i] ?? false,
       });
     });
   }
@@ -344,7 +414,10 @@ export async function fetchPlanTopics(planId: string): Promise<PlanTopic[]> {
   return (data ?? []) as unknown as PlanTopic[];
 }
 
-/** Replaces a plan's topic list and ratings. */
+/**
+ * Replaces a plan's topic list and ratings in place: matching topics are updated
+ * (so their subtopics, exam scope and flashcards survive), new ones added, removed ones dropped.
+ */
 export async function savePlanTopics(
   planId: string,
   topics: Array<{
@@ -354,23 +427,54 @@ export async function savePlanTopics(
     isPriority: boolean;
   }>,
 ) {
-  const { error: deleteError } = await supabase
-    .from("plan_topics")
-    .delete()
-    .eq("plan_id", planId);
-  if (deleteError) throw deleteError;
-  if (!topics.length) return;
-  const { error } = await supabase.from("plan_topics").insert(
-    topics.map((entry, index) => ({
-      plan_id: planId,
-      subject_id: entry.subjectId,
-      topic: entry.topic,
-      confidence: entry.confidence,
-      is_priority: entry.isPriority,
-      position: index,
-    })),
-  );
-  if (error) throw error;
+  const existing = await fetchPlanTopics(planId);
+  const key = (subjectId: string, topic: string) => `${subjectId}|${topic}`;
+  const byKey = new Map(existing.map((row) => [key(row.subject_id, row.topic), row]));
+  const wanted = new Set(topics.map((t) => key(t.subjectId, t.topic)));
+
+  const remove = existing.filter((row) => !wanted.has(key(row.subject_id, row.topic))).map((r) => r.id);
+  if (remove.length) {
+    const { error } = await supabase.from("plan_topics").delete().in("id", remove);
+    if (error) throw error;
+  }
+
+  const inserts: Array<{
+    plan_id: string;
+    subject_id: string;
+    topic: string;
+    confidence: number | null;
+    is_priority: boolean;
+    position: number;
+  }> = [];
+  for (const [index, entry] of topics.entries()) {
+    const match = byKey.get(key(entry.subjectId, entry.topic));
+    if (match) {
+      if (
+        match.confidence !== entry.confidence ||
+        match.is_priority !== entry.isPriority ||
+        match.position !== index
+      ) {
+        const { error } = await supabase
+          .from("plan_topics")
+          .update({ confidence: entry.confidence, is_priority: entry.isPriority, position: index })
+          .eq("id", match.id);
+        if (error) throw error;
+      }
+    } else {
+      inserts.push({
+        plan_id: planId,
+        subject_id: entry.subjectId,
+        topic: entry.topic,
+        confidence: entry.confidence,
+        is_priority: entry.isPriority,
+        position: index,
+      });
+    }
+  }
+  if (inserts.length) {
+    const { error } = await supabase.from("plan_topics").insert(inserts);
+    if (error) throw error;
+  }
 }
 
 /** The topic rows a draft wants saved, flattened. */
@@ -462,11 +566,13 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       topic_text: pool.length ? (pool[used % pool.length] ?? "") : "",
       gap_notes: "",
       length_minutes: slot.minutes,
+      pinned: slot.pinned,
     };
   });
 
   const { error: sessionError } = await supabase.from("sessions").insert(rows);
   if (sessionError) throw sessionError;
+  await syncExamsFromColumns(planId);
 
   return planId;
 }
@@ -638,6 +744,35 @@ export async function regeneratePlanSessions(
 ) {
   const existing = await fetchSessions(planId);
   const savedTopics = await fetchPlanTopics(planId);
+  const { data: capRow } = await supabase
+    .from("plans")
+    .select("weekly_minutes_budget, holiday_boost, pre_exam_boost, pre_exam_weeks")
+    .eq("id", planId)
+    .maybeSingle();
+  // Subtopic ratings, where they exist, replace their topic's rating in the weighting.
+  const subtopics = await fetchSubtopics(planId).catch(() => []);
+  if (subtopics.length) {
+    settings = {
+      ...settings,
+      subjects: settings.subjects.map((subject) => ({
+        ...subject,
+        topics: savedTopics
+          .filter((t) => t.subject_id === subject.subjectId)
+          .flatMap((t) => {
+            const subs = subtopics.filter((s) => s.plan_topic_id === t.id);
+            return subs.length
+              ? subs.map((s) => ({ topic: `${t.topic} — ${s.name}`, confidence: s.confidence }))
+              : [{ topic: t.topic, confidence: t.confidence }];
+          }),
+      })),
+    };
+  }
+  const completed = new Map<string, string>();
+  for (const session of existing) {
+    if (session.completed_at) {
+      completed.set(`${session.week_number}|${session.day_label}|${session.session_slot}`, session.completed_at);
+    }
+  }
 
   const notes = new Map<string, string>();
   const topicsBySubject: Record<string, string[]> = {};
@@ -687,6 +822,14 @@ export async function regeneratePlanSessions(
     subjects: settings.subjects,
     intensity: settings.intensity ?? null,
     holidays: settings.holidays ?? [],
+    capacity: capRow
+      ? {
+          weeklyMinutesBudget: capRow.weekly_minutes_budget,
+          holidayBoost: capRow.holiday_boost,
+          preExamBoost: capRow.pre_exam_boost,
+          preExamWeeks: capRow.pre_exam_weeks,
+        }
+      : null,
   });
 
   const counters: Record<string, number> = {};
@@ -703,6 +846,8 @@ export async function regeneratePlanSessions(
       topic_text: pool.length ? (pool[used % pool.length] ?? "") : "",
       gap_notes: notes.get(`${slot.week}|${slot.day}|${slot.slot}`) ?? "",
       length_minutes: slot.minutes,
+      pinned: slot.pinned,
+      completed_at: completed.get(`${slot.week}|${slot.day}|${slot.slot}`) ?? null,
     };
   });
 
@@ -769,6 +914,7 @@ export async function savePlanSubjects(
 
     if (updateError) throw updateError;
   }
+  await syncExamsFromColumns(planId);
 }
 
 /** Permanently deletes a plan along with its sessions and subject links. */
@@ -780,5 +926,19 @@ export async function deletePlan(planId: string) {
   const { error: linkError } = await supabase.from("plan_subjects").delete().eq("plan_id", planId);
   if (linkError) throw linkError;
   const { error } = await supabase.from("plans").delete().eq("id", planId);
+  if (error) throw error;
+}
+
+/** Saves the opt-in capacity controls (weekly budget and the two boosts). */
+export async function updatePlanCapacity(planId: string, capacity: Capacity) {
+  const { error } = await supabase
+    .from("plans")
+    .update({
+      weekly_minutes_budget: capacity.weeklyMinutesBudget ?? null,
+      holiday_boost: Boolean(capacity.holidayBoost),
+      pre_exam_boost: Boolean(capacity.preExamBoost),
+      pre_exam_weeks: capacity.preExamWeeks ?? 4,
+    })
+    .eq("id", planId);
   if (error) throw error;
 }

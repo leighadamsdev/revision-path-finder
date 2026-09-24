@@ -32,7 +32,15 @@ import {
   usePlanSessions,
   usePlanSubjects,
   usePlanTopics,
+  useFlashcards,
+  useSubtopics,
 } from "@/hooks/useActivePlan";
+import { FlashcardReview } from "@/components/FlashcardReview";
+import { MasteryStrip } from "@/components/MasteryStrip";
+import { PacePrompts } from "@/components/PacePrompts";
+import { TopicsConfidencePanel } from "@/components/TopicsConfidencePanel";
+import { planDayDate } from "@/lib/plan-dates";
+import { isToday } from "date-fns";
 import { averageConfidence, confidenceTone } from "@/lib/confidence";
 import type { SessionRow } from "@/lib/plan";
 import { deletePlan, disablePlanShare, enablePlanShare } from "@/lib/plan";
@@ -73,6 +81,10 @@ function TimetablePage() {
   const subjectsQuery = usePlanSubjects(plan?.id);
   const topicsQuery = usePlanTopics(plan?.id);
   const sessionsQuery = usePlanSessions(plan?.id);
+  const cardsQuery = useFlashcards(plan?.id);
+  const subtopicsQuery = useSubtopics(plan?.id);
+  const cards = cardsQuery.data ?? [];
+  const subtopics = subtopicsQuery.data ?? [];
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -252,6 +264,10 @@ function TimetablePage() {
 
       <ExamCountdown subjects={subjects} />
 
+      <MasteryStrip subjects={subjects} topics={topics} subtopics={subtopics} cards={cards} />
+
+      <PacePrompts plan={plan} subjects={subjects} topics={topics} subtopics={subtopics} sessions={sessions} />
+
       <section className="mb-7 print:hidden">
         <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
@@ -291,7 +307,7 @@ function TimetablePage() {
                         <span
                           className={`ml-auto text-[11px] font-extrabold ${confidenceTone(subject.rating).text}`}
                         >
-                          {subject.rating}/5
+                          {subject.rating}/5 · {(subject.rating ?? 0) <= 2 ? "Red" : (subject.rating ?? 0) < 5 ? "Amber" : "Green"}
                         </span>
                       </li>
                     );
@@ -316,8 +332,10 @@ function TimetablePage() {
           {days.map((day) => {
           const daySessions = weekSessions
             .filter((s) => s.day_label === day)
-            .sort((a, b) => a.session_slot - b.session_slot);
+            .sort((a, b) => Number(b.pinned) - Number(a.pinned) || a.session_slot - b.session_slot);
           if (daySessions.length === 0) return null;
+          const dayDate = planDayDate(plan.start_date, week, day);
+          const today = dayDate ? isToday(dayDate) : false;
           return (
             <section key={day} className="print-day rounded-[16px] bg-card p-3 ring-1 ring-black/5 sm:p-4">
               <div className="print-day-heading mb-2 flex items-center justify-between px-1">
@@ -329,6 +347,7 @@ function TimetablePage() {
                 </p>
               </div>
               <div className="space-y-3">
+                {today ? <FlashcardReview planId={plan.id} cards={cards} subjects={subjects} /> : null}
                 {daySessions.map((session) => (
                   <SessionCard
                     key={session.id}
@@ -343,6 +362,10 @@ function TimetablePage() {
           );
           })}
         </div>
+      </div>
+
+      <div className="mt-7">
+        <TopicsConfidencePanel planId={plan.id} subjects={subjects} topics={topics} subtopics={subtopics} cards={cards} />
       </div>
 
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>

@@ -18,6 +18,7 @@ import { Route as RevisionGuideRouteImport } from './routes/revision-guide'
 import { Route as RevisionHelpRouteImport } from './routes/revision-help'
 import { Route as RevisionToolsRouteImport } from './routes/revision-tools'
 import { Route as SitesRouteImport } from './routes/sites'
+import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
@@ -71,6 +72,11 @@ const SitesRoute = SitesRouteImport.update({
   path: '/sites',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/revision-help': typeof RevisionHelpRoute
   '/revision-tools': typeof RevisionToolsRoute
   '/sites': typeof SitesRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/revision-help': typeof RevisionHelpRoute
   '/revision-tools': typeof RevisionToolsRoute
   '/sites': typeof SitesRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/revision-help': typeof RevisionHelpRoute
   '/revision-tools': typeof RevisionToolsRoute
   '/sites': typeof SitesRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/revision-help'
     | '/revision-tools'
     | '/sites'
+    | '/account'
     | '/admin'
     | '/edit-plan'
     | '/exams'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/revision-help'
     | '/revision-tools'
     | '/sites'
+    | '/account'
     | '/admin'
     | '/edit-plan'
     | '/exams'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/revision-help'
     | '/revision-tools'
     | '/sites'
+    | '/_authenticated/account'
     | '/_authenticated/admin'
     | '/_authenticated/edit-plan'
     | '/_authenticated/exams'
@@ -305,6 +317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -365,6 +384,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedEditPlanRoute: typeof AuthenticatedEditPlanRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
@@ -375,6 +395,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedEditPlanRoute: AuthenticatedEditPlanRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,

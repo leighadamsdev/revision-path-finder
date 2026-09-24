@@ -108,6 +108,12 @@ export function AppShell({
               >
                 {plan ? "Create another plan" : "Create plan"}
               </Link>
+              <Link
+                to="/account"
+                className="hidden rounded-full px-3 py-2 text-[13px] font-bold text-structure-foreground/75 hover:bg-structure-foreground/10 sm:inline-flex"
+              >
+                Account
+              </Link>
               <button
                 onClick={signOut}
                 className="hidden rounded-full px-3 py-2 text-[13px] font-bold text-structure-foreground/75 hover:bg-structure-foreground/10 sm:inline-flex"
@@ -153,6 +159,7 @@ export function AppShell({
                     <tab.icon className="size-4 shrink-0" />{tab.label}
                   </Link>
                 ))}
+                <Link to="/account" onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10">Account</Link>
                 <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-[8px] px-3 py-3 text-left text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10">Sign out</button>
               </div>
             ) : null}

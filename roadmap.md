@@ -31,3 +31,13 @@
 - [ ] Explain setup blockers and creation behavior; validate holiday dates.
 - [ ] Make long session topics fully readable and editable.
 - [ ] Verify desktop, 390px mobile, auth, and plan journeys.
+
+## Exams, Leitner, prioritisation, mastery, digest
+- [x] Mock/final exams per paper with topic scope; official exam list (admin)
+- [x] Likert labels + red/amber/green bands; subtopic layer
+- [x] Leitner flashcards (3 boxes + bench, reactivation) in the day view
+- [x] Prioritisation engine (urgency ramp, 72h pin + slide, floor/cap, interleave)
+- [x] Weekly budget, holiday + pre-exam boosts, "behind pace" prompt
+- [x] Mark session complete, mastery ring per subject
+- [x] School on sign-up (admin list), parent email + digest opt-in on Account
+- [ ] Weekly digest email — blocked: needs an email domain the user owns

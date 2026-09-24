@@ -14,6 +14,348 @@ export type Database = {
   }
   public: {
     Tables: {
+      exam_topics: {
+        Row: {
+          exam_id: string
+          id: string
+          plan_topic_id: string
+        }
+        Insert: {
+          exam_id: string
+          id?: string
+          plan_topic_id: string
+        }
+        Update: {
+          exam_id?: string
+          id?: string
+          plan_topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_topics_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_topics_plan_topic_id_fkey"
+            columns: ["plan_topic_id"]
+            isOneToOne: false
+            referencedRelation: "plan_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          all_topics: boolean
+          created_at: string
+          exam_date: string
+          id: string
+          kind: string
+          label: string
+          official_exam_id: string | null
+          paper_no: number
+          plan_id: string
+          subject_id: string
+          verified: boolean
+        }
+        Insert: {
+          all_topics?: boolean
+          created_at?: string
+          exam_date: string
+          id?: string
+          kind?: string
+          label?: string
+          official_exam_id?: string | null
+          paper_no?: number
+          plan_id: string
+          subject_id: string
+          verified?: boolean
+        }
+        Update: {
+          all_topics?: boolean
+          created_at?: string
+          exam_date?: string
+          id?: string
+          kind?: string
+          label?: string
+          official_exam_id?: string | null
+          paper_no?: number
+          plan_id?: string
+          subject_id?: string
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_official_exam_id_fkey"
+            columns: ["official_exam_id"]
+            isOneToOne: false
+            referencedRelation: "official_exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flashcard_reviews: {
+        Row: {
+          correct: boolean
+          flashcard_id: string
+          from_box: string
+          id: string
+          reviewed_at: string
+          session_id: string | null
+          to_box: string
+        }
+        Insert: {
+          correct: boolean
+          flashcard_id: string
+          from_box: string
+          id?: string
+          reviewed_at?: string
+          session_id?: string | null
+          to_box: string
+        }
+        Update: {
+          correct?: boolean
+          flashcard_id?: string
+          from_box?: string
+          id?: string
+          reviewed_at?: string
+          session_id?: string | null
+          to_box?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcard_reviews_flashcard_id_fkey"
+            columns: ["flashcard_id"]
+            isOneToOne: false
+            referencedRelation: "flashcards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcard_reviews_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flashcards: {
+        Row: {
+          box: string
+          created_at: string
+          due_on: string
+          id: string
+          last_reviewed_at: string | null
+          plan_id: string
+          plan_topic_id: string | null
+          prompt: string
+          refreshed_for_exam_id: string | null
+          subject_id: string
+          subtopic_id: string | null
+        }
+        Insert: {
+          box?: string
+          created_at?: string
+          due_on?: string
+          id?: string
+          last_reviewed_at?: string | null
+          plan_id: string
+          plan_topic_id?: string | null
+          prompt: string
+          refreshed_for_exam_id?: string | null
+          subject_id: string
+          subtopic_id?: string | null
+        }
+        Update: {
+          box?: string
+          created_at?: string
+          due_on?: string
+          id?: string
+          last_reviewed_at?: string | null
+          plan_id?: string
+          plan_topic_id?: string | null
+          prompt?: string
+          refreshed_for_exam_id?: string | null
+          subject_id?: string
+          subtopic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcards_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcards_plan_topic_id_fkey"
+            columns: ["plan_topic_id"]
+            isOneToOne: false
+            referencedRelation: "plan_topics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcards_refreshed_for_exam_id_fkey"
+            columns: ["refreshed_for_exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcards_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcards_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "plan_subtopics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mastery_snapshots: {
+        Row: {
+          id: string
+          plan_id: string
+          score: number
+          subject_id: string
+          week_start: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          score: number
+          subject_id: string
+          week_start: string
+        }
+        Update: {
+          id?: string
+          plan_id?: string
+          score?: number
+          subject_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mastery_snapshots_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mastery_snapshots_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      official_exams: {
+        Row: {
+          created_at: string
+          exam_board: string
+          exam_date: string
+          id: string
+          paper: string
+          series: string
+          subject_id: string
+          tier: string | null
+        }
+        Insert: {
+          created_at?: string
+          exam_board?: string
+          exam_date: string
+          id?: string
+          paper: string
+          series?: string
+          subject_id: string
+          tier?: string | null
+        }
+        Update: {
+          created_at?: string
+          exam_board?: string
+          exam_date?: string
+          id?: string
+          paper?: string
+          series?: string
+          subject_id?: string
+          tier?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "official_exams_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pace_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          plan_id: string
+          status: string
+          subject_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_id: string
+          status?: string
+          subject_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_id?: string
+          status?: string
+          subject_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pace_prompts_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pace_prompts_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       past_papers: {
         Row: {
           free_resource_name: string
@@ -97,6 +439,41 @@ export type Database = {
           },
         ]
       }
+      plan_subtopics: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          id: string
+          name: string
+          plan_topic_id: string
+          position: number
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          plan_topic_id: string
+          position?: number
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          plan_topic_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_subtopics_plan_topic_id_fkey"
+            columns: ["plan_topic_id"]
+            isOneToOne: false
+            referencedRelation: "plan_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_topics: {
         Row: {
           confidence: number | null
@@ -151,17 +528,21 @@ export type Database = {
           created_at: string
           day_plan: Json | null
           days_per_week: number
+          holiday_boost: boolean
           holiday_periods: Json
           id: string
           intensity_sessions_per_day: number | null
           intensity_weeks: number | null
           name: string
+          pre_exam_boost: boolean
+          pre_exam_weeks: number
           profile_id: string
           session_length_minutes: number
           sessions_per_day: number
           share_token: string | null
           start_date: string
           study_days: string[]
+          weekly_minutes_budget: number | null
           weeks: number
         }
         Insert: {
@@ -169,17 +550,21 @@ export type Database = {
           created_at?: string
           day_plan?: Json | null
           days_per_week?: number
+          holiday_boost?: boolean
           holiday_periods?: Json
           id?: string
           intensity_sessions_per_day?: number | null
           intensity_weeks?: number | null
           name?: string
+          pre_exam_boost?: boolean
+          pre_exam_weeks?: number
           profile_id: string
           session_length_minutes?: number
           sessions_per_day?: number
           share_token?: string | null
           start_date?: string
           study_days?: string[]
+          weekly_minutes_budget?: number | null
           weeks?: number
         }
         Update: {
@@ -187,17 +572,21 @@ export type Database = {
           created_at?: string
           day_plan?: Json | null
           days_per_week?: number
+          holiday_boost?: boolean
           holiday_periods?: Json
           id?: string
           intensity_sessions_per_day?: number | null
           intensity_weeks?: number | null
           name?: string
+          pre_exam_boost?: boolean
+          pre_exam_weeks?: number
           profile_id?: string
           session_length_minutes?: number
           sessions_per_day?: number
           share_token?: string | null
           start_date?: string
           study_days?: string[]
+          weekly_minutes_budget?: number | null
           weeks?: number
         }
         Relationships: [
@@ -213,20 +602,37 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          digest_opt_in: boolean
           display_name: string | null
           id: string
+          parent_email: string | null
+          school_id: string | null
         }
         Insert: {
           created_at?: string
+          digest_opt_in?: boolean
           display_name?: string | null
           id: string
+          parent_email?: string | null
+          school_id?: string | null
         }
         Update: {
           created_at?: string
+          digest_opt_in?: boolean
           display_name?: string | null
           id?: string
+          parent_email?: string | null
+          school_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       revision_sites: {
         Row: {
@@ -252,14 +658,35 @@ export type Database = {
         }
         Relationships: []
       }
+      schools: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
+          completed_at: string | null
           confidence: number | null
           confidence_before: number | null
           day_label: string
           gap_notes: string
           id: string
+          kind: string
           length_minutes: number | null
+          pinned: boolean
           plan_id: string
           session_slot: number
           subject_id: string | null
@@ -268,12 +695,15 @@ export type Database = {
           week_number: number
         }
         Insert: {
+          completed_at?: string | null
           confidence?: number | null
           confidence_before?: number | null
           day_label: string
           gap_notes?: string
           id?: string
+          kind?: string
           length_minutes?: number | null
+          pinned?: boolean
           plan_id: string
           session_slot?: number
           subject_id?: string | null
@@ -282,12 +712,15 @@ export type Database = {
           week_number: number
         }
         Update: {
+          completed_at?: string | null
           confidence?: number | null
           confidence_before?: number | null
           day_label?: string
           gap_notes?: string
           id?: string
+          kind?: string
           length_minutes?: number | null
+          pinned?: boolean
           plan_id?: string
           session_slot?: number
           subject_id?: string | null

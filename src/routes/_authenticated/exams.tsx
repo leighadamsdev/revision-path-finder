@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { ExamDatesField } from "@/components/ExamDatesField";
-import { updatePlanSubjectMeta } from "@/lib/plan";
+import { useMemo, useState } from "react";
+import { ExamsEditor } from "@/components/ExamsEditor";
+import { useExams } from "@/hooks/useActivePlan";
+import { examKindLabel } from "@/lib/exams";
 import {
   addMonths,
   differenceInCalendarDays,
@@ -53,46 +52,34 @@ function ExamCalendarPage() {
   const subjectsQuery = usePlanSubjects(plan?.id);
   const subjects = subjectsQuery.data ?? [];
 
+  const examRows = useExams(plan?.id).data ?? [];
   const exams = useMemo(
     () =>
-      subjects
-        .flatMap((subject) =>
-          subject.exam_dates.map((value, index) => ({
-            key: `${subject.id}-${index}`,
-            name: subject.name,
-            paper: subject.exam_dates.length > 1 ? `Paper ${index + 1}` : null,
-            colorKey: subject.color_key,
-            date: parseISO(value),
-          })),
-        )
+      examRows
+        .map((exam) => {
+          const subject = subjects.find((s) => s.id === exam.subject_id);
+          const count = examRows.filter((e) => e.subject_id === exam.subject_id).length;
+          return {
+            key: exam.id,
+            name: subject?.name ?? "Subject",
+            paper: [
+              exam.label || (count > 1 ? `Paper ${exam.paper_no}` : null),
+              examKindLabel(exam.kind),
+              exam.kind === "final" && !exam.verified ? "unconfirmed" : null,
+            ]
+              .filter(Boolean)
+              .join(" · "),
+            colorKey: subject?.color_key ?? "media",
+            date: parseISO(exam.exam_date),
+          };
+        })
         .sort((a, b) => a.date.getTime() - b.date.getTime()),
-    [subjects],
+    [examRows, subjects],
   );
 
   const firstUpcoming = exams.find((exam) => differenceInCalendarDays(exam.date, new Date()) >= 0);
   const [month, setMonth] = useState<Date | null>(null);
-  const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [draft, setDraft] = useState<Record<string, string[]>>({});
-  useEffect(() => {
-    setDraft(Object.fromEntries(subjects.map((s) => [s.id, s.exam_dates])));
-  }, [subjectsQuery.data]);
-
-  async function saveDates() {
-    if (!plan) return;
-    setSaving(true);
-    try {
-      await Promise.all(subjects.map((s) => updatePlanSubjectMeta(plan.id, s.id, { examDates: draft[s.id] ?? [] })));
-      await queryClient.invalidateQueries({ queryKey: ["plan-subjects", plan.id] });
-      toast.success("Exam dates saved");
-      setEditing(false);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Couldn't save exam dates.");
-    } finally {
-      setSaving(false);
-    }
-  }
   const shown = month ?? startOfMonth(firstUpcoming?.date ?? exams[0]?.date ?? new Date());
 
   const gridDays = eachDayOfInterval({
@@ -134,24 +121,12 @@ function ExamCalendarPage() {
             </p>
           </div>
           <Button variant="outline" onClick={() => setEditing((v) => !v)}>
-            {editing ? "Close" : exams.length ? "Add or change exam dates" : "Add exam dates"}
+            {editing ? "Close" : exams.length ? "Add or change exams" : "Add exams"}
           </Button>
         </div>
 
         {editing || (exams.length === 0 && subjects.length > 0) ? (
-          <div className="mt-5 rounded-[16px] bg-card p-4 ring-1 ring-border sm:p-5">
-            <p className="text-sm font-extrabold tracking-tight">Your exam dates</p>
-            <p className="mt-1 text-[12px] font-medium text-muted-foreground">Add up to three papers per subject. Nothing else in your plan changes.</p>
-            <div className="mt-4 space-y-4">
-              {subjects.map((s) => (
-                <div key={s.id} className="grid gap-2 sm:grid-cols-[180px_1fr] sm:items-start">
-                  <p className="flex items-center gap-2 pt-2 text-[13px] font-extrabold"><span className={`size-2 rounded-full ${subjectStyle(s.color_key).dot}`} />{s.name}</p>
-                  <ExamDatesField dates={draft[s.id] ?? []} onChange={(d) => setDraft((prev) => ({ ...prev, [s.id]: d }))} />
-                </div>
-              ))}
-            </div>
-            <Button className="mt-5" onClick={() => void saveDates()} disabled={saving}>{saving ? "Saving…" : "Save exam dates"}</Button>
-          </div>
+          <ExamsEditor planId={plan.id} subjects={subjects} onDone={() => setEditing(false)} />
         ) : null}
 
         {exams.length === 0 ? (

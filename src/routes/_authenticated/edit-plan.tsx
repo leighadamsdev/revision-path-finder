@@ -12,6 +12,7 @@ import { ExamDatesField } from "@/components/ExamDatesField";
 import { ExamDateUpload } from "@/components/ExamDateUpload";
 import { HolidayPlanner } from "@/components/HolidayPlanner";
 import { IntensityField } from "@/components/IntensityField";
+import { CapacityControls } from "@/components/CapacityControls";
 import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ import {
   savePlanSubjects,
   savePlanTopics,
   updatePlanSettings,
+  updatePlanCapacity,
+  type Capacity,
   type DaySetting,
   type HolidayPeriod,
   type Intensity,
@@ -95,6 +98,7 @@ function EditPlanPage() {
   const [topics, setTopics] = useState<TopicRow[]>([]);
   const [intensity, setIntensity] = useState<Intensity | null>(null);
   const [holidays, setHolidays] = useState<HolidayPeriod[]>([]);
+  const [capacity, setCapacity] = useState<Capacity>({});
   const [addId, setAddId] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -125,6 +129,12 @@ function EditPlanPage() {
         : null,
     );
     setHolidays(plan.holiday_periods ?? []);
+    setCapacity({
+      weeklyMinutesBudget: plan.weekly_minutes_budget,
+      holidayBoost: plan.holiday_boost,
+      preExamBoost: plan.pre_exam_boost,
+      preExamWeeks: plan.pre_exam_weeks ?? 4,
+    });
   }, [plan]);
 
   useEffect(() => {
@@ -194,6 +204,7 @@ function EditPlanPage() {
         intensity,
         holidays: cleanHolidays,
       });
+      await updatePlanCapacity(plan.id, capacity);
       await regeneratePlanSessions(plan.id, {
         startDate,
         weeks,
@@ -395,6 +406,7 @@ function EditPlanPage() {
           <div className="mt-4 space-y-2">
             <IntensityField value={intensity} onChange={setIntensity} />
             <HolidayPlanner holidays={holidays} onChange={setHolidays} />
+            <CapacityControls value={capacity} onChange={setCapacity} />
           </div>
         </div>
 

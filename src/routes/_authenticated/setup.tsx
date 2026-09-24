@@ -57,19 +57,26 @@ const DEFAULT_DAY: DayConfig = { sessions: 2, minutes: 45 };
 const TOTAL_STEPS = 4;
 const STEP_LABELS = ["Pick subjects", "Choose topics", "Set timeframe", "Review"];
 
-type TopicSource = "dfe" | "manual" | "upload";
+type TopicSource = "dfe" | "manual" | "upload" | "library";
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
 }
 
 function SetupPage() {
+  useOnboardingGate();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { plans } = useActivePlan();
   const subjectsQuery = useQuery({ queryKey: ["subjects"], queryFn: fetchSubjects });
   const subjects = subjectsQuery.data ?? [];
+  const library = useLibrary();
+  /** Library topics for a subject name (matched by name), as "Title: items" lines. */
+  function libraryOptions(subjectName: string): string[] {
+    const s = library.subjects.find((x) => x.name.trim().toLowerCase() === subjectName.trim().toLowerCase());
+    return (s?.topics ?? []).map(libraryTopicText);
+  }
 
   const [step, setStep] = useState(1);
   const [picks, setPicks] = useState<Pick[]>([]);

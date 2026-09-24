@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  BookOpen,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -39,6 +40,7 @@ import { FlashcardReview } from "@/components/FlashcardReview";
 import { MasteryStrip } from "@/components/MasteryStrip";
 import { PacePrompts } from "@/components/PacePrompts";
 import { TopicsConfidencePanel } from "@/components/TopicsConfidencePanel";
+import { useOnboardingGate } from "@/hooks/useLibrary";
 import { planDayDate } from "@/lib/plan-dates";
 import { isToday } from "date-fns";
 import { averageConfidence, confidenceTone } from "@/lib/confidence";
@@ -69,6 +71,7 @@ export const Route = createFileRoute("/_authenticated/plan")({
 });
 
 function TimetablePage() {
+  useOnboardingGate();
   const { plan, plans, isLoading } = useActivePlan();
   const [week, setWeek] = useState(1);
   const [shareOpen, setShareOpen] = useState(false);
@@ -241,6 +244,12 @@ function TimetablePage() {
           <p className="text-[13px] font-semibold text-muted-foreground">{plan.name}</p>
         </div>
         <div className="relative grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <Button asChild variant="outline">
+            <Link to="/library">
+              <BookOpen aria-hidden="true" />
+              Manage Subjects and Topics
+            </Link>
+          </Button>
           <Button asChild variant="outline">
             <Link to="/edit-plan">
               <Pencil aria-hidden="true" />

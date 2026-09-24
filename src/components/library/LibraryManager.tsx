@@ -21,10 +21,14 @@ import {
   type LibTopic,
 } from "@/lib/library";
 import { ImportPanel } from "./ImportPanel";
+import { GCSE_SUBJECTS, SUBJECT_GROUPS, catalogueSubject, isTiered } from "@/lib/gcse-subjects";
 import { TopicDraftEditor } from "./TopicDraftEditor";
 
 export const libField =
   "w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring";
+
+const BOARDS = ["AQA", "Edexcel (Pearson)", "OCR", "WJEC / Eduqas", "CCEA", "Cambridge (CAIE)"];
+const OTHER = "__other__";
 
 export function SubjectFields({
   value,
@@ -33,11 +37,53 @@ export function SubjectFields({
   value: { name: string; exam_board: string; qualification_level: string };
   onChange: (v: { name: string; exam_board: string; qualification_level: string }) => void;
 }) {
+  const inCatalogue = Boolean(catalogueSubject(value.name));
+  const [custom, setCustom] = useState(Boolean(value.name) && !inCatalogue);
+  const tiered = !custom && isTiered(value.name);
+  const selectValue = custom ? OTHER : inCatalogue ? catalogueSubject(value.name)!.name : "";
+
   return (
     <div className="grid gap-2 sm:grid-cols-3">
-      <Input value={value.name} onChange={(e) => onChange({ ...value, name: e.target.value })} placeholder="Subject name, e.g. Physics" aria-label="Subject name" />
-      <Input value={value.exam_board} onChange={(e) => onChange({ ...value, exam_board: e.target.value })} placeholder="Exam board (optional)" aria-label="Exam board" />
-      <Input value={value.qualification_level} onChange={(e) => onChange({ ...value, qualification_level: e.target.value })} placeholder="Level, e.g. GCSE (optional)" aria-label="Qualification level" />
+      <div className="space-y-2">
+        <select
+          className={libField}
+          aria-label="Subject"
+          value={selectValue}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === OTHER) {
+              setCustom(true);
+              onChange({ ...value, name: "", qualification_level: "GCSE" });
+            } else {
+              setCustom(false);
+              onChange({ ...value, name: v, qualification_level: isTiered(v) ? "" : "GCSE" });
+            }
+          }}
+        >
+          <option value="" disabled>Choose a subject…</option>
+          {SUBJECT_GROUPS.map((g) => (
+            <optgroup key={g} label={g}>
+              {GCSE_SUBJECTS.filter((s) => s.group === g).map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
+            </optgroup>
+          ))}
+          <option value={OTHER}>Other — type my own</option>
+        </select>
+        {custom ? <Input value={value.name} onChange={(e) => onChange({ ...value, name: e.target.value })} placeholder="Subject name" aria-label="Subject name" /> : null}
+      </div>
+      <select className={libField} aria-label="Exam board" value={value.exam_board} onChange={(e) => onChange({ ...value, exam_board: e.target.value })}>
+        <option value="">Exam board (optional)</option>
+        {BOARDS.map((b) => <option key={b} value={b}>{b}</option>)}
+        {value.exam_board && !BOARDS.includes(value.exam_board) ? <option value={value.exam_board}>{value.exam_board}</option> : null}
+      </select>
+      {tiered ? (
+        <select className={libField} aria-label="Tier" value={value.qualification_level} onChange={(e) => onChange({ ...value, qualification_level: e.target.value })}>
+          <option value="">Choose tier…</option>
+          <option value="GCSE Foundation">Foundation tier</option>
+          <option value="GCSE Higher">Higher tier</option>
+        </select>
+      ) : (
+        <div className={`${libField} text-muted-foreground`}>GCSE (no tiers)</div>
+      )}
     </div>
   );
 }

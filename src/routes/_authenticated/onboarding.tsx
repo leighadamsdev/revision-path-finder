@@ -102,7 +102,7 @@ function OnboardingPage() {
                 <Button onClick={() => void saveSubject()}><Plus /> {editing ? "Save changes" : "Add subject"}</Button>
                 {editing ? <Button variant="ghost" onClick={() => { setEditing(null); setValue(blank); }}>Cancel</Button> : null}
               </div>
-              {!editing ? <p className="mt-2 text-[12px] font-medium text-muted-foreground">Add all your subjects first — you'll add topics in the next step.</p> : null}
+              {!editing ? <p className="mt-2 text-[12px] font-medium text-muted-foreground">Add your subjects and tier. You can add topics for each one straight away, or leave it until later.</p> : null}
             </div>
 
             {subjects.length ? (
@@ -115,6 +115,7 @@ function OnboardingPage() {
                         {s.name}
                         <span className="ml-2 font-medium text-muted-foreground">{[s.exam_board, s.qualification_level].filter(Boolean).join(" · ")}</span>
                       </span>
+                      <Button size="sm" variant="outline" onClick={() => setImportAfterCreate(s)}>Add topics</Button>
                       <Button size="icon" variant="ghost" aria-label="Edit subject" onClick={() => { setEditing(s.id); setValue({ name: s.name, exam_board: s.exam_board ?? "", qualification_level: s.qualification_level ?? "" }); }}><Pencil /></Button>
                       <Button size="icon" variant="ghost" aria-label="Delete subject" onClick={async () => { await deleteSubject(s.id); refresh(); }}><Trash2 /></Button>
                     </li>

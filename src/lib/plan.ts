@@ -861,6 +861,7 @@ export async function savePlanSubjects(
 
     if (updateError) throw updateError;
   }
+  await syncExamsFromColumns(planId);
 }
 
 /** Permanently deletes a plan along with its sessions and subject links. */

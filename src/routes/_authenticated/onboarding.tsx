@@ -39,7 +39,6 @@ function OnboardingPage() {
   const [importAfterCreate, setImportAfterCreate] = useState<LibSubject | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const withContent = subjects.filter((s) => s.topics.some((t) => t.items.length > 0));
   const totalTopics = subjects.reduce((n, s) => n + s.topics.length, 0);
   const totalItems = subjects.reduce((n, s) => n + s.topics.reduce((m, t) => m + t.items.length, 0), 0);
 
@@ -102,7 +101,7 @@ function OnboardingPage() {
                 <Button onClick={() => void saveSubject()}><Plus /> {editing ? "Save changes" : "Add subject"}</Button>
                 {editing ? <Button variant="ghost" onClick={() => { setEditing(null); setValue(blank); }}>Cancel</Button> : null}
               </div>
-              {!editing ? <p className="mt-2 text-[12px] font-medium text-muted-foreground">Add all your subjects first — you'll add topics in the next step.</p> : null}
+              {!editing ? <p className="mt-2 text-[12px] font-medium text-muted-foreground">Add your subjects and tier. You can add topics for each one straight away, or leave it until later.</p> : null}
             </div>
 
             {subjects.length ? (
@@ -115,6 +114,7 @@ function OnboardingPage() {
                         {s.name}
                         <span className="ml-2 font-medium text-muted-foreground">{[s.exam_board, s.qualification_level].filter(Boolean).join(" · ")}</span>
                       </span>
+                      <Button size="sm" variant="outline" onClick={() => setImportAfterCreate(s)}>Add topics</Button>
                       <Button size="icon" variant="ghost" aria-label="Edit subject" onClick={() => { setEditing(s.id); setValue({ name: s.name, exam_board: s.exam_board ?? "", qualification_level: s.qualification_level ?? "" }); }}><Pencil /></Button>
                       <Button size="icon" variant="ghost" aria-label="Delete subject" onClick={async () => { await deleteSubject(s.id); refresh(); }}><Trash2 /></Button>
                     </li>
@@ -133,14 +133,15 @@ function OnboardingPage() {
         {step === 1 ? (
           <section className="mt-6 space-y-4">
             <LibraryManager subjects={subjects} refresh={refresh} />
-            <div className="flex justify-between">
+            <div className="flex flex-wrap justify-between gap-2">
               <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
-              <Button disabled={!withContent.length} onClick={() => setStep(2)}>Continue</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="ghost" disabled={saving} onClick={() => void finish()}>Skip for now</Button>
+                <Button onClick={() => setStep(2)}>Continue</Button>
+              </div>
             </div>
             <p className="text-right text-[12px] font-medium text-muted-foreground">
-              {withContent.length
-                ? subjects.length > withContent.length ? "You can skip the rest for now and finish them later in My Topic Library." : ""
-                : "Add at least one Topic with a content item to continue."}
+              Topics are optional here — you can add them later in My Topic Library or when you build a knowledge checker.
             </p>
           </section>
         ) : null}
@@ -156,7 +157,7 @@ function OnboardingPage() {
             <LibraryManager subjects={subjects} refresh={refresh} />
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-              <Button disabled={saving || !subjects.length || !totalTopics || !totalItems} onClick={() => void finish()}>
+              <Button disabled={saving || !subjects.length} onClick={() => void finish()}>
                 {saving ? "Saving…" : "Save and Finish Setup"}
               </Button>
             </div>
@@ -165,7 +166,7 @@ function OnboardingPage() {
       </main>
 
       {importAfterCreate ? (
-        <ImportPanel open onOpenChange={(v) => !v && setImportAfterCreate(null)} subjectId={importAfterCreate.id} subjectName={importAfterCreate.name} existingCount={0} onSaved={refresh} />
+        <ImportPanel open onOpenChange={(v) => !v && setImportAfterCreate(null)} subjectId={importAfterCreate.id} subjectName={importAfterCreate.name} existingCount={subjects.find((s) => s.id === importAfterCreate.id)?.topics.length ?? 0} onSaved={refresh} />
       ) : null}
     </div>
   );

@@ -14,7 +14,7 @@ import {
   type Intensity,
 } from "@/lib/plan";
 import { SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
-import { isTiered, type Tier } from "@/lib/gcse-subjects";
+import { GCSE_SUBJECTS, isTiered, type Tier } from "@/lib/gcse-subjects";
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
 import { DatePicker } from "@/components/DatePicker";
@@ -127,8 +127,8 @@ function SetupPage() {
     [dayConfigs],
   );
 
-  /** Only the subjects the student added to their Topic Library are listed here. */
-  const listedNames = useMemo(() => {
+  /** The student's own subjects first, then the rest of the GCSE catalogue. */
+  const myNames = useMemo(() => {
     const seen = new Set<string>();
     const names: string[] = [];
     for (const s of library.subjects) {
@@ -141,6 +141,12 @@ function SetupPage() {
     }
     return names.sort((a, b) => a.localeCompare(b));
   }, [library.subjects]);
+
+  const listedNames = useMemo(() => {
+    const seen = new Set(myNames.map((n) => n.toLowerCase()));
+    const rest = GCSE_SUBJECTS.map((s) => s.name).filter((n) => !seen.has(n.toLowerCase()));
+    return [...myNames, ...rest];
+  }, [myNames]);
 
   const visibleNames = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -361,8 +367,9 @@ function SetupPage() {
                 Which subjects are you revising?
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                These are the subjects you added — tick everything you're sitting. For tiered
-                subjects, tell us whether you're on Foundation or Higher papers.
+                Your own subjects are listed first, then every other GCSE subject. Tick everything
+                you're sitting, and choose Foundation or Higher where it applies. You can change
+                these at any time.
               </p>
 
               <div className="mt-4 flex items-center gap-2 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border">
@@ -419,11 +426,7 @@ function SetupPage() {
                     </div>
                   );
                 })}
-                {listedNames.length === 0 ? (
-                  <p className="text-[12px] font-bold text-muted-foreground">
-                    You haven't added any subjects yet — add them in My Topic Library first.
-                  </p>
-                ) : visibleNames.length === 0 ? (
+                {visibleNames.length === 0 ? (
                   <p className="text-[12px] font-bold text-muted-foreground">
                     Nothing matched — add it as a custom subject below.
                   </p>

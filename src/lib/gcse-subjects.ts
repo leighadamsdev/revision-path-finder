@@ -71,7 +71,6 @@ export const GCSE_SUBJECTS: CatalogueSubject[] = [
 
   // Other
   { name: "Physical Education (Full Course)", colorKey: "pe", group: "Other" },
-  { name: "Physical Education (Short Course)", colorKey: "pe", group: "Other" },
 ];
 
 export const SUBJECT_GROUPS = [

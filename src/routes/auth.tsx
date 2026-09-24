@@ -131,19 +131,6 @@ function AuthPage() {
     }
   }
 
-  async function handleGoogle() {
-    setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.href,
-    });
-    if (result.error) {
-      setBusy(false);
-      toast.error("Google sign-in didn't work. Try email instead.");
-      return;
-    }
-    if (result.redirected) return;
-    setBusy(false);
-  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">

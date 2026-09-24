@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 const PUBLIC_LINKS = [
   { to: "/", label: "Home" },
   { to: "/revision-guide", label: "Effective Revision" },
+  { to: "/plan", label: "Revision Planner" },
   { to: "/knowledge-checker", label: "Knowledge Checker" },
   { to: "/revision-tools", label: "Revision Tools" },
   { to: "/papers", label: "Past Papers" },

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
-import { SchoolSearch } from "@/components/SchoolSearch";
+import { SchoolSearch, fetchAllSchools } from "@/components/SchoolSearch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -31,7 +31,7 @@ function AccountPage() {
   const queryClient = useQueryClient();
   const schools = useQuery({
     queryKey: ["schools"],
-    queryFn: async () => (await supabase.from("schools").select("id, name").order("name")).data ?? [],
+    queryFn: fetchAllSchools,
   });
   const profile = useQuery({
     queryKey: ["profile", user?.id],

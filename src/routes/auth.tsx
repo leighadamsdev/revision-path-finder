@@ -7,7 +7,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
 import { PublicHeader } from "@/components/PublicHeader";
-import { SchoolSearch } from "@/components/SchoolSearch";
+import { SchoolSearch, fetchAllSchools } from "@/components/SchoolSearch";
 
 type AuthSearch = { mode?: "signup"; context?: string; returnTo?: string };
 
@@ -72,7 +72,7 @@ function AuthPage() {
   const schools = useQuery({
     queryKey: ["schools"],
     queryFn: async () => {
-      const { data } = await supabase.from("schools").select("id, name").order("name");
+      const data = await fetchAllSchools();
       return data ?? [];
     },
   });

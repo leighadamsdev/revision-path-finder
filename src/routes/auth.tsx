@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
 import { PublicHeader } from "@/components/PublicHeader";

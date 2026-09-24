@@ -142,16 +142,25 @@ function SetupPage() {
     return names.sort((a, b) => a.localeCompare(b));
   }, [library.subjects]);
 
-  const listedNames = useMemo(() => {
+  /** Grouped like the subject drop-downs: your subjects, then the GCSE catalogue by category. */
+  const listedGroups = useMemo(() => {
     const seen = new Set(myNames.map((n) => n.toLowerCase()));
-    const rest = GCSE_SUBJECTS.map((s) => s.name).filter((n) => !seen.has(n.toLowerCase()));
-    return [...myNames, ...rest];
+    const groups: { label: string; names: string[] }[] = [];
+    if (myNames.length) groups.push({ label: "Your subjects", names: myNames });
+    for (const g of SUBJECT_GROUPS) {
+      const names = GCSE_SUBJECTS.filter((s) => s.group === g && !seen.has(s.name.toLowerCase())).map((s) => s.name);
+      if (names.length) groups.push({ label: g, names });
+    }
+    return groups;
   }, [myNames]);
 
-  const visibleNames = useMemo(() => {
+  const visibleGroups = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return q ? listedNames.filter((n) => n.toLowerCase().includes(q)) : listedNames;
-  }, [listedNames, search]);
+    if (!q) return listedGroups;
+    return listedGroups
+      .map((g) => ({ ...g, names: g.names.filter((n) => n.toLowerCase().includes(q)) }))
+      .filter((g) => g.names.length > 0);
+  }, [listedGroups, search]);
 
   function toggleName(subjectName: string) {
     setPicks((prev) => {

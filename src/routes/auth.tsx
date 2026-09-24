@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
 import { PublicHeader } from "@/components/PublicHeader";
@@ -131,19 +130,6 @@ function AuthPage() {
     }
   }
 
-  async function handleGoogle() {
-    setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.href,
-    });
-    if (result.error) {
-      setBusy(false);
-      toast.error("Google sign-in didn't work. Try email instead.");
-      return;
-    }
-    if (result.redirected) return;
-    setBusy(false);
-  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
@@ -235,21 +221,9 @@ function AuthPage() {
                   : "Your plan is private to your account."}
               </p>
 
-              <button
-                onClick={handleGoogle}
-                disabled={busy}
-                className="mt-5 w-full rounded-full border border-border bg-background py-3 text-sm font-bold text-foreground disabled:opacity-60"
-              >
-                Continue with Google
-              </button>
+              <div className="mt-5" />
 
-              <div className="my-4 flex items-center gap-3">
-                <span className="h-px flex-1 bg-border" />
-                <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  or
-                </span>
-                <span className="h-px flex-1 bg-border" />
-              </div>
+
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 <label className="block">

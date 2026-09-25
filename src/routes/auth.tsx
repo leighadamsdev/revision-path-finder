@@ -63,7 +63,8 @@ function AuthPage() {
           } else if (safeReturnTo) {
             navigate({ to: safeReturnTo });
           } else {
-            navigate({ to: data && data.length > 0 ? "/plan" : "/setup" });
+            void data;
+            navigate({ to: "/" });
           }
         });
     }

@@ -9,7 +9,9 @@ export function DatePicker({
   value,
   onChange,
   label = "Choose a date",
+  defaultMonth,
 }: {
+  defaultMonth?: string;
   value: string;
   onChange: (value: string) => void;
   label?: string;
@@ -28,6 +30,7 @@ export function DatePicker({
         <Calendar
           mode="single"
           selected={selected}
+          {...((selected ?? defaultMonth) ? { defaultMonth: selected ?? parseISO(defaultMonth!) } : {})}
           onSelect={(date) => onChange(date ? format(date, "yyyy-MM-dd") : "")}
           className="pointer-events-auto p-3"
         />

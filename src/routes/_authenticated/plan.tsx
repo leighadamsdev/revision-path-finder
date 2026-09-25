@@ -241,7 +241,10 @@ function TimetablePage() {
       <div className="mb-5 flex flex-col items-start justify-between gap-3 print:hidden sm:flex-row sm:items-center">
         <div>
           <h1 className="text-xl font-extrabold tracking-tight">Week {week}</h1>
-          <p className="text-[13px] font-semibold text-muted-foreground">{plan.name}</p>
+          <p className="text-[13px] font-semibold text-muted-foreground">
+            {plan.name} ·{" "}
+            <Link to="/my-plans" className="font-bold underline underline-offset-2">See all my plans</Link>
+          </p>
         </div>
         <div className="relative grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <Button asChild variant="outline">
@@ -328,6 +331,28 @@ function TimetablePage() {
         </div>
       </section>
 
+      <nav aria-label="Choose a week" className="mb-5 print:hidden">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled={week <= 1} onClick={() => setWeek((w) => Math.max(1, w - 1))}>
+            <ChevronLeft /> Previous week
+          </Button>
+          <div className="flex flex-1 gap-1.5 overflow-x-auto py-1">
+            {Array.from({ length: plan.weeks }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => setWeek(n)}
+                aria-current={n === week ? "page" : undefined}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-extrabold ${n === week ? "bg-primary text-primary-foreground" : "bg-card ring-1 ring-border hover:bg-secondary"}`}
+              >
+                Week {n}
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" disabled={week >= plan.weeks} onClick={() => setWeek((w) => Math.min(plan.weeks, w + 1))}>
+            Next week <ChevronRight />
+          </Button>
+        </div>
+      </nav>
       <div className="print-week-sheet">
         <header className="print-week-heading hidden">
           <div>

@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Check, Search } from "lucide-react";
+import { Check, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth, ensureProfile } from "@/hooks/useAuth";
@@ -55,7 +55,7 @@ export const Route = createFileRoute("/_authenticated/setup")({
 type Pick = { name: string; tier: Tier | null };
 type DayConfig = { sessions: number; minutes: number };
 
-const DEFAULT_DAY: DayConfig = { sessions: 2, minutes: 45 };
+const DEFAULT_DAY: DayConfig = { sessions: 3, minutes: 30 };
 const TOTAL_STEPS = 4;
 const STEP_LABELS = ["Pick subjects", "Choose topics", "Set timeframe", "Review"];
 
@@ -81,6 +81,8 @@ function SetupPage() {
   }
 
   const [step, setStep] = useState(1);
+  /** Quick plan: skip topics and confidence ratings. */
+  const [quick, setQuick] = useState(false);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");
   /** Ticked topics, keyed by subject name. */
@@ -141,6 +143,25 @@ function SetupPage() {
     }
     return names.sort((a, b) => a.localeCompare(b));
   }, [library.subjects]);
+
+  /** Subjects chosen before (in the library) start ticked — students can untick them. */
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (prefilled || library.subjects.length === 0) return;
+    setPrefilled(true);
+    setPicks((prev) => {
+      if (prev.length) return prev;
+      const seen = new Set<string>();
+      return library.subjects.flatMap((s) => {
+        const n = s.name.trim();
+        if (!n || seen.has(n.toLowerCase())) return [];
+        seen.add(n.toLowerCase());
+        const lvl = s.qualification_level ?? "";
+        const tier: Tier | null = /higher/i.test(lvl) ? "Higher" : /foundation/i.test(lvl) ? "Foundation" : null;
+        return [{ name: n, tier }];
+      });
+    });
+  }, [library.subjects, prefilled]);
 
   /** Grouped like the subject drop-downs: your subjects, then the GCSE catalogue by category. */
   const listedGroups = useMemo(() => {
@@ -235,30 +256,30 @@ function SetupPage() {
     });
   }
 
-  async function readTopicsFile(subjectName: string, file: File) {
+  async function readTopicsFiles(subjectName: string, files: File[]) {
     setParsing(subjectName);
+    const found: string[] = [];
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error("Could not read that file."));
-        reader.readAsDataURL(file);
-      });
-      const { topics } = await extractTopicsFromDocument({
-        data: {
-          subject: subjectName,
-          fileName: file.name,
-          mimeType: file.type || "application/pdf",
-          dataUrl,
-        },
-      });
-      if (!topics.length) {
-        toast.error("We couldn't find topics in that document — try typing them instead.");
+      for (const file of files) {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error("Could not read that file."));
+          reader.readAsDataURL(file);
+        });
+        const { topics } = await extractTopicsFromDocument({
+          data: { subject: subjectName, fileName: file.name, mimeType: file.type || "application/pdf", dataUrl },
+        });
+        found.push(...topics);
+      }
+      if (!found.length) {
+        toast.error("We couldn't find topics in those pages — try typing them instead.");
         return;
       }
-      setUploaded((prev) => ({ ...prev, [subjectName]: topics }));
-      setChosen((prev) => ({ ...prev, [subjectName]: topics }));
-      toast.success(`Found ${topics.length} topics — untick anything you don't need.`);
+      const merge = (prev: string[] | undefined) => [...new Set([...(prev ?? []), ...found])];
+      setUploaded((prev) => ({ ...prev, [subjectName]: merge(prev[subjectName]) }));
+      setChosen((prev) => ({ ...prev, [subjectName]: merge(prev[subjectName]) }));
+      toast.success(`Found ${found.length} topics — untick anything you don't need.`);
     } catch (error) {
       console.error(error);
       toast.error("We couldn't read that document. Try a clearer file or type your topics.");
@@ -284,9 +305,10 @@ function SetupPage() {
         subjectIds.push(id);
         tiers[id] = pick.tier;
         examDateMap[id] = [...new Set((examDates[pick.name] ?? []).filter(Boolean))].sort();
-        const topics = topicsFor(pick.name);
+        // Quick plans skip topics and confidence entirely.
+        const topics = quick ? [] : topicsFor(pick.name);
         // A subject-wide rating only matters when no specific topics were chosen.
-        confidenceMap[id] = topics.length ? null : (confidences[pick.name] ?? null);
+        confidenceMap[id] = quick ? null : (confidences[pick.name] ?? null);
         if (topics.length) {
           chosenTopics[id] = topics;
           const ratings = topicRatings[pick.name] ?? {};
@@ -609,6 +631,22 @@ function SetupPage() {
                         </span>
                       </button>
 
+                      {!quick ? (
+                        <div className="border-t border-border px-3 py-2.5">
+                          <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                            How confident are you in {pick.name}?
+                          </p>
+                          <div className="mt-1.5">
+                            <ConfidencePicker
+                              value={confidences[pick.name] ?? null}
+                              onChange={(value) =>
+                                setConfidences((prev) => ({ ...prev, [pick.name]: value }))
+                              }
+                              label={`${pick.name} confidence`}
+                            />
+                          </div>
+                        </div>
+                      ) : null}
                       {open ? (
                         <div className="border-t border-border px-3 py-3">
                           <div className="flex flex-wrap gap-1.5">
@@ -656,22 +694,30 @@ function SetupPage() {
 
                           {mode === "upload" ? (
                             <div className="mt-3">
-                              <input
-                                type="file"
-                                accept="application/pdf,image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) void readTopicsFile(pick.name, file);
-                                  e.target.value = "";
-                                }}
-                                className="block w-full text-[12px] font-bold text-muted-foreground"
-                              />
+                              <label className="flex cursor-pointer flex-col items-center gap-1 rounded-[14px] border-2 border-dashed border-primary/40 bg-card px-4 py-5 text-center hover:bg-secondary">
+                                <Upload className="size-6 text-primary" />
+                                <span className="text-sm font-extrabold">Upload your topic list</span>
+                                <span className="text-[12px] font-medium text-muted-foreground">
+                                  A screenshot or photo of your revision guide's contents page, or a topic list from school. PDF, JPG or PNG — you can choose several pages at once.
+                                </span>
+                                <input
+                                  type="file"
+                                  multiple
+                                  accept="application/pdf,image/*"
+                                  onChange={(e) => {
+                                    const files = Array.from(e.target.files ?? []);
+                                    if (files.length) void readTopicsFiles(pick.name, files);
+                                    e.target.value = "";
+                                  }}
+                                  className="sr-only"
+                                />
+                              </label>
                               <p className="mt-1 text-[12px] font-medium text-muted-foreground">
                                 {parsing === pick.name
-                                  ? "Reading your document…"
+                                  ? "Reading your pages…"
                                   : options.length
-                                    ? "Tick the topics you want to keep."
-                                    : "Upload a PDF or photo of your topic list."}
+                                    ? "Tick the topics you want to keep. Upload more pages to add to the list."
+                                    : "Topics are grouped under their section titles."}
                               </p>
                             </div>
                           ) : null}
@@ -754,26 +800,7 @@ function SetupPage() {
                                 />
                               </div>
                             </div>
-                          ) : (
-                            <div className="mt-4 border-t border-border pt-3">
-                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                                How confident are you in {pick.name}?
-                              </p>
-                              <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-                                No topics chosen, so we'll plan around the whole subject. Rate it and
-                                shakier subjects get more sessions.
-                              </p>
-                              <div className="mt-2">
-                                <ConfidencePicker
-                                  value={confidences[pick.name] ?? null}
-                                  onChange={(value) =>
-                                    setConfidences((prev) => ({ ...prev, [pick.name]: value }))
-                                  }
-                                  label={`${pick.name} confidence`}
-                                />
-                              </div>
-                            </div>
-                          )}
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
@@ -984,19 +1011,35 @@ function SetupPage() {
             </>
           ) : null}
 
-          <div className="mt-5 flex items-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center gap-2">
             {step > 1 ? (
               <button
-                onClick={() => setStep(step - 1)}
+                onClick={() => setStep(quick && step === 3 ? 1 : step - 1)}
                 className="rounded-full px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-background"
               >
                 Back
               </button>
             ) : null}
+            {step === 1 ? (
+              <button
+                onClick={() => {
+                  setQuick(true);
+                  setStep(3);
+                }}
+                disabled={!canContinue}
+                title="Skip topics and confidence ratings — just share your time across your subjects"
+                className="rounded-full px-4 py-3 text-sm font-extrabold ring-1 ring-border hover:bg-background disabled:opacity-50"
+              >
+                Quick plan (skip topics)
+              </button>
+            ) : null}
             {step < TOTAL_STEPS ? (
               <button
                 onClick={() => {
-                  if (step === 1) setOpenSubject(picks[0]?.name ?? null);
+                  if (step === 1) {
+                    setQuick(false);
+                    setOpenSubject(picks[0]?.name ?? null);
+                  }
                   setStep(step + 1);
                 }}
                 disabled={!canContinue}

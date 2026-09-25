@@ -79,6 +79,7 @@ export function HolidayPlanner({
                   <DatePicker
                     value={holiday.end}
                     onChange={(value) => patch(index, { end: value })}
+                    defaultMonth={holiday.start}
                     label="Pick a date"
                   />
                 </div>

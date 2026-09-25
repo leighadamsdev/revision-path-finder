@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import {
   CalendarDays,
+  BookOpen,
+  FolderOpen,
   FileText,
   House,
   Pencil,
@@ -23,8 +25,11 @@ import { LogoOnDark } from "@/components/Logo";
 
 
 const TABS = [
+  { to: "/", label: "Home", icon: House },
   { to: "/revision-guide", label: "Effective Revision", icon: GraduationCap },
-  { to: "/plan", label: "Revision Planner", icon: House },
+  { to: "/plan", label: "Revision Planner", icon: CalendarDays },
+  { to: "/my-plans", label: "My plans", icon: FolderOpen },
+  { to: "/library", label: "My Subjects & Topics", icon: BookOpen },
   { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
   { to: "/exams", label: "Exam timetable", icon: CalendarDays },
   { to: "/papers", label: "Past Papers", icon: FileText },
@@ -62,7 +67,7 @@ export function AppShell({
         <div className="mx-auto max-w-5xl px-4 pb-3 pt-4 sm:px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <Link to="/plan" aria-label="Home" title="Home">
+              <Link to="/" aria-label="Home" title="Home">
                 <LogoOnDark className="h-5 w-auto" />
               </Link>
               <div className="min-w-0 leading-none">

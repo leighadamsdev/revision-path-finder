@@ -135,7 +135,7 @@ export const extractTopicsFromDocument = createServerFn({ method: "POST" })
     try {
       const result = await askForJson<{ topics: string[] }>({
         instructions:
-          "You read UK GCSE revision documents — specifications, topic checklists, schemes of work, class handouts. Extract every distinct revision topic as a short, concrete title (max 10 words each), in the order they appear. Keep them specific enough to revise from. Ignore page furniture, staff names, dates and assessment admin. Return an empty list if there are no recognisable topics.",
+          "You read UK GCSE revision documents — specifications, topic checklists, schemes of work, class handouts. Identify each section title (e.g. 'Energy', 'Paper 1: Algebra') and extract every revision topic listed under it, in printed order. Write each item as 'Section title: topic' (topic max 10 words); if the page has no section titles, just give the topic. Keep them specific enough to revise from. Ignore page furniture, staff names, dates and assessment admin. Return an empty list if there are no recognisable topics.",
         schemaName: "document_topics",
         schema: {
           type: "object",

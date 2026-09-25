@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Printer } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useActivePlan, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
@@ -35,6 +36,15 @@ function PrintablePlanPage() {
   const { plan, isLoading } = useActivePlan();
   const subjectsQuery = usePlanSubjects(plan?.id);
   const sessionsQuery = usePlanSessions(plan?.id);
+  const printed = useRef(false);
+  const ready = Boolean(plan) && !isLoading && !subjectsQuery.isLoading && !sessionsQuery.isLoading;
+  // Go straight to the print dialog once the week is ready.
+  useEffect(() => {
+    if (!ready || printed.current) return;
+    printed.current = true;
+    const t = window.setTimeout(() => window.print(), 400);
+    return () => window.clearTimeout(t);
+  }, [ready]);
 
   if (isLoading || subjectsQuery.isLoading || sessionsQuery.isLoading) {
     return <p className="print-loading">Preparing your week…</p>;

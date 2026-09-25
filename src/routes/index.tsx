@@ -100,6 +100,8 @@ function Landing() {
           Not sure how to revise yet? Read the Effective Revision guide.
         </Link>
 
+        <QuickLinks />
+
         <PlanMockup />
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
@@ -255,5 +257,37 @@ function PlanMockup() {
         before exam day.
       </p>
     </div>
+  );
+}
+
+const QUICK_LINKS = [
+  { to: "/setup", title: "Create a revision plan", body: "Build a week-by-week timetable around your subjects and exams." },
+  { to: "/my-plans", title: "Open my plans", body: "See, switch between, edit or delete your saved plans." },
+  { to: "/plan", title: "Today's revision", body: "Go to your current plan and this week's sessions." },
+  { to: "/library", title: "My subjects & topics", body: "Add, edit or remove your subjects, topics and content." },
+  { to: "/knowledge-checker", title: "Check what I know", body: "Brain dump a topic from memory, then highlight the gaps." },
+  { to: "/exams", title: "Exam timetable", body: "Add your exam dates and see the countdown." },
+  { to: "/revision-tools", title: "Focus tools", body: "Pomodoro timer, focus sounds and a distraction-free mode." },
+  { to: "/revision-guide", title: "Learn how to revise", body: "Five proven techniques, explained simply." },
+  { to: "/papers", title: "Past papers", body: "Question papers and mark schemes by subject and board." },
+  { to: "/sites", title: "Revision links", body: "Trusted revision websites for every subject." },
+] as const;
+
+function QuickLinks() {
+  return (
+    <section className="mt-10" aria-labelledby="quick-links-heading">
+      <h2 id="quick-links-heading" className="text-xl font-extrabold tracking-tight">What would you like to do?</h2>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {QUICK_LINKS.map((q) => (
+          <div key={q.to} className="flex items-center gap-3 rounded-[14px] bg-card p-4 ring-1 ring-black/5">
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-extrabold">{q.title}</p>
+              <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">{q.body}</p>
+            </div>
+            <Link to={q.to} className="shrink-0 rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground">Go</Link>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -24,6 +24,7 @@ import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
 import { Route as AuthenticatedKnowledgeCheckerRouteImport } from './routes/_authenticated/knowledge-checker'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
+import { Route as AuthenticatedMyPlansRouteImport } from './routes/_authenticated/my-plans'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
@@ -105,6 +106,11 @@ const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMyPlansRoute = AuthenticatedMyPlansRouteImport.update({
+  id: '/my-plans',
+  path: '/my-plans',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/exams': typeof AuthenticatedExamsRoute
   '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/my-plans': typeof AuthenticatedMyPlansRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/exams': typeof AuthenticatedExamsRoute
   '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/my-plans': typeof AuthenticatedMyPlansRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
   '/_authenticated/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/_authenticated/my-plans': typeof AuthenticatedMyPlansRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/exams'
     | '/knowledge-checker'
     | '/library'
+    | '/my-plans'
     | '/onboarding'
     | '/plan'
     | '/print-plan'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/exams'
     | '/knowledge-checker'
     | '/library'
+    | '/my-plans'
     | '/onboarding'
     | '/plan'
     | '/print-plan'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/_authenticated/exams'
     | '/_authenticated/knowledge-checker'
     | '/_authenticated/library'
+    | '/_authenticated/my-plans'
     | '/_authenticated/onboarding'
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
@@ -383,6 +395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLibraryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/my-plans': {
+      id: '/_authenticated/my-plans'
+      path: '/my-plans'
+      fullPath: '/my-plans'
+      preLoaderRoute: typeof AuthenticatedMyPlansRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -428,6 +447,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
   AuthenticatedKnowledgeCheckerRoute: typeof AuthenticatedKnowledgeCheckerRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
+  AuthenticatedMyPlansRoute: typeof AuthenticatedMyPlansRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
@@ -441,6 +461,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,
   AuthenticatedKnowledgeCheckerRoute: AuthenticatedKnowledgeCheckerRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
+  AuthenticatedMyPlansRoute: AuthenticatedMyPlansRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,

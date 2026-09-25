@@ -83,17 +83,18 @@ export function ImportPanel({
     setBusy(false);
     if (!result || !result.ok) return void toast.error(result?.error ?? "We couldn't read that page. Try again.");
     if (!result.topics.length) {
-      toast.error("No numbered “Topic” headings were found. Try straightening or cropping the photo, or add Topics manually.");
+      toast.error("No section titles or topics were found. Try straightening or cropping the photo, or add Topics manually.");
       return;
     }
     const unsure = new Set(result.uncertain.map((u) => u.toLowerCase()));
-    setTopics(
-      result.topics.map((t) => ({
+    setTopics((prev) => [
+      ...prev,
+      ...result.topics.map((t) => ({
         key: newKey(),
         title: t.title,
         items: t.items.map((title) => ({ key: newKey(), title, uncertain: unsure.has(title.toLowerCase()) })),
       })),
-    );
+    ]);
     setStage("review");
   }
 
@@ -147,7 +148,7 @@ export function ImportPanel({
               className={`flex cursor-pointer flex-col items-center gap-2 rounded-[16px] border-2 border-dashed p-8 text-center ${dragOver ? "border-primary bg-accent" : "border-border"}`}
             >
               <Upload className="size-6 text-muted-foreground" />
-              <span className="text-sm font-extrabold">{busy ? "Opening…" : "Upload contents page"}</span>
+              <span className="text-sm font-extrabold">{busy ? "Opening…" : topics.length ? `Upload another page (${topics.length} Topics so far)` : "Upload contents page"}</span>
               <span className="text-[12px] font-medium text-muted-foreground">Drag and drop, or tap to choose. JPG, PNG, HEIC or PDF.</span>
               <input type="file" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif,application/pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void takeFile(f); e.target.value = ""; }} />
             </label>
@@ -156,7 +157,7 @@ export function ImportPanel({
               <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void takeFile(f); e.target.value = ""; }} />
             </label>
             <p className="text-[12px] font-medium text-muted-foreground">
-              Only numbered “Topic” headings and the content listed under them are read. Nothing is saved until you choose which Topics to add.
+              Try a screenshot or photo of your revision guide&apos;s contents page, or a topic list from school. Section titles become Topics, with the content listed under them. Got more than one page? Add them one after another. Nothing is saved until you choose which Topics to add.
             </p>
           </div>
         ) : null}
@@ -189,6 +190,7 @@ export function ImportPanel({
             <TopicDraftEditor topics={topics} onChange={setTopics} />
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => setStage("prepare")}>Back to image</Button>
+              <Button variant="outline" onClick={() => { setImg(null); setRotation(0); setCrop(null); setStage("upload"); }}><Upload /> Add another page</Button>
               <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button onClick={() => setStage("choose")} disabled={!topics.length}>Continue</Button>
             </div>

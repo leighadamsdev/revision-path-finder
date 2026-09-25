@@ -19,7 +19,9 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { ItemMultiSelect } from "@/components/ItemMultiSelect";
 import { SavedCheckers } from "@/components/SavedCheckers";
 import { useAuth } from "@/hooks/useAuth";
-import { useActivePlan } from "@/hooks/useActivePlan";
+import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
+import { FocusSound } from "@/components/FocusSound";
+import { subjectUnits } from "@/lib/gcse-topics";
 import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
 import {
   AlertDialog,
@@ -112,10 +114,41 @@ function KnowledgeCheckerPage() {
   const library = useLibrary();
   const [libSubjectId, setLibSubjectId] = useState("");
   const [libTopicId, setLibTopicId] = useState("");
-  const libSubject = library.subjects.find((s) => s.id === libSubjectId);
-  const libTopic = libSubject?.topics.find((t) => t.id === libTopicId);
   const { user } = useAuth();
   const { plan } = useActivePlan();
+  const planSubjectsQuery = usePlanSubjects(plan?.id);
+  /** Library subjects plus any plan subject not yet in the library; DfE content fills gaps. */
+  const subjectOptions = useMemo(() => {
+    const list = library.subjects.map((s) => ({
+      id: s.id,
+      name: s.name,
+      topics: s.topics.length
+        ? s.topics.map((t) => ({ id: t.id, title: t.title, items: t.items.map((i) => ({ id: i.id, title: i.title })) }))
+        : dfeTopics(s.name),
+      fromLibrary: s.topics.length > 0,
+    }));
+    const seen = new Set(list.map((s) => s.name.trim().toLowerCase()));
+    for (const ps of planSubjectsQuery.data ?? []) {
+      const name = (ps as unknown as { name?: string; subject?: { name: string } }).name ?? (ps as unknown as { subject?: { name: string } }).subject?.name;
+      if (!name || seen.has(name.trim().toLowerCase())) continue;
+      seen.add(name.trim().toLowerCase());
+      list.push({ id: `plan:${name}`, name, topics: dfeTopics(name), fromLibrary: false });
+    }
+    return list;
+  }, [library.subjects, planSubjectsQuery.data]);
+  const libSubject = subjectOptions.find((s) => s.id === libSubjectId);
+  const libTopic = libSubject?.topics.find((t) => t.id === libTopicId);
+  const sheetRef = useRef<HTMLElement | null>(null);
+  const [fullScreen, setFullScreen] = useState(false);
+  useEffect(() => {
+    const onChange = () => setFullScreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  function toggleFullScreen() {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void sheetRef.current?.requestFullscreen?.().catch(() => setFullScreen(true));
+  }
   const [draft, setDraft] = useState<CheckerDraft>({ subject: "", topic: "", date: "", rows: EMPTY_ROWS });
   const [mode, setMode] = useState<"recall" | "check">("recall");
   const [remaining, setRemaining] = useState(30 * 60);
@@ -327,7 +360,7 @@ function KnowledgeCheckerPage() {
           </div>
         </header>
 
-        <section className="mt-7 overflow-hidden rounded-[8px] border border-checker-ink bg-card shadow-sm print:hidden">
+        <section ref={sheetRef} className={`mt-7 rounded-[8px] border border-checker-ink bg-card shadow-sm print:hidden ${fullScreen ? "fixed inset-0 z-50 mt-0 overflow-y-auto rounded-none" : "overflow-hidden"}`}>
           <div className="flex flex-col gap-4 bg-checker-ink p-5 text-checker-paper sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-extrabold uppercase text-checker-mint">revplan. · active recall</p>
@@ -343,14 +376,19 @@ function KnowledgeCheckerPage() {
                 <RotateCcw />
               </Button>
             </div>
+            <FocusSound className="text-checker-paper" />
+            <Button type="button" variant="secondary" onClick={toggleFullScreen}>
+              {fullScreen ? "Exit full screen" : "Do it in the app (full screen)"}
+            </Button>
           </div>
 
-          {library.subjects.length ? (
+          {subjectOptions.length ? (
+            <>
             <div className="grid gap-3 border-b border-checker-line bg-card p-5 sm:grid-cols-3">
               <label className="text-xs font-extrabold uppercase text-muted-foreground">From my library: subject
-                <select value={libSubjectId} onChange={(e) => { setLibSubjectId(e.target.value); setLibTopicId(""); const s = library.subjects.find((x) => x.id === e.target.value); if (s) setDraft((c) => ({ ...c, subject: s.name })); }} className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border">
+                <select value={libSubjectId} onChange={(e) => { setLibSubjectId(e.target.value); setLibTopicId(""); const s = subjectOptions.find((x) => x.id === e.target.value); if (s) setDraft((c) => ({ ...c, subject: s.name })); }} className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border">
                   <option value="">Choose…</option>
-                  {library.subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {subjectOptions.map((s) => <option key={s.id} value={s.id}>{s.name}{s.fromLibrary ? "" : s.topics.length ? " (DfE content)" : " (no content yet)"}</option>)}
                 </select>
               </label>
               <label className="text-xs font-extrabold uppercase text-muted-foreground">Topic
@@ -363,6 +401,15 @@ function KnowledgeCheckerPage() {
                 <ItemMultiSelect items={libTopic?.items ?? []} disabled={!libTopic || !libTopic.items.length} onAdd={(sel) => setDraft((c) => ({ ...c, rows: sel.map((i) => ({ id: i.id, component: i.title, recall: "", gaps: "" })) }))} />
               </div>
             </div>
+            {libSubject && !libSubject.fromLibrary ? (
+              <div className="border-b border-checker-line bg-secondary px-5 py-3 text-sm font-semibold">
+                {libSubject.topics.length
+                  ? `You haven't added your own content for ${libSubject.name} yet, so the DfE content list is shown. `
+                  : `There's no content for ${libSubject.name} yet. `}
+                You can <Link to="/library" className="font-extrabold underline">upload a contents page or topic list</Link>, use the DfE content, or type the topic and components in below.
+              </div>
+            ) : null}
+            </>
           ) : null}
 
           <div className="grid gap-4 border-b border-checker-line bg-checker-paper p-5 sm:grid-cols-[1fr_1.4fr_0.7fr]">
@@ -539,4 +586,11 @@ function FlashcardPanel({ flashcards }: { flashcards: Flashcard[] }) {
       </div>
     </section>
   );
+}
+function dfeTopics(name: string) {
+  return subjectUnits(name).map((u, i) => ({
+    id: `dfe:${name}:${i}`,
+    title: u.unit,
+    items: u.elements.map((e, j) => ({ id: `dfe:${name}:${i}:${j}`, title: e.label })),
+  }));
 }

@@ -39,12 +39,16 @@ const GREAT_RESOURCE_TABS = [
   { to: "/revision-tools", label: "Revision Tools", icon: Wrench },
 ] as const;
 
-const GROUPS = [
+import type { LucideIcon } from "lucide-react";
+
+const GROUPS: { label: string; items: readonly NavTab[] }[] = [
   { label: "My revision", items: MY_REVISION_TABS },
   { label: "Great resources", items: GREAT_RESOURCE_TABS },
-] as const;
+];
 
-const ALL_TABS = [...MY_REVISION_TABS, ...GREAT_RESOURCE_TABS] as const;
+const ALL_TABS: readonly NavTab[] = [...MY_REVISION_TABS, ...GREAT_RESOURCE_TABS];
+
+type NavTab = { to: string; label: string; icon: LucideIcon };
 
 const ADMIN_TAB = { to: "/admin", label: "Admin", icon: Settings } as const;
 

@@ -18,10 +18,10 @@ const GREAT_RESOURCES = [
   { to: "/revision-tools", label: "Revision Tools" },
 ] as const;
 
-const GROUPS = [
+const GROUPS: { label: string; items: readonly { to: string; label: string }[] }[] = [
   { label: "My revision", items: MY_REVISION },
   { label: "Great resources", items: GREAT_RESOURCES },
-] as const;
+];
 
 const MOBILE_PRIMARY = ["/", "/knowledge-checker", "/papers"] as const;
 

@@ -14,7 +14,7 @@ import {
   type Flashcard,
   type Subtopic,
 } from "@/lib/leitner";
-import { averageConfidence, confidenceTone } from "@/lib/confidence";
+import { averageConfidence } from "@/lib/confidence";
 import type { PlanSubject, PlanTopic } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
 

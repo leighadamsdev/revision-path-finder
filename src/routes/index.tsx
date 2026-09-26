@@ -268,13 +268,13 @@ const QUICK_ACTIONS = [
   },
   {
     to: "/library",
-    title: "Lock in your subjects and topics",
+    title: "Lock in my subjects and topics",
     body: "List what you are studying, tell us how confident you  are with each, then photograph and upload revision guide contents pages or use lists from school to make sure you have everything covered",
   },
   {
     to: "/setup",
-    title: "Create your own revision plan",
-    body: "Based on your subjects, confidence levels and tailored to upcoming exams, mocks or tests",
+    title: "Create my own revision plan",
+    body: "Choose when and for long you study daily, based on your subjects, confidence levels and your next exams, mocks or tests ",
   },
   {
     to: "/exams",
@@ -288,7 +288,7 @@ const QUICK_ACTIONS = [
   },
   {
     to: "/revision-tools",
-    title: "Find your focus - Get in the zone",
+    title: "Find my focus and get in the zone",
     body: "3 simple tools to help you concentrate better",
   },
 ] as const;

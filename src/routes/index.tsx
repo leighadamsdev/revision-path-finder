@@ -270,7 +270,7 @@ const QUICK_LINKS = [
   { to: "/revision-tools", title: "Use some tools to help me focus", body: "Pomodoro timer, focus sounds and a distraction-free mode." },
   { to: "/revision-guide", title: "Learn how to revise effectively", body: "Five five simple stages" },
   { to: "/papers", title: "Find real past papers", body: "Question papers and mark schemes by subject and board." },
-  { to: "/sites", title: "Access useful revision links, by subject", body: "Trusted revision websites for every subject." },
+  { to: "/sites", title: "Access useful revision links (external)", body: "Trusted revision websites for every subject." },
 ] as const;
 
 function QuickLinks() {

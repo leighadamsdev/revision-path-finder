@@ -264,32 +264,32 @@ const QUICK_ACTIONS = [
   {
     to: "/revision-guide",
     title: "Learn how to revise effectively",
-    body: "Follow our 5 simple steps",
+    body: "Follow our simple 5 step plan",
   },
   {
     to: "/library",
-    title: "Lock in the subjects and topics you are studying",
-    body: "Photograph and upload revision guide contents pages or use lists from school",
+    title: "Lock in your subjects and topics",
+    body: "List what you are studying, tell us how confident you  are with each, then photograph and upload revision guide contents pages or use lists from school to make sure you have everything covered",
   },
   {
     to: "/setup",
     title: "Create your own revision plan",
-    body: "Based on your subjects, confidence levels, tailored to upcoming exams, mocks or tests",
+    body: "Based on your subjects, confidence levels and tailored to upcoming exams, mocks or tests",
   },
   {
     to: "/exams",
     title: "Manage my exam timetable",
-    body: "Map when D-Day is for each subject",
+    body: "Map when D-Day is for each subject and paper and link this to your revision plan",
   },
   {
     to: "/knowledge-checker",
     title: "Check how much I already know",
-    body: "Create and use individual knowledge checkers to populate flashcards for every subject",
+    body: "Yes yourself with individual knowledge checkers and then create targeted flashcards for every subject",
   },
   {
     to: "/revision-tools",
-    title: "Find your focus",
-    body: "Some simple tools to help you concentrate better",
+    title: "Find your focus - Get in the zone",
+    body: "3 simple tools to help you concentrate better",
   },
 ] as const;
 
@@ -315,7 +315,7 @@ function QuickLinks() {
             7
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-extrabold">Access more help</p>
+            <p className="text-[14px] font-extrabold">Find more help</p>
             <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">Test yourself with past papers and find subject specific revision sites</p>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">

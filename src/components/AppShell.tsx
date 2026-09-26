@@ -176,7 +176,7 @@ export function AppShell({
                 >
                   <button
                     type="button"
-                    onClick={() => setOpenGroup((open) => (open === group.label ? null : group.label))}
+                    onClick={() => setOpenGroup(group.label)}
                     aria-expanded={openGroup === group.label}
                     className={`flex min-h-10 shrink-0 items-center gap-1.5 rounded-[8px] px-3 py-2 text-structure-foreground/70 ${
                       groupActive(group.items) ? "bg-structure-foreground/10 text-primary" : "hover:bg-structure-foreground/10"

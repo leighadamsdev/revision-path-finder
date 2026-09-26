@@ -31,7 +31,7 @@ export function ConfidencePicker({
             aria-pressed={on}
             onClick={() => onChange(value === step ? null : step)}
             className={`${dot} rounded-full transition-colors ${
-              on ? tone.fill : `ring-1 ${stepTone.ring}`
+              on ? `${tone.fill} ring-2 ${tone.ring}` : `ring-2 ${stepTone.ring}`
             }`}
           />
         );

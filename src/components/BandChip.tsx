@@ -7,10 +7,10 @@ export function BandChip({ value }: { value: number | null | undefined }) {
   return (
     <span
       title={value ? `${value}/5 — ${LIKERT[value]}` : "Not rated yet"}
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${tone.tag}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${tone.tag}`}
     >
-      <span className={`size-1.5 rounded-full ${tone.fill}`} />
-      {BAND_LABEL[band]}
+      <span className={`size-2 rounded-full ${tone.fill}`} />
+      {band === "red" ? "Low" : band === "green" ? "High" : BAND_LABEL[band]}
     </span>
   );
 }

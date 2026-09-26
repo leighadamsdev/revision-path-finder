@@ -84,7 +84,7 @@ export function TopicsConfidencePanel({
             const isOpen = open === subject.id;
             const cardCount = cards.filter((c) => c.subject_id === subject.id && c.box !== "bench").length;
             return (
-              <div key={subject.id} className="rounded-[12px] bg-background ring-1 ring-black/5">
+              <div key={subject.id} className={`rounded-[8px] border-l-4 bg-background ring-1 ring-border/60 ${avg == null ? "border-border" : avg <= 2.49 ? "border-conf-low" : avg < 4.5 ? "border-conf-mid" : "border-conf-high"}`}>
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : subject.id)}
@@ -93,7 +93,7 @@ export function TopicsConfidencePanel({
                 >
                   <span className={`size-2 shrink-0 rounded-full ${style.dot}`} />
                   <span className="min-w-0 flex-1 truncate text-[13px] font-extrabold">{subject.name}</span>
-                  <span className="text-[11px] font-bold text-muted-foreground">
+                  <span className="hidden text-[11px] font-bold text-muted-foreground sm:inline">
                     {own.length} topics · {cardCount} cards
                   </span>
                   <BandChip value={avg == null ? null : Math.round(avg)} />
@@ -104,7 +104,7 @@ export function TopicsConfidencePanel({
                     {own.map((topic) => {
                       const subs = subtopics.filter((s) => s.plan_topic_id === topic.id);
                       return (
-                        <div key={topic.id} className="rounded-[10px] bg-card p-2.5 ring-1 ring-border">
+                        <div key={topic.id} className={`rounded-[8px] border-l-[3px] bg-card p-2.5 ring-1 ring-border ${subs.length ? "border-border" : topic.confidence == null ? "border-border" : topic.confidence <= 2 ? "border-conf-low" : topic.confidence <= 4 ? "border-conf-mid" : "border-conf-high"}`}>
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="min-w-0 flex-1 text-[12px] font-bold leading-relaxed">
                               {topic.topic}
@@ -124,7 +124,7 @@ export function TopicsConfidencePanel({
                           {subs.length ? (
                             <ul className="mt-2 space-y-1 border-l-2 border-border pl-3">
                               {subs.map((sub) => (
-                                <li key={sub.id} className="flex flex-wrap items-center gap-2">
+                                <li key={sub.id} className={`flex flex-wrap items-center gap-2 border-l-[3px] pl-2 ${sub.confidence == null ? "border-border" : sub.confidence <= 2 ? "border-conf-low" : sub.confidence <= 4 ? "border-conf-mid" : "border-conf-high"}`}>
                                   <span className="min-w-0 flex-1 text-[12px] font-semibold">{sub.name}</span>
                                   <BandChip value={sub.confidence} />
                                   <ConfidencePicker

@@ -260,34 +260,70 @@ function PlanMockup() {
   );
 }
 
-const QUICK_LINKS = [
-  { to: "/setup", title: "Create a revision plan", body: "Build a week-by-week timetable around your subjects and exams." },
-  { to: "/my-plans", title: "View and edit my revision plans", body: "See, switch between, edit or delete your saved plans." },
-  { to: "/plan", title: "View today's revision", body: "Go to your current plan and this week's sessions." },
-  { to: "/library", title: "Add/edit subjects & topics", body: "Add, edit or remove your subjects, topics and content." },
-  { to: "/knowledge-checker", title: "Create a knowledge checker", body: "Brain dump a topic from memory, then highlight the gaps." },
-  { to: "/exams", title: "Create my exam timetable", body: "Add your exam dates and see the countdown." },
-  { to: "/revision-tools", title: "Use some tools to help me focus", body: "Pomodoro timer, focus sounds and a distraction-free mode." },
-  { to: "/revision-guide", title: "Learn how to revise effectively", body: "Five five simple stages" },
-  { to: "/papers", title: "Find real past papers", body: "Question papers and mark schemes by subject and board." },
-  { to: "/sites", title: "Access useful revision links (external)", body: "Trusted revision websites for every subject." },
+const QUICK_ACTIONS = [
+  {
+    to: "/revision-guide",
+    title: "Learn how to revise effectively",
+    body: "Follow our 5 simple steps",
+  },
+  {
+    to: "/library",
+    title: "Tell us what subjects and topics you are studying",
+    body: "Photograph and upload revision guide contents pages or use lists from school",
+  },
+  {
+    to: "/setup",
+    title: "Create your own revision plan",
+    body: "Based on your subjects, confidence levels, tailored to upcoming exams, mocks or tests",
+  },
+  {
+    to: "/exams",
+    title: "Manage my exam timetable",
+    body: "Map when D-Day is for each subject",
+  },
+  {
+    to: "/knowledge-checker",
+    title: "Check how much I already know",
+    body: "Create and use individual knowledge checkers to populate flashcards for every subject",
+  },
+  {
+    to: "/revision-tools",
+    title: "Find your focus",
+    body: "Some simple tools to help you concentrate better",
+  },
 ] as const;
 
 function QuickLinks() {
   return (
     <section className="mt-10" aria-labelledby="quick-links-heading">
       <h2 id="quick-links-heading" className="text-xl font-extrabold tracking-tight">What would you like to do?</h2>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {QUICK_LINKS.map((q) => (
-          <div key={q.to} className="flex items-center gap-3 rounded-[14px] bg-card p-4 ring-1 ring-black/5">
+      <ol className="mt-4 space-y-3">
+        {QUICK_ACTIONS.map((q, i) => (
+          <li key={q.to} className="flex items-center gap-3 rounded-[14px] bg-card p-4 ring-1 ring-black/5">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[13px] font-extrabold text-primary">
+              {i + 1}
+            </span>
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-extrabold">{q.title}</p>
               <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">{q.body}</p>
             </div>
             <Link to={q.to} className="shrink-0 rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground">Go</Link>
-          </div>
+          </li>
         ))}
-      </div>
+        <li className="flex items-center gap-3 rounded-[14px] bg-card p-4 ring-1 ring-black/5">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[13px] font-extrabold text-primary">
+            7
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-extrabold">Access more help</p>
+            <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">Test yourself with past papers and find subject specific revision sites</p>
+          </div>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+            <Link to="/papers" className="rounded-full bg-primary px-4 py-2 text-center text-[13px] font-bold text-primary-foreground">Past papers</Link>
+            <Link to="/sites" className="rounded-full bg-primary px-4 py-2 text-center text-[13px] font-bold text-primary-foreground">Revision links</Link>
+          </div>
+        </li>
+      </ol>
     </section>
   );
 }

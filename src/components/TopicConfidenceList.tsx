@@ -21,7 +21,7 @@ export function TopicConfidenceList({
         return (
           <div
             key={topic}
-            className="flex flex-wrap items-center gap-2 rounded-[10px] bg-card px-2.5 py-2 ring-1 ring-border"
+            className={`flex flex-wrap items-center gap-2 rounded-[8px] border-l-4 bg-card px-2.5 py-2 ring-1 ring-border ${value == null ? "border-border" : value <= 2 ? "border-conf-low" : value <= 4 ? "border-conf-mid" : "border-conf-high"}`}
           >
             <span className="min-w-0 flex-1 text-[12px] font-bold leading-relaxed">{topic}</span>
             <span className={`text-[11px] font-extrabold ${tone.text}`}>

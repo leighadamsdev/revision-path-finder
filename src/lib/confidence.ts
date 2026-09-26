@@ -21,14 +21,14 @@ const LOW: ConfidenceTone = {
   fill: "bg-conf-low",
   ring: "ring-conf-low/50",
   text: "text-conf-low",
-  tag: "bg-conf-low/10 text-conf-low",
+  tag: "bg-conf-low/15 text-conf-low",
 };
 
 const MID: ConfidenceTone = {
   fill: "bg-conf-mid",
   ring: "ring-conf-mid/50",
   text: "text-conf-mid",
-  tag: "bg-conf-mid/10 text-conf-mid",
+  tag: "bg-conf-mid/15 text-conf-mid",
 };
 
 const HIGH: ConfidenceTone = {

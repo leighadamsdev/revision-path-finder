@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import type { PlanSubject } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
 
-/** Quiet countdown to each exam the student has dated. Soonest first, sat exams ticked off. */
+/** Countdown that changes from a subject's colour through amber to red in the final three days. */
 export function ExamCountdown({ subjects }: { subjects: PlanSubject[] }) {
   const today = new Date();
   const dated = subjects
@@ -36,14 +36,23 @@ export function ExamCountdown({ subjects }: { subjects: PlanSubject[] }) {
         {[...upcoming, ...done].map(({ key, subject, paper, date, days }) => {
           const style = subjectStyle(subject.color_key);
           const sat = days < 0;
+          const urgent = days >= 0 && days <= 3;
+          const approaching = days > 3 && days <= 14;
+          const urgencyText = urgent ? "text-exam-imminent" : approaching ? "text-conf-mid" : style.text;
+          const urgencyDot = urgent ? "bg-exam-imminent" : approaching ? "bg-conf-mid" : style.dot;
+          const urgencySurface = urgent
+            ? "bg-exam-imminent/10 ring-exam-imminent/35"
+            : approaching
+              ? "bg-conf-mid/10 ring-conf-mid/30"
+              : "bg-background ring-border/50";
           return (
             <li
               key={key}
-              className={`flex min-w-[9.5rem] flex-1 items-center gap-2.5 rounded-[14px] bg-background px-3 py-2.5 ring-1 ring-black/5 sm:flex-none ${
+              className={`flex min-w-[9.5rem] flex-1 items-center gap-2.5 rounded-[8px] px-3 py-2.5 ring-1 sm:flex-none ${urgencySurface} ${
                 sat ? "opacity-55" : ""
               }`}
             >
-              <span className={`size-2 shrink-0 rounded-full ${style.dot}`} />
+              <span className={`size-2.5 shrink-0 rounded-full ${urgencyDot}`} />
               <div className="min-w-0">
                 <p className="truncate text-[13px] font-extrabold">
                   {subject.name}
@@ -55,16 +64,16 @@ export function ExamCountdown({ subjects }: { subjects: PlanSubject[] }) {
                   {format(date, "EEE d MMM")}
                 </p>
               </div>
-              <span className="ml-auto pl-2 text-right">
+              <span className={`ml-auto shrink-0 pl-2 text-right ${urgencyText}`}>
                 {sat ? (
                   <Check className="size-4 text-muted-foreground" strokeWidth={3} />
                 ) : (
                   <>
-                    <span className="block text-[15px] font-extrabold tabular-nums leading-none">
+                    <span className="block text-[18px] font-extrabold tabular-nums leading-none">
                       {days}
                     </span>
-                    <span className="text-[10px] font-bold text-muted-foreground">
-                      {days === 1 ? "day" : "days"}
+                    <span className="text-[10px] font-extrabold">
+                      {days === 0 ? "today" : days === 1 ? "day" : "days"}
                     </span>
                   </>
                 )}

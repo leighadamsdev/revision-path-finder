@@ -268,7 +268,7 @@ const QUICK_ACTIONS = [
   },
   {
     to: "/library",
-    title: "Tell us what subjects and topics you are studying",
+    title: "Lock in the subjects and topics you are studying",
     body: "Photograph and upload revision guide contents pages or use lists from school",
   },
   {

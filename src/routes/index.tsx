@@ -262,11 +262,11 @@ function PlanMockup() {
 
 const QUICK_LINKS = [
   { to: "/setup", title: "Create a revision plan", body: "Build a week-by-week timetable around your subjects and exams." },
-  { to: "/my-plans", title: "Open my plans", body: "See, switch between, edit or delete your saved plans." },
+  { to: "/my-plans", title: "View and edit my revision plans", body: "See, switch between, edit or delete your saved plans." },
   { to: "/plan", title: "View today's revision", body: "Go to your current plan and this week's sessions." },
   { to: "/library", title: "Add/edit subjects & topics", body: "Add, edit or remove your subjects, topics and content." },
   { to: "/knowledge-checker", title: "Create a knowledge checker", body: "Brain dump a topic from memory, then highlight the gaps." },
-  { to: "/exams", title: "View my exam timetable", body: "Add your exam dates and see the countdown." },
+  { to: "/exams", title: "Create my exam timetable", body: "Add your exam dates and see the countdown." },
   { to: "/revision-tools", title: "Use some tools to help me focus", body: "Pomodoro timer, focus sounds and a distraction-free mode." },
   { to: "/revision-guide", title: "Learn how to revise effectively", body: "Five five simple stages" },
   { to: "/papers", title: "Find real past papers", body: "Question papers and mark schemes by subject and board." },

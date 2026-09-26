@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Colour exam countdown from subject hue through amber to bright red by three days, and clarify confidence at a glance.
+- [x] Colour exam countdown from subject hue through amber to bright red by three days, and clarify confidence at a glance.
 
 - [x] Move signed-in navigation to the top on every signed-in page.
 - [x] Rename Sites to Revision links and Exams to Exam timetable.

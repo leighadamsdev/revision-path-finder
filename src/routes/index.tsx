@@ -27,7 +27,7 @@ export const Route = createFileRoute("/")({
 
 const HOW_STEPS = [
   "Tell revplan the subjects and tiers you are studying, lock in how many weeks you have until exam day and how many times a week you want to study and for how long",
-  "Upload a topic list or take a photo of your revision book contents page and let revplan create your knowledge checkers for you",
+  "Upload a topic list or take a photo of your revision book contents page and let revplan create your knowledge checkers for you, subject by subject",
   "Use your bespoke knowledge checker to work out what you know and what you don't, before you create your revision plan or any flashcards",
   "Focus on what you don't know to build a list of the topics you need to commit to long term memory, adding in your confidence level",
   "Let revplan build you a week-by-week, session by session plan, linked to exam dates. You can add in extra sessions during the holidays and ramp things and prioritise subjects up closer to the day",

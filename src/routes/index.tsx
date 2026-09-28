@@ -27,10 +27,10 @@ export const Route = createFileRoute("/")({
 
 const HOW_STEPS = [
   "Tell revplan the subjects and tiers you are studying",
-  "Choose the exact topics from a pre-populated list\nor upload your own topic list",
   "Lock in how many weeks you have until exam day",
+  "Use our bespoke knowledge checker to work out what you know and what you don't, before you create your revision plan or any flashcards\n",
+  "Choose the exact topics you need to revise from a pre-populated list or upload your own topic list\n",
   "Let revplan build you a week-by-week, session by session plan, linked to exam dates and your subject confidence",
-  "Use our bespoke knowledge checker to work out what you know and what you don't before you create your flashcards",
 ];
 
 const POINTS = [

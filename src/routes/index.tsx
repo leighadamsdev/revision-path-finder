@@ -63,7 +63,7 @@ function Landing() {
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
           A bespoke revision timetable, designed around the time you've got and exactly what you need to focus on
         </h1>
-        <div className="relative mt-8 w-full max-w-xl">
+        <div className="relative mt-8 w-full">
           <div
             aria-hidden="true"
             className="absolute left-[26px] bottom-6 top-6 hidden w-1 rounded-full bg-primary/40 sm:block"

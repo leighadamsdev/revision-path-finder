@@ -26,10 +26,10 @@ export const Route = createFileRoute("/")({
 });
 
 const HOW_STEPS = [
-  "Tell revplan the subjects and tiers you are studying",
-  "Lock in how many weeks you have until exam day",
-  "Use our bespoke knowledge checker to work out what you know and what you don't, before you create your revision plan or any flashcards\n",
-  "Choose the exact topics you need to revise from a pre-populated list or upload your own topic list\n",
+  "Tell revplan the subjects and tiers you are studying, lock in how many weeks you have until exam day and how many times a week you want to study and for how long",
+  "Upload a topic list or take a photo of your revision book contents page and let revplan create your knowledge checkers for you",
+  "Use your bespoke knowledge checker to work out what you know and what you don't, before you create your revision plan or any flashcards",
+  "Focus on what you don't know to select the exact topics to revise for each subject, adding in your confidence level.\u00a0",
   "Let revplan build you a week-by-week, session by session plan, linked to exam dates and your subject confidence",
 ];
 

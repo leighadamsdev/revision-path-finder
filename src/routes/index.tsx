@@ -30,7 +30,7 @@ const HOW_STEPS = [
   "Choose the exact topics from a pre-populated list\nor upload your own topic list",
   "Lock in how many weeks you have until exam day",
   "Let revplan build you a week-by-week, session by session plan, linked to exam dates and your subject confidence",
-  "Print it out, share it or use it online, it is up to you.",
+  "Use our bespoke knowledge checker to work out what you know and what you don't before you create your flashcards",
 ];
 
 const POINTS = [

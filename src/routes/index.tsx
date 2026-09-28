@@ -263,7 +263,7 @@ function PlanMockup() {
 const QUICK_ACTIONS = [
   {
     to: "/revision-guide",
-    title: "Learn how to revise effectively",
+    title: "Learn how to revise effectively (free)",
     body: "Follow our simple 5 step plan",
   },
   {
@@ -288,7 +288,7 @@ const QUICK_ACTIONS = [
   },
   {
     to: "/revision-tools",
-    title: "Find my focus and get in the zone",
+    title: "Find my focus and get in the zone (free)",
     body: "3 simple tools to help you concentrate better",
   },
 ] as const;
@@ -315,7 +315,7 @@ function QuickLinks() {
             7
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-extrabold">Find more help</p>
+            <p className="text-[14px] font-extrabold">Find more help (free)</p>
             <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">Test yourself with past papers and find subject specific revision sites</p>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">

@@ -272,11 +272,6 @@ const QUICK_ACTIONS = [
     body: "List what you are studying, tell us how confident you  are with each, then photograph and upload revision guide contents pages or use lists from school to make sure you have everything covered",
   },
   {
-    to: "/setup",
-    title: "Create my own revision plan",
-    body: "Choose when and for long you study daily, based on your subjects, confidence levels and your next exams, mocks or tests ",
-  },
-  {
     to: "/exams",
     title: "Manage my exam timetable",
     body: "Map when D-Day is for each subject and paper and link this to your revision plan",
@@ -285,6 +280,11 @@ const QUICK_ACTIONS = [
     to: "/knowledge-checker",
     title: "Check how much I already know",
     body: "Yes yourself with individual knowledge checkers and then create targeted flashcards for every subject",
+  },
+  {
+    to: "/setup",
+    title: "Create my own revision plan",
+    body: "Choose when and for long you study daily, based on your subjects, confidence levels and your next exams, mocks or tests ",
   },
   {
     to: "/revision-tools",

@@ -102,6 +102,8 @@ function Landing() {
 
         <QuickLinks />
 
+        <CheckerMockup />
+
         <PlanMockup />
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">

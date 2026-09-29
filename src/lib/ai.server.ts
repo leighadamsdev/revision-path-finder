@@ -34,7 +34,7 @@ export async function askForJson<T>(options: {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Lovable-API-Key": key,
+      Authorization: `Bearer ${key}`,
       "X-Lovable-AIG-SDK": "fetch",
     },
     ...(options.signal ? { signal: options.signal } : {}),

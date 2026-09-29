@@ -64,8 +64,8 @@ export const extractTopics = createServerFn({ method: "POST" })
         ],
       });
       const topics = result.topics
-        .map((t) => ({ title: clean(t.title), items: t.items.map(clean).filter((i) => i && !EXCLUDE.test(i) && !/^topic\b/i.test(i)) }))
-        .filter((t) => /^topic\b/i.test(t.title));
+        .map((t) => ({ title: clean(t.title), items: t.items.map(clean).filter((i) => i && !EXCLUDE.test(i)) }))
+        .filter((t) => t.title && !EXCLUDE.test(t.title));
       return { ok: true as const, topics, uncertain: result.uncertain.map(clean) };
     } catch (error) {
       const message = error instanceof AiError ? error.message : "We couldn't read that page. Try again.";

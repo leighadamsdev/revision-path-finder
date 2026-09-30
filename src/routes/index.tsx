@@ -66,17 +66,17 @@ function Landing() {
         <div className="relative mt-8 w-full">
           <div
             aria-hidden="true"
-            className="absolute left-[26px] bottom-6 top-6 hidden w-1 rounded-full bg-primary/40 sm:block"
+            className="absolute bottom-6 left-[26px] top-6 hidden w-0.5 bg-primary sm:block"
           />
           <ol className="space-y-6">
             {HOW_STEPS.map((step, i) => (
               <li key={step} className="relative flex items-start">
-                <div className="z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-full bg-structure text-xl font-bold text-primary ring-4 ring-primary sm:flex">
-                  {i + 1}
+                <div className="z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-[8px] bg-primary text-lg font-extrabold text-primary-foreground shadow-lg sm:flex">
+                  {String(i + 1).padStart(2, "0")}
                 </div>
-                <div className="w-full rounded-r-[24px] border-l-4 border-primary bg-structure p-5 text-lg font-medium leading-relaxed text-structure-foreground shadow-lg sm:ml-8 sm:p-6">
-                  <span className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground sm:hidden">
-                    {i + 1}
+                <div className={`w-full rounded-[8px] bg-structure p-5 text-lg font-medium leading-relaxed text-structure-foreground shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:ml-8 sm:p-6 ${i === HOW_STEPS.length - 1 ? "ring-2 ring-primary" : ""}`}>
+                  <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-[8px] bg-primary text-sm font-extrabold text-primary-foreground shadow-md sm:hidden">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
                   {step}
                 </div>
@@ -108,7 +108,7 @@ function Landing() {
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
           {POINTS.map((point) => (
-            <div key={point.title} className="rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+            <div key={point.title} className="rounded-[8px] bg-card p-5 ring-1 ring-border">
               <span className={`block size-2.5 rounded-full ${point.dot}`} />
               <p className="mt-3 text-[15px] font-extrabold tracking-tight">{point.title}</p>
               <p className="mt-1.5 text-[13px] font-medium leading-relaxed text-muted-foreground">
@@ -178,7 +178,7 @@ function ConfidenceDots({ value, fill }: { value: number; fill: string }) {
       {[1, 2, 3, 4, 5].map((v) => (
         <span
           key={v}
-          className={`size-4 rounded-full ${value >= v ? fill : "ring-1 ring-black/15"}`}
+          className={`size-4 rounded-full ${value >= v ? fill : "ring-1 ring-border"}`}
         />
       ))}
     </div>
@@ -191,7 +191,7 @@ function PlanMockup() {
       <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
         What a week looks like
       </p>
-      <div className="mt-3 overflow-hidden rounded-[20px] bg-card shadow-[0_20px_60px_-25px] shadow-structure/35 ring-1 ring-black/10">
+      <div className="mt-3 overflow-hidden rounded-[8px] bg-card shadow-[0_20px_60px_-25px] shadow-structure/35 ring-1 ring-border">
         <div className="flex flex-wrap items-center gap-3 bg-structure px-4 py-3">
           <LogoOnDark className="h-5 w-auto" />
           <div className="ml-auto flex items-center gap-1.5">
@@ -410,8 +410,8 @@ function QuickLinks() {
       <h2 id="quick-links-heading" className="text-xl font-extrabold tracking-tight">What would you like to do?</h2>
       <ol className="mt-4 space-y-3">
         {QUICK_ACTIONS.map((q, i) => (
-          <li key={q.to} className="flex items-center gap-3 rounded-[14px] bg-card p-4 ring-1 ring-black/5">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[13px] font-extrabold text-primary">
+          <li key={q.to} className="flex items-center gap-3 rounded-[8px] border-l-4 border-primary bg-card p-4 shadow-sm ring-1 ring-border transition-colors hover:bg-accent/40">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-[6px] bg-primary text-[13px] font-extrabold text-primary-foreground">
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
@@ -421,8 +421,8 @@ function QuickLinks() {
             <Link to={q.to} className="shrink-0 rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground">Go</Link>
           </li>
         ))}
-        <li className="flex items-center gap-3 rounded-[14px] bg-card p-4 ring-1 ring-black/5">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[13px] font-extrabold text-primary">
+        <li className="flex items-center gap-3 rounded-[8px] border-l-4 border-primary bg-card p-4 shadow-sm ring-1 ring-border transition-colors hover:bg-accent/40">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-[6px] bg-primary text-[13px] font-extrabold text-primary-foreground">
             7
           </span>
           <div className="min-w-0 flex-1">

@@ -3,8 +3,8 @@
 @import "tw-animate-css";
 
 /*
- * rev.plan design system — "soft rounded planner".
- * Pale mint canvas, deep teal (#03313A) structure, sparing mint (#8FFFE0) actions.
+ * rev.plan design system — "modernist study planner".
+ * Light grey canvas, deep navy (#14133e) structure, vivid orange (#fe9a00) actions.
  * All colour values are oklch. Never hardcode colours in components.
  */
 
@@ -22,8 +22,8 @@
   --color-biz: oklch(0.4809 0.0961 43.59);
   --color-media: oklch(0.5211 0.0636 246.13);
   --color-pe: oklch(0.4796 0.109 303.93);
-  --color-structure: oklch(0.2889 0.0488 214.62);
-  --color-structure-foreground: oklch(0.9245 0.1127 173.77);
+  --color-structure: oklch(0.2192 0.0798 278.56);
+  --color-structure-foreground: oklch(0.9605 0.0046 258.32);
 
   /* Confidence traffic lights — 1–2 red, 3–4 amber, 5 green */
   --color-conf-low: oklch(0.5769 0.1775 24.91);
@@ -73,25 +73,25 @@
 
 :root {
   --radius: 0.875rem;
-  --background: oklch(0.9798 0.0158 166.74);
-  --foreground: oklch(0.2889 0.0488 214.62);
-  --card: oklch(0.993 0.008 166.74);
-  --card-foreground: oklch(0.2889 0.0488 214.62);
-  --popover: oklch(0.993 0.008 166.74);
-  --popover-foreground: oklch(0.2889 0.0488 214.62);
-  --primary: oklch(0.9245 0.1127 173.77);
-  --primary-foreground: oklch(0.2889 0.0488 214.62);
-  --secondary: oklch(0.9458 0.0342 168.77);
-  --secondary-foreground: oklch(0.2889 0.0488 214.62);
-  --muted: oklch(0.9458 0.0342 168.77);
-  --muted-foreground: oklch(0.46 0.05 214.62);
-  --accent: oklch(0.9245 0.1127 173.77);
-  --accent-foreground: oklch(0.2889 0.0488 214.62);
+  --background: oklch(0.9605 0.0046 258.32);
+  --foreground: oklch(0.2192 0.0798 278.56);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2192 0.0798 278.56);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2192 0.0798 278.56);
+  --primary: oklch(0.7724 0.1728 65.37);
+  --primary-foreground: oklch(0.2192 0.0798 278.56);
+  --secondary: oklch(0.928 0.012 265);
+  --secondary-foreground: oklch(0.2192 0.0798 278.56);
+  --muted: oklch(0.928 0.012 265);
+  --muted-foreground: oklch(0.4806 0.037 274.5);
+  --accent: oklch(0.944 0.047 73);
+  --accent-foreground: oklch(0.2192 0.0798 278.56);
   --destructive: oklch(0.5915 0.1371 9.92);
   --destructive-foreground: oklch(0.9942 0.0069 88.64);
-  --border: oklch(0.9137 0.0551 170.21);
-  --input: oklch(0.9137 0.0551 170.21);
-  --ring: oklch(0.9245 0.1127 173.77);
+  --border: oklch(0.885 0.012 265);
+  --input: oklch(0.885 0.012 265);
+  --ring: oklch(0.7724 0.1728 65.37);
 }
 
 @keyframes fadeSaved {

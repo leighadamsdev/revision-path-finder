@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Use the semantic light-grey, deep-navy (#14133e), and orange (#fe9a00) palette across the app so every page shares one accessible visual system.

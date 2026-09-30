@@ -35,17 +35,17 @@ export function PublicHeader() {
   const groupActive = (items: readonly { to: string }[]) => items.some((item) => isActive(item.to));
 
   const linkClass =
-    "rounded-[8px] px-3 py-2 text-[12px] font-bold text-muted-foreground hover:bg-secondary hover:text-foreground";
-  const activeLinkClass = "bg-secondary text-foreground";
+    "rounded-[8px] px-3 py-2 text-[12px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground";
+  const activeLinkClass = "bg-accent text-foreground";
 
   return (
-    <header className="public-header border-b border-border bg-background print:hidden">
+    <header className="public-header border-b border-border bg-card print:hidden">
       <div className="mx-auto max-w-4xl px-5 pb-3 pt-5">
         <div className="flex items-center justify-between gap-3">
           <Link
             to="/"
             aria-label="rev.plan home"
-            className="inline-flex items-center rounded-[8px] bg-card px-3 py-2 shadow-sm"
+            className="inline-flex items-center rounded-[8px] bg-background px-3 py-2 shadow-sm ring-1 ring-border"
           >
             <Logo className="h-8 w-auto" />
           </Link>
@@ -86,8 +86,8 @@ export function PublicHeader() {
                   aria-expanded={openGroup === group.label}
                   className={`flex items-center gap-1 whitespace-nowrap rounded-[8px] px-3 py-2 text-[12px] font-bold ${
                     groupActive(group.items)
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      ? "bg-accent text-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
                   }`}
                 >
                   {group.label}
@@ -100,7 +100,7 @@ export function PublicHeader() {
                         key={item.to}
                         to={item.to}
                         onClick={() => setOpenGroup(null)}
-                        className={`block whitespace-nowrap rounded-[8px] px-3 py-2.5 text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-foreground ${
+                        className={`block whitespace-nowrap rounded-[8px] px-3 py-2.5 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${
                           isActive(item.to) ? activeLinkClass : ""
                         }`}
                       >
@@ -126,14 +126,14 @@ export function PublicHeader() {
           </div>
           {moreOpen ? (
             <div className="absolute inset-x-0 top-full z-30 mt-2 rounded-[8px] bg-card p-2 shadow-lg ring-1 ring-border">
-              <Link to="/revision-guide" onClick={() => setMoreOpen(false)} className={`block rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-foreground ${isActive("/revision-guide") ? activeLinkClass : ""}`}>Effective Revision</Link>
+               <Link to="/revision-guide" onClick={() => setMoreOpen(false)} className={`block rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${isActive("/revision-guide") ? activeLinkClass : ""}`}>Effective Revision</Link>
               {GROUPS.map((group) => (
                 <div key={group.label}>
                   <p className="px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70">{group.label}</p>
                   {group.items
                     .filter((item) => !(MOBILE_PRIMARY as readonly string[]).includes(item.to))
                     .map((item) => (
-                      <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)} className={`block rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-foreground ${isActive(item.to) ? activeLinkClass : ""}`}>{item.label}</Link>
+                       <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)} className={`block rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${isActive(item.to) ? activeLinkClass : ""}`}>{item.label}</Link>
                     ))}
                 </div>
               ))}

@@ -28,8 +28,7 @@ import { useActivePlan } from "@/hooks/useActivePlan";
 import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
 import { topicText as libraryTopicText } from "@/lib/library";
 
-import { ConfidencePicker } from "@/components/ConfidencePicker";
-import { JourneyProgress, SubjectConfidence, levelOf, type JourneyStatus } from "@/components/planner/JourneyProgress";
+import { JourneyProgress, SubjectConfidence, type JourneyStatus } from "@/components/planner/JourneyProgress";
 import { daysToNextExam, priorityScore } from "@/lib/scheduling";
 
 
@@ -102,7 +101,6 @@ function SetupPage() {
   const [excluded, setExcluded] = useState<string[]>([]);
   const [restored, setRestored] = useState(false);
   /** Quick plan: skip topics and confidence ratings. */
-  const [quick, setQuick] = useState(false);
   const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");
   /** Ticked topics, keyed by subject name. */

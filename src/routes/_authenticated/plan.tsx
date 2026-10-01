@@ -245,6 +245,7 @@ function TimetablePage() {
             {plan.name} ·{" "}
             <Link to="/my-plans" className="font-bold underline underline-offset-2">See all my plans</Link>
           </p>
+          <PlanTypeNote type={plan.plan_type} />
         </div>
         <div className="relative grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <Button asChild variant="outline">
@@ -467,5 +468,37 @@ function TimetablePage() {
         </DialogContent>
       </Dialog>
     </AppShell>
+  );
+}
+
+const PLAN_TYPES: Record<string, { label: string; text: string }> = {
+  quick: {
+    label: "Quick Plan",
+    text: "Built from your subjects, confidence, exam dates and available time. Add topics and check what you know to make it more personal.",
+  },
+  topic: {
+    label: "Topic Plan",
+    text: "Your topics are spread across your sessions, with subject confidence and exam dates deciding how often each subject appears.",
+  },
+  personalised: {
+    label: "Personalised Plan",
+    text: "Built from your topic confidence ratings and the priority order you reviewed, so weaker topics come first.",
+  },
+};
+
+function PlanTypeNote({ type }: { type?: string | null }) {
+  const info = PLAN_TYPES[type ?? "personalised"] ?? PLAN_TYPES.personalised!;
+  return (
+    <div className="mt-2 max-w-xl rounded-[12px] bg-card px-3 py-2 ring-1 ring-border">
+      <p className="text-[12px] font-extrabold">
+        <span className="mr-2 rounded-full bg-primary px-2 py-0.5 text-primary-foreground">{info.label}</span>
+        {info.text}
+      </p>
+      {type !== "personalised" ? (
+        <Link to="/setup" search={{ step: 2 }} className="mt-1 inline-block text-[12px] font-extrabold underline underline-offset-2">
+          Personalise my timetable
+        </Link>
+      ) : null}
+    </div>
   );
 }

@@ -84,6 +84,7 @@ export type Plan = {
   holiday_boost: boolean;
   pre_exam_boost: boolean;
   pre_exam_weeks: number;
+  plan_type?: "quick" | "topic" | "personalised" | string;
 };
 
 export type SessionRow = {

@@ -63,7 +63,7 @@ function Landing() {
           GCSE revision planner
         </p>
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          A bespoke revision timetable, designed around the time you've got and exactly what you need to focus on
+          A bespoke revision timetable, designed around exactly what you need to focus on and the time you have
         </h1>
         <div className="relative mt-8 w-full">
           <div
@@ -376,12 +376,12 @@ function CheckerMockup() {
 const QUICK_ACTIONS = [
   {
     to: "/revision-guide",
-    title: "Learn how to revise effectively (free - no login needed)",
+    title: "Learn how to revise effectively",
     body: "Follow our simple 5 step plan",
   },
   {
     to: "/revision-tools",
-    title: "Find my focus and get in the zone (free - no login needed)",
+    title: "Find my focus and get in the zone",
     body: "3 simple tools to help you concentrate better",
   },
 ] as const;
@@ -389,7 +389,7 @@ const QUICK_ACTIONS = [
 function QuickLinks() {
   return (
     <section className="mt-10" aria-labelledby="quick-links-heading">
-      <h2 id="quick-links-heading" className="text-xl font-extrabold tracking-tight">What would you like to do?</h2>
+      <h2 id="quick-links-heading" className="text-xl font-extrabold tracking-tight">You can do the follow things for free</h2>
       <ol className="mt-4 space-y-3">
         {QUICK_ACTIONS.map((q, i) => (
           <li key={q.to} className="flex items-center gap-3 rounded-[8px] border-l-4 border-primary bg-card p-4 shadow-sm ring-1 ring-border transition-colors hover:bg-accent/40">
@@ -408,7 +408,7 @@ function QuickLinks() {
             3
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-extrabold">Find more help (free - no login needed)</p>
+            <p className="text-[14px] font-extrabold">Find more help</p>
             <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">Test yourself with past papers and find subject specific revision sites</p>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">

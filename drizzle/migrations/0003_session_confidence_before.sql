@@ -1,1 +1,0 @@
-ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS confidence_before integer;

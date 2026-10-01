@@ -74,7 +74,7 @@ type DayConfig = { sessions: number; minutes: number };
 
 const DEFAULT_DAY: DayConfig = { sessions: 3, minutes: 30 };
 const FIRST_STAGE = [
-  { step: 1, label: "Subjects" },
+  { step: 1, label: "Subjects and Exams" },
   { step: 4, label: "Exam dates" },
   { step: 3, label: "Study time" },
   { step: 8, label: "Confidence" },

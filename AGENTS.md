@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Use the semantic light-grey, deep-navy (#14133e), and orange (#fe9a00) palette across the app so every page shares one accessible visual system.
+- Keep the five first-stage planner screens within the existing setup route and persisted step state so drafts and edit/copy journeys remain compatible.

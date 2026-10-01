@@ -99,7 +99,7 @@ function Landing() {
           </span>
         </div>
         <Link to="/revision-guide" className="mt-3 inline-flex text-[13px] font-bold text-muted-foreground underline underline-offset-4">
-          Not sure how to revise yet? Read the Effective Revision guide.
+          {"\n"}
         </Link>
 
         <QuickLinks />

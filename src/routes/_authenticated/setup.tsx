@@ -112,6 +112,8 @@ function SetupPage() {
   const [order, setOrder] = useState<string[]>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
   const [restored, setRestored] = useState(false);
+  const [original, setOriginal] = useState<{ subjects: string[]; name: string; startDate: string; weeks: number; days: string; kind: PlanKind } | null>(null);
+  const [preview, setPreview] = useState<{ kind: PlanKind; changes: string[]; completed: number } | null>(null);
   /** Quick plan: skip topics and confidence ratings. */
   const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");
@@ -196,6 +198,14 @@ function SetupPage() {
         setHolidays(p.holiday_periods ?? []);
         setIntensity(p.intensity_weeks && p.intensity_sessions_per_day ? { weeks: p.intensity_weeks, sessions: p.intensity_sessions_per_day } : null);
         setStepRaw(1);
+        setOriginal({
+          subjects: subs.map((s) => s.name),
+          name: p.name,
+          startDate: p.start_date,
+          weeks: p.weeks,
+          days: dp.map((d) => `${d.day}:${d.sessions}x${d.minutes}`).join(","),
+          kind: ((p as { plan_type?: string }).plan_type ?? "quick") as PlanKind,
+        });
       } catch {
         toast.error("We couldn't load that plan — try again.");
       }
@@ -414,6 +424,24 @@ function SetupPage() {
   }
 
   async function generate(kind: PlanKind) {
+    if (!(editing && fromId && original)) return runGenerate(kind);
+    const changes: string[] = [];
+    const now = picks.map((p) => p.name);
+    const added = now.filter((n) => !original.subjects.includes(n));
+    const removed = original.subjects.filter((n) => !now.includes(n));
+    if (added.length) changes.push(`Adding ${added.join(", ")}`);
+    if (removed.length) changes.push(`Removing ${removed.join(", ")} (their upcoming sessions go)`);
+    if (original.name !== trimmedName) changes.push(`Renaming to “${trimmedName}”`);
+    if (original.startDate !== startDate) changes.push(`Start date moves to ${startDate}`);
+    if (original.weeks !== weeks) changes.push(`Length changes from ${original.weeks} to ${weeks} weeks`);
+    const daysNow = studyDays.map((d) => `${d}:${dayConfigs[d]?.sessions ?? DEFAULT_DAY.sessions}x${dayConfigs[d]?.minutes ?? DEFAULT_DAY.minutes}`).join(",");
+    if (original.days !== daysNow) changes.push("Your study days or session times change");
+    if (original.kind !== kind) changes.push(`Plan type becomes ${kind === "quick" ? "Quick" : kind === "topic" ? "Topic" : "Personalised"} Plan`);
+    const { count } = await supabase.from("sessions").select("id", { count: "exact", head: true }).eq("plan_id", fromId).not("completed_at", "is", null);
+    setPreview({ kind, changes, completed: count ?? 0 });
+  }
+
+  async function runGenerate(kind: PlanKind) {
     if (!user) return;
     if (nameError) {
       setStep(1);
@@ -1392,6 +1420,29 @@ function SetupPage() {
           {holidayError ? <p className="mt-2 text-[12px] font-bold text-destructive">Fix the holiday dates before generating your timetable.</p> : null}
         </div>
       </div>
+      {preview ? (
+        <div role="dialog" aria-modal="true" aria-labelledby="rebuild-title" className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 p-4">
+          <div className="w-full max-w-md rounded-[16px] bg-card p-5 shadow-xl">
+            <h2 id="rebuild-title" className="text-lg font-extrabold">Before we rebuild your timetable</h2>
+            <p className="mt-1 text-[13px] font-medium text-muted-foreground">Here is what will change:</p>
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-[13px] font-medium">
+              {preview.changes.length ? preview.changes.map((c) => <li key={c}>{c}</li>) : <li>No changes to subjects or time — sessions will be re-spread using your latest ratings.</li>}
+            </ul>
+            <p className="mt-3 rounded-[10px] bg-secondary px-3 py-2 text-[12px] font-bold">
+              {preview.completed} completed session{preview.completed === 1 ? "" : "s"} and your notes will be kept. Sessions not yet done will be replaced.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => setPreview(null)} className="flex-1 rounded-full py-3 text-sm font-bold ring-1 ring-border">Go back</button>
+              <button
+                onClick={() => { const k = preview.kind; setPreview(null); void runGenerate(k); }}
+                className="flex-1 rounded-full py-3 text-sm font-extrabold bg-primary text-primary-foreground"
+              >
+                Rebuild timetable
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AppShell>
   );
 }

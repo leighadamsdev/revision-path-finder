@@ -50,6 +50,6 @@
 - [x] Setup drafts saved to the account; manual priority order kept as topic order.
 - [x] Foolproof guide: next-best-action card (home + timetable), review/decision screen before first timetable, "Plan setup: n of 5" wording, focus moves to each new screen.
 - [ ] Split Step 1 into five separate mini-screens (subjects, exam dates, time, confidence, review) — currently three parts.
-- [ ] Preview what changes before rebuilding a timetable.
+- [x] Preview what changes before rebuilding a timetable.
 - [x] Name the plan on the first screen; all missing items listed together before continuing.
 - [x] Edit any plan from Step 1 (keeps completed sessions) and copy an existing plan to edit as a new one.

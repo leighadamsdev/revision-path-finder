@@ -29,6 +29,8 @@ import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
 import { topicText as libraryTopicText } from "@/lib/library";
 
 import { ConfidencePicker } from "@/components/ConfidencePicker";
+import { JourneyProgress, SubjectConfidence, levelOf, type JourneyStatus } from "@/components/planner/JourneyProgress";
+import { daysToNextExam, priorityScore } from "@/lib/scheduling";
 
 
 export const Route = createFileRoute("/_authenticated/setup")({
@@ -49,8 +51,15 @@ export const Route = createFileRoute("/_authenticated/setup")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    step: typeof search.step === "number" ? search.step : undefined,
+  }),
   component: SetupPage,
 });
+
+type PlanKind = "quick" | "topic" | "personalised";
+type RankedTopic = { key: string; subject: string; topic: string; rating: number | null; score: number; reason: string };
+const DRAFT_KEY = "revplan.setupDraft.";
 
 type Pick = { name: string; tier: Tier | null };
 type DayConfig = { sessions: number; minutes: number };
@@ -80,7 +89,18 @@ function SetupPage() {
     return (s?.topics ?? []).map(libraryTopicText);
   }
 
-  const [step, setStep] = useState(1);
+  const search = Route.useSearch();
+  /** Screens: 1 subjects, 3 time (journey step 1), 2 topics, 5 knowledge check, 6 priorities. */
+  const [step, setStepRaw] = useState(search.step === 2 ? 2 : 1);
+  function setStep(n: number) {
+    setStepRaw(n);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+  }
+  const [checkState, setCheckState] = useState<"todo" | "skipped" | "done">("todo");
+  const [topicsVisited, setTopicsVisited] = useState(false);
+  const [order, setOrder] = useState<string[]>([]);
+  const [excluded, setExcluded] = useState<string[]>([]);
+  const [restored, setRestored] = useState(false);
   /** Quick plan: skip topics and confidence ratings. */
   const [quick, setQuick] = useState(false);
   const [picks, setPicks] = useState<Pick[]>([]);
@@ -123,6 +143,45 @@ function SetupPage() {
     Thursday: { ...DEFAULT_DAY },
   });
   const [generating, setGenerating] = useState(false);
+
+  // Autosave the in-progress journey so refreshes and later visits resume.
+  useEffect(() => {
+    if (!user || restored) return;
+    setRestored(true);
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY + user.id);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (d.picks?.length) setPicks(d.picks);
+      if (d.chosen) setChosen(d.chosen);
+      if (d.source) setSource(d.source);
+      if (d.manualText) setManualText(d.manualText);
+      if (d.uploaded) setUploaded(d.uploaded);
+      if (d.examDates) setExamDates(d.examDates);
+      if (d.confidences) setConfidences(d.confidences);
+      if (d.topicRatings) setTopicRatings(d.topicRatings);
+      if (d.priorities) setPriorities(d.priorities);
+      if (d.dayConfigs) setDayConfigs(d.dayConfigs);
+      if (d.weeks) setWeeks(d.weeks);
+      if (d.name) setName(d.name);
+      if (d.holidays) setHolidays(d.holidays);
+      if (d.intensity !== undefined) setIntensity(d.intensity);
+      if (d.checkState) setCheckState(d.checkState);
+      if (d.topicsVisited) setTopicsVisited(true);
+      if (d.order) setOrder(d.order);
+      if (d.excluded) setExcluded(d.excluded);
+      if (search.step !== 2 && d.step && d.step !== 4) setStepRaw(d.step);
+      toast.message("We've restored your unfinished plan setup.");
+    } catch {
+      /* ignore a broken draft */
+    }
+  }, [user, restored, search.step]);
+
+  useEffect(() => {
+    if (!user || !restored) return;
+    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step };
+    window.localStorage.setItem(DRAFT_KEY + user.id, JSON.stringify(d));
+  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step]);
 
   const studyDays = useMemo(
     () => WEEK_DAYS.filter((d) => dayConfigs[d]).map((d) => d as string),
@@ -288,8 +347,13 @@ function SetupPage() {
     }
   }
 
-  async function generate() {
+  async function generate(kind: PlanKind) {
     if (!user) return;
+    if (nameError) {
+      setStep(3);
+      toast.error(nameError);
+      return;
+    }
     setGenerating(true);
     try {
       await ensureProfile(user);
@@ -305,10 +369,12 @@ function SetupPage() {
         subjectIds.push(id);
         tiers[id] = pick.tier;
         examDateMap[id] = [...new Set((examDates[pick.name] ?? []).filter(Boolean))].sort();
-        // Quick plans skip topics and confidence entirely.
-        const topics = quick ? [] : topicsFor(pick.name);
-        // A subject-wide rating only matters when no specific topics were chosen.
-        confidenceMap[id] = quick ? null : (confidences[pick.name] ?? null);
+        // Quick plans are subject-level; personalised plans drop excluded topics.
+        const all = kind === "quick" ? [] : topicsFor(pick.name);
+        const topics = kind === "personalised"
+          ? all.filter((t) => !excluded.includes(`${pick.name}|||${t}`))
+          : all;
+        confidenceMap[id] = confidences[pick.name] ?? null;
         if (topics.length) {
           chosenTopics[id] = topics;
           const ratings = topicRatings[pick.name] ?? {};
@@ -316,7 +382,9 @@ function SetupPage() {
             topics.map((topic) => [topic, ratings[topic] ?? null]),
           );
         }
-        const priority = prioritiesFor(pick.name);
+        const priority = kind === "personalised"
+          ? order.filter((k) => k.startsWith(`${pick.name}|||`) && !excluded.includes(k)).map((k) => k.split("|||")[1]!).filter((t) => topics.includes(t)).slice(0, 3)
+          : kind === "topic" ? prioritiesFor(pick.name) : [];
         if (priority.length) priorityTopics[id] = priority;
       }
       await queryClient.invalidateQueries({ queryKey: ["subjects"] });
@@ -331,7 +399,8 @@ function SetupPage() {
           minutes: dayConfigs[day]?.minutes ?? DEFAULT_DAY.minutes,
         })),
         // Subjects left blank get their topics written for them.
-        contentMode: "ai",
+        contentMode: kind === "quick" ? "manual" : "ai",
+        planType: kind,
         subjectIds,
         tiers,
         examDates: examDateMap,
@@ -344,6 +413,7 @@ function SetupPage() {
       });
 
       window.localStorage.setItem("revisionpath.activePlan", planId);
+      window.localStorage.removeItem(DRAFT_KEY + user.id);
       await queryClient.invalidateQueries();
       navigate({ to: "/plan" });
     } catch (error) {
@@ -364,32 +434,79 @@ function SetupPage() {
 
   const canContinue =
     step === 1
-      ? picks.length > 0 && missingTiers === 0
+      ? picks.length > 0 && missingTiers === 0 && picks.every((p) => confidences[p.name] != null)
       : step === 3
-          ? studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start)
+          ? !nameError && studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start)
           : true;
   const missingTierNames = picks.filter((pick) => isTiered(pick.name) && !pick.tier).map((pick) => pick.name);
   const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
+  const missingConfidence = picks.filter((p) => confidences[p.name] == null).map((p) => p.name);
+
+  const ranked: RankedTopic[] = useMemo(() => {
+    const today = new Date();
+    const out: RankedTopic[] = [];
+    for (const p of picks) {
+      const days = daysToNextExam(examDates[p.name] ?? [], today);
+      for (const topic of topicsFor(p.name)) {
+        const rating = topicRatings[p.name]?.[topic] ?? null;
+        const score = priorityScore(rating, days);
+        const conf = rating == null ? "not rated" : rating <= 2 ? "low confidence" : rating <= 4 ? "partly understood" : "confident";
+        out.push({
+          key: `${p.name}|||${topic}`,
+          subject: p.name,
+          topic,
+          rating,
+          score,
+          reason: `${conf[0]!.toUpperCase()}${conf.slice(1)}${days != null ? ` · exam in ${days} day${days === 1 ? "" : "s"}` : ""}`,
+        });
+      }
+    }
+    return out.sort((a, b) => b.score - a.score);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picks, examDates, topicRatings, chosen, source, manualText]);
+
+  function openPriorities() {
+    setCheckState("done");
+    const keys = ranked.map((r) => r.key);
+    setOrder((prev) => [...prev.filter((k) => keys.includes(k)), ...keys.filter((k) => !prev.includes(k))].length && prev.length ? [...prev.filter((k) => keys.includes(k)), ...keys.filter((k) => !prev.includes(k))] : keys);
+    setStep(6);
+  }
+  function move(key: string, dir: -1 | 1) {
+    setOrder((prev) => {
+      const i = prev.indexOf(key);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j]!, next[i]!];
+      return next;
+    });
+  }
+  const rankedByKey = new Map(ranked.map((r) => [r.key, r]));
+  const orderedRanked = order.map((k) => rankedByKey.get(k)).filter((r): r is RankedTopic => Boolean(r));
+  const anyTopics = ranked.length > 0;
+
+  const journey: Record<number, JourneyStatus> = {
+    1: step === 1 || step === 3 ? "current" : "done",
+    2: step === 2 ? "current" : topicsVisited ? "done" : "optional",
+    3: step === 5 ? "current" : checkState === "done" ? "done" : checkState === "skipped" ? "skipped" : "optional",
+    4: step === 6 ? "current" : checkState === "done" ? "done" : "locked",
+    5: "todo",
+  };
+  function selectJourney(n: number) {
+    if (n === 1) setStep(1);
+    else if (n === 2) setStep(2);
+    else if (n === 3) setStep(5);
+    else if (n === 4 && checkState === "done") openPriorities();
+  }
+  function saveAndExit() {
+    toast.success("Saved — come back any time to carry on.");
+    navigate({ to: plans.length ? "/plan" : "/" });
+  }
 
   return (
     <AppShell>
       <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
-        <div className="mb-5 flex items-center gap-2">
-          <span className="text-[11px] font-extrabold text-muted-foreground">
-            Step {step} of {TOTAL_STEPS}
-          </span>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4].map((n) => (
-              <span
-                key={n}
-                className={`h-1 w-5 rounded-full ${n <= step ? "bg-primary" : "bg-border"}`}
-              />
-            ))}
-          </div>
-          <span className="ml-auto text-[11px] font-bold text-muted-foreground">
-            {STEP_LABELS[step - 1]}
-          </span>
-        </div>
+        <JourneyProgress statuses={journey} onSelect={selectJourney} />
 
         <div className="rounded-[18px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
           {step === 1 ? (
@@ -559,6 +676,21 @@ function SetupPage() {
 
                         <div className="mt-2.5">
                           <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                            How confident do you feel in {pick.name}? (required)
+                          </span>
+                          <div className="mt-1">
+                            <SubjectConfidence
+                              subject={pick.name}
+                              value={confidences[pick.name]}
+                              onChange={(v) => setConfidences((prev) => ({ ...prev, [pick.name]: v }))}
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] font-medium text-muted-foreground">
+                            Low-confidence subjects get more sessions; high-confidence ones are kept fresh.
+                          </p>
+                        </div>
+                        <div className="mt-2.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                             Exam dates (optional, up to 3)
                           </span>
                           <div className="mt-1">
@@ -631,22 +763,6 @@ function SetupPage() {
                         </span>
                       </button>
 
-                      {!quick ? (
-                        <div className="border-t border-border px-3 py-2.5">
-                          <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                            How confident are you in {pick.name}?
-                          </p>
-                          <div className="mt-1.5">
-                            <ConfidencePicker
-                              value={confidences[pick.name] ?? null}
-                              onChange={(value) =>
-                                setConfidences((prev) => ({ ...prev, [pick.name]: value }))
-                              }
-                              label={`${pick.name} confidence`}
-                            />
-                          </div>
-                        </div>
-                      ) : null}
                       {open ? (
                         <div className="border-t border-border px-3 py-3">
                           <div className="flex flex-wrap gap-1.5">
@@ -778,7 +894,7 @@ function SetupPage() {
                             </p>
                           ) : null}
 
-                          {finalTopics.length ? (
+                          {finalTopics.length && step === 5 ? (
                             <div className="mt-4 border-t border-border pt-3">
                               <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
                                 Rate each topic
@@ -950,112 +1066,147 @@ function SetupPage() {
             </>
           ) : null}
 
-          {step === 4 ? (
+          {step === 5 ? (
             <>
-              <p className="text-lg font-extrabold tracking-tight">Ready to build your plan</p>
-              <div className="mt-4 space-y-2 text-[13px] font-semibold">
-                <Row
-                  label="Subjects"
-                  value={picks
-                    .map((p) => `${p.name}${p.tier ? ` (${p.tier})` : ""}`)
-                    .join(", ")}
-                />
-                <Row label="Starts" value={format(new Date(`${startDate}T12:00:00`), "d MMMM yyyy")} />
-                <Row label="Weeks" value={`${weeks}`} />
-                {studyDays.map((day) => (
-                  <Row
-                    key={day}
-                    label={day}
-                    value={`${dayConfigs[day]!.sessions} × ${lengthLabel(dayConfigs[day]!.minutes)}`}
-                  />
-                ))}
-                <Row
-                  label="Topics chosen"
-                  value={totalChosen ? `${totalChosen} topics` : "None — filled for you"}
-                />
-                <Row
-                  label="Before exams"
-                  value={
-                    intensity
-                      ? `${intensity.sessions} sessions a day in the last ${intensity.weeks} week${intensity.weeks === 1 ? "" : "s"}`
-                      : "Same as usual"
-                  }
-                />
-                <Row
-                  label="Holidays"
-                  value={
-                    holidays.filter((h) => h.start && h.end).length
-                      ? holidays
-                          .filter((h) => h.start && h.end)
-                          .map((h) => h.name || "Holiday")
-                          .join(", ")
-                      : "None added"
-                  }
-                />
-                <Row label="Total sessions" value={`${totalSessions}`} />
-              </div>
-              <p className="mt-3 text-[12px] font-medium text-muted-foreground">
-                Any subject you left blank gets its topics written for you — this takes a few
-                moments.
+              <p className="text-lg font-extrabold tracking-tight">Check what you know</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+                Rate each topic in any order — your answers save as you go. Red: I do not know this yet.
+                Amber: I partly understand this. Green: I feel confident with this.
               </p>
-              <label className="mt-4 block">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Save this plan as</span>
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mock exams plan" className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none" />
-                {nameError ? <span className="mt-1 block text-[12px] font-bold text-destructive">{nameError}</span> : null}
-              </label>
-              {plans.length ? (
-                <p className="mt-3 rounded-[8px] bg-secondary px-3 py-2 text-[12px] font-bold text-foreground">
-                  This saves a new plan. Your existing {plans.length === 1 ? "plan is" : "plans are"} kept — switch between them any time from the plan selector at the top of the page.
+              {!anyTopics ? (
+                <p className="mt-4 rounded-[12px] bg-secondary px-3 py-3 text-[13px] font-bold">
+                  Add some topics first, or skip this step and create your timetable now.
                 </p>
-              ) : null}
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {picks.map((p) => {
+                    const topics = topicsFor(p.name);
+                    if (!topics.length) return null;
+                    const done = topics.filter((t) => topicRatings[p.name]?.[t] != null).length;
+                    return (
+                      <div key={p.name}>
+                        <p className="text-sm font-extrabold">
+                          {p.name}{" "}
+                          <span className="text-[12px] font-bold text-muted-foreground">· {done}/{topics.length} rated</span>
+                        </p>
+                        <div className="mt-2">
+                          <TopicConfidenceList
+                            topics={topics}
+                            ratings={topicRatings[p.name] ?? {}}
+                            onChange={(topic, value) =>
+                              setTopicRatings((prev) => ({ ...prev, [p.name]: { ...(prev[p.name] ?? {}), [topic]: value } }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="mt-3 text-[12px] font-medium text-muted-foreground">
+                Want to go deeper? The full <a href="/knowledge-checker" className="font-bold underline">Knowledge Checker</a> is still available any time.
+              </p>
+            </>
+          ) : null}
+
+          {step === 6 ? (
+            <>
+              <p className="text-lg font-extrabold tracking-tight">Review your priorities</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+                Ranked by confidence and how soon each exam is. Move topics up or down, or leave one out for now.
+              </p>
+              <ol className="mt-4 space-y-1.5">
+                {orderedRanked.map((r, i) => {
+                  const out = excluded.includes(r.key);
+                  const live = orderedRanked.filter((x) => !excluded.includes(x.key));
+                  const pos = live.indexOf(r);
+                  const band = out ? "Left out" : pos < Math.ceil(live.length / 3) ? "High priority" : pos < Math.ceil((live.length * 2) / 3) ? "Medium priority" : "Maintain confidence";
+                  return (
+                    <li key={r.key} className={`flex items-center gap-2 rounded-[10px] bg-background px-3 py-2 ring-1 ring-border ${out ? "opacity-50" : ""}`}>
+                      <span className="w-6 text-[12px] font-extrabold text-muted-foreground">{i + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] font-extrabold">{r.topic}</p>
+                        <p className="text-[11px] font-bold text-muted-foreground">
+                          {r.subject} · {band} · {r.reason}
+                        </p>
+                      </div>
+                      <button type="button" onClick={() => move(r.key, -1)} aria-label={`Move ${r.topic} up`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↑</button>
+                      <button type="button" onClick={() => move(r.key, 1)} aria-label={`Move ${r.topic} down`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↓</button>
+                      <button
+                        type="button"
+                        onClick={() => setExcluded((prev) => (out ? prev.filter((k) => k !== r.key) : [...prev, r.key]))}
+                        className="rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-border"
+                      >
+                        {out ? "Include" : "Leave out"}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+              <div className="mt-3 flex flex-wrap gap-3 text-[12px] font-bold">
+                <button type="button" className="underline" onClick={() => setStep(5)}>Change confidence ratings</button>
+                <button type="button" className="underline" onClick={() => setStep(2)}>Edit topics</button>
+                <button type="button" className="underline" onClick={() => setStep(3)}>Edit availability</button>
+              </div>
             </>
           ) : null}
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            {step > 1 ? (
+            {step !== 1 ? (
               <button
-                onClick={() => setStep(quick && step === 3 ? 1 : step - 1)}
+                onClick={() => setStep(step === 3 ? 1 : step === 2 ? 3 : step === 5 ? 2 : 5)}
                 className="rounded-full px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-background"
               >
                 Back
               </button>
             ) : null}
             {step === 1 ? (
-              <button
-                onClick={() => {
-                  setQuick(true);
-                  setStep(3);
-                }}
-                disabled={!canContinue}
-                title="Skip topics and confidence ratings — just share your time across your subjects"
-                className="rounded-full px-4 py-3 text-sm font-extrabold ring-1 ring-border hover:bg-background disabled:opacity-50"
-              >
-                Quick plan (skip topics)
+              <button onClick={() => setStep(3)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                Continue to availability
               </button>
             ) : null}
-            {step < TOTAL_STEPS ? (
-              <button
-                onClick={() => {
-                  if (step === 1) {
-                    setQuick(false);
-                    setOpenSubject(picks[0]?.name ?? null);
-                  }
-                  setStep(step + 1);
-                }}
-                disabled={!canContinue}
-                className="flex-1 rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-50"
-              >
-                Continue
+            {step === 3 ? (
+              <>
+                <button onClick={() => void generate("quick")} disabled={!canContinue || generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                  {generating ? "Building your timetable…" : "Create my quick timetable"}
+                </button>
+                <button
+                  onClick={() => { setTopicsVisited(true); setOpenSubject(picks[0]?.name ?? null); setStep(2); }}
+                  disabled={!canContinue}
+                  className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background"
+                >
+                  Make my plan more personalised
+                </button>
+              </>
+            ) : null}
+            {step === 2 ? (
+              <>
+                <button onClick={() => setStep(5)} disabled={!anyTopics} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                  Check what I know
+                </button>
+                <button onClick={() => void generate(anyTopics ? "topic" : "quick")} disabled={generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background">
+                  {generating ? "Building…" : "Create my timetable now"}
+                </button>
+              </>
+            ) : null}
+            {step === 5 ? (
+              <>
+                <button onClick={openPriorities} disabled={!anyTopics} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                  Finish knowledge check
+                </button>
+                <button onClick={() => { setCheckState("skipped"); void generate(anyTopics ? "topic" : "quick"); }} disabled={generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-card text-foreground ring-1 ring-border">
+                  Skip for now
+                </button>
+              </>
+            ) : null}
+            {step === 6 ? (
+              <button onClick={() => void generate("personalised")} disabled={generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                {generating ? "Building your timetable…" : "Create my personalised timetable"}
               </button>
-            ) : (
-              <button
-                onClick={() => void generate()}
-                disabled={generating || holidayError || Boolean(nameError)}
-                className="flex-1 rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-60"
-              >
-                {generating ? "Building your timetable…" : "Generate my timetable"}
-              </button>
-            )}
+            ) : null}
+            <button onClick={saveAndExit} className="w-full rounded-full py-2 text-[12px] font-bold text-muted-foreground underline">
+              Save and exit
+            </button>
           </div>
           {!canContinue ? (
             <p className="mt-2 text-[12px] font-bold text-destructive" role="alert">
@@ -1063,6 +1214,10 @@ function SetupPage() {
                 ? "Choose at least one subject to continue."
                 : step === 1 && missingTierNames.length
                   ? `Choose a tier for ${missingTierNames.join(", ")}.`
+                  : step === 1 && missingConfidence.length
+                    ? `Choose how confident you feel in ${missingConfidence.join(", ")}.`
+                  : step === 3 && nameError
+                    ? nameError
                   : step === 3 && !startDate
                     ? "Choose a plan start date to continue."
                     : step === 3 && holidayError

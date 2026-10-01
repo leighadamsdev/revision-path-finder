@@ -237,6 +237,7 @@ function SetupPage() {
       if (d.topicRatings) setTopicRatings(d.topicRatings);
       if (d.priorities) setPriorities(d.priorities);
       if (d.dayConfigs) setDayConfigs(d.dayConfigs);
+       if (d.startDate) setStartDate(d.startDate);
       if (d.weeks) setWeeks(d.weeks);
       if (d.name) setName(d.name);
       if (d.holidays) setHolidays(d.holidays);
@@ -245,7 +246,7 @@ function SetupPage() {
       if (d.topicsVisited) setTopicsVisited(true);
       if (d.order) setOrder(d.order);
       if (d.excluded) setExcluded(d.excluded);
-      if (routeSearch.step !== 2 && d.step && d.step !== 4) setStepRaw(d.step);
+       if (routeSearch.step !== 2 && d.step) setStepRaw(d.step);
       toast.message("We've restored your unfinished plan setup.");
     } catch {
       /* ignore a broken draft */
@@ -255,14 +256,14 @@ function SetupPage() {
 
   useEffect(() => {
     if (!user || !restored || fromId) return;
-    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step };
+    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step };
     window.localStorage.setItem(DRAFT_KEY + user.id, JSON.stringify(d));
     // Also save to the student's account (debounced) so it resumes on any device.
     const t = setTimeout(() => {
       void supabase.from("setup_drafts").upsert({ user_id: user.id, data: d as never, updated_at: new Date().toISOString() });
     }, 1200);
     return () => clearTimeout(t);
-  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step]);
+  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step]);
 
   const studyDays = useMemo(
     () => WEEK_DAYS.filter((d) => dayConfigs[d]).map((d) => d as string),
@@ -564,6 +565,9 @@ function SetupPage() {
   }
 
   const missingTiers = picks.filter((p) => isTiered(p.name) && !p.tier).length;
+  const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
+  const missingConfidence = picks.filter((p) => confidences[p.name] == null).map((p) => p.name);
+  const readyForPlan = !nameError && picks.length > 0 && missingTiers === 0 && studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidayError && missingConfidence.length === 0;
   const totalSessions =
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
 
@@ -571,12 +575,11 @@ function SetupPage() {
 
   const canContinue =
     step === 1 ? !nameError && picks.length > 0 && missingTiers === 0
-      : step === 3 ? studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start)
-        : step === 8 ? picks.every((p) => confidences[p.name] != null)
+      : step === 3 ? studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidayError
+        : step === 8 ? missingConfidence.length === 0
+          : step === 7 ? readyForPlan
           : true;
   const missingTierNames = picks.filter((pick) => isTiered(pick.name) && !pick.tier).map((pick) => pick.name);
-  const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
-  const missingConfidence = picks.filter((p) => confidences[p.name] == null).map((p) => p.name);
 
   const ranked: RankedTopic[] = useMemo(() => {
     const today = new Date();
@@ -669,7 +672,7 @@ function SetupPage() {
                 const current = FIRST_STAGE.findIndex((item) => item.step === step);
                 return (
                   <li key={screen.step}>
-                    <button type="button" onClick={() => setStep(screen.step)} disabled={index > current || (index > 0 && (!picks.length || Boolean(nameError) || missingTiers > 0))} aria-current={screen.step === step ? "step" : undefined} className={`w-full border-t-2 pt-2 text-[11px] font-bold leading-tight disabled:cursor-default ${index <= current ? "border-primary text-foreground" : "border-border text-muted-foreground"}`}>
+                  <button type="button" onClick={() => setStep(screen.step)} disabled={index > current || (index > 0 && (!picks.length || Boolean(nameError) || missingTiers > 0))} aria-current={screen.step === step ? "step" : undefined} className={`w-full border-t-2 pt-2 text-[11px] font-bold leading-tight disabled:cursor-default ${index <= current ? "border-primary text-foreground" : "border-border text-muted-foreground"}`}>
                       {index + 1}. {screen.label}
                     </button>
                   </li>
@@ -1326,12 +1329,12 @@ function SetupPage() {
             ) : null}
             {step === 7 ? (
               <>
-                <button onClick={() => void generate("quick")} disabled={generating || picks.length === 0 || studyDays.length === 0} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                <button onClick={() => void generate("quick")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
                   {generating ? "Building your timetable…" : "Create my Quick Plan"}
                 </button>
                 <button
                   onClick={() => { setTopicsVisited(true); setOpenSubject(picks[0]?.name ?? null); setStep(2); }}
-                  disabled={picks.length === 0}
+                  disabled={!readyForPlan}
                   className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background"
                 >
                   Make my plan more personalised
@@ -1340,26 +1343,26 @@ function SetupPage() {
             ) : null}
             {step === 2 ? (
               <>
-                <button onClick={() => setStep(5)} disabled={!anyTopics} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                <button onClick={() => setStep(5)} disabled={!anyTopics || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
                   Check what I know
                 </button>
-                <button onClick={() => void generate(anyTopics ? "topic" : "quick")} disabled={generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background">
+                <button onClick={() => void generate(anyTopics ? "topic" : "quick")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background">
                   {generating ? "Building…" : "Create my timetable now"}
                 </button>
               </>
             ) : null}
             {step === 5 ? (
               <>
-                <button onClick={openPriorities} disabled={!anyTopics} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                <button onClick={openPriorities} disabled={!anyTopics || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
                   Finish knowledge check
                 </button>
-                <button onClick={() => { setCheckState("skipped"); void generate(anyTopics ? "topic" : "quick"); }} disabled={generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-card text-foreground ring-1 ring-border">
+                <button onClick={() => { setCheckState("skipped"); void generate(anyTopics ? "topic" : "quick"); }} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-card text-foreground ring-1 ring-border">
                   Skip for now
                 </button>
               </>
             ) : null}
             {step === 6 ? (
-              <button onClick={() => void generate("personalised")} disabled={generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+              <button onClick={() => void generate("personalised")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
                 {generating ? "Building your timetable…" : "Create my personalised timetable"}
               </button>
             ) : null}
@@ -1378,6 +1381,7 @@ function SetupPage() {
                       missingTierNames.length ? `Choose a tier for ${missingTierNames.join(", ")}.` : null,
                     ]
                   : step === 8 ? [missingConfidence.length ? `Choose how confident you feel in ${missingConfidence.join(", ")}.` : null]
+                  : step === 7 ? [nameError, picks.length === 0 ? "Choose at least one subject." : null, missingTierNames.length ? `Choose a tier for ${missingTierNames.join(", ")}.` : null, !startDate ? "Choose a plan start date." : null, studyDays.length === 0 ? "Choose at least one study day." : null, holidayError ? "Fix the holiday dates." : null, missingConfidence.length ? `Choose how confident you feel in ${missingConfidence.join(", ")}.` : null]
                   : [
                       !startDate ? "Choose a plan start date." : null,
                       studyDays.length === 0 ? "Choose at least one study day." : null,

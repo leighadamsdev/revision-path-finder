@@ -284,6 +284,14 @@ function EditPlanPage() {
           Change anything here and your timetable is rebuilt around it. Your gaps-to-revisit notes
           stay where they are.
         </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/setup" search={{ from: plan.id, mode: "edit" }}>Edit from the start (step 1)</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/setup" search={{ from: plan.id, mode: "copy" }}>Copy this plan and edit</Link>
+          </Button>
+        </div>
 
         <div className="mt-5 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
           <label className="block">

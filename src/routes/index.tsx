@@ -380,26 +380,6 @@ const QUICK_ACTIONS = [
     body: "Follow our simple 5 step plan",
   },
   {
-    to: "/library",
-    title: "Lock in my subjects and topics",
-    body: "List what you are studying, tell us how confident you  are with each, then photograph and upload revision guide contents pages or use lists from school to make sure you have everything covered",
-  },
-  {
-    to: "/exams",
-    title: "Manage my exam timetable",
-    body: "Map when D-Day is for each subject and paper and link this to your revision plan",
-  },
-  {
-    to: "/knowledge-checker",
-    title: "Check how much I already know",
-    body: "Yes yourself with individual knowledge checkers and then create targeted flashcards for every subject",
-  },
-  {
-    to: "/setup",
-    title: "Create my own revision plan",
-    body: "Choose when and for long you study daily, based on your subjects, confidence levels and your next exams, mocks or tests ",
-  },
-  {
     to: "/revision-tools",
     title: "Find my focus and get in the zone (free - no login needed)",
     body: "3 simple tools to help you concentrate better",
@@ -425,7 +405,7 @@ function QuickLinks() {
         ))}
         <li className="flex items-center gap-3 rounded-[8px] border-l-4 border-primary bg-card p-4 shadow-sm ring-1 ring-border transition-colors hover:bg-accent/40">
           <span className="flex size-7 shrink-0 items-center justify-center rounded-[6px] bg-primary text-[13px] font-extrabold text-primary-foreground">
-            7
+            3
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[14px] font-extrabold">Find more help (free - no login needed)</p>

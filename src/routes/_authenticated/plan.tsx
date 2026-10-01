@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
+import { addExtraSession } from "@/lib/plan";
 import { ExamCountdown } from "@/components/ExamCountdown";
 import { SessionCard } from "@/components/SessionCard";
 import { Button } from "@/components/ui/button";
@@ -390,8 +391,33 @@ function TimetablePage() {
                     subject={subjects.find((s) => s.id === session.subject_id)}
                     minutes={session.length_minutes ?? plan.session_length_minutes}
                     onChanged={(patch) => patchSession(session.id, patch)}
+                    weeks={plan.weeks}
+                    days={plan.study_days}
+                    onStructureChanged={() => void queryClient.invalidateQueries({ queryKey: ["sessions", plan.id] })}
                   />
                 ))}
+                <button
+                  type="button"
+                  className="w-full rounded-[12px] border border-dashed border-border py-2 text-[12px] font-extrabold text-muted-foreground hover:text-foreground print:hidden"
+                  onClick={async () => {
+                    try {
+                      await addExtraSession(
+                        plan.id,
+                        week,
+                        day,
+                        daySessions[0]?.subject_id ?? subjects[0]?.id ?? null,
+                        plan.session_length_minutes,
+                        Math.max(...daySessions.map((s) => s.session_slot)) + 1,
+                      );
+                      await queryClient.invalidateQueries({ queryKey: ["sessions", plan.id] });
+                      toast.success("Extra session added.");
+                    } catch {
+                      toast.error("Couldn't add a session.");
+                    }
+                  }}
+                >
+                  + Add extra session
+                </button>
               </div>
             </section>
           );

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Circle, Pin, Play, RefreshCw } from "lucide-react";
+import { CheckCircle2, Circle, Pin, Play, RefreshCw, Trash2, CalendarX2, MoveRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -15,12 +15,61 @@ export function SessionCard({
   subject,
   minutes,
   onChanged,
+  weeks = 1,
+  days = [],
+  onStructureChanged,
 }: {
+  weeks?: number;
+  days?: string[];
+  onStructureChanged?: () => void;
   session: SessionRow;
   subject: Subject | undefined;
   minutes: number;
   onChanged: (patch: Partial<SessionRow>) => void;
 }) {
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [moveWeek, setMoveWeek] = useState(session.week_number);
+  const [moveDay, setMoveDay] = useState(session.day_label);
+  const missed = Boolean(session.missed_at);
+
+  async function toggleMissed() {
+    const missed_at = missed ? null : new Date().toISOString();
+    const { error } = await supabase.from("sessions").update({ missed_at }).eq("id", session.id);
+    if (error) return void toast.error("That didn't save. Check your connection.");
+    onChanged({ missed_at });
+  }
+
+  async function changeLength(value: number) {
+    await save({ length_minutes: value });
+  }
+
+  async function moveSession() {
+    const { data } = await supabase
+      .from("sessions")
+      .select("session_slot")
+      .eq("plan_id", session.plan_id)
+      .eq("week_number", moveWeek)
+      .eq("day_label", moveDay)
+      .order("session_slot", { ascending: false })
+      .limit(1);
+    const slot = (data?.[0]?.session_slot ?? 0) + 1;
+    const { error } = await supabase
+      .from("sessions")
+      .update({ week_number: moveWeek, day_label: moveDay, session_slot: slot, pinned: false })
+      .eq("id", session.id);
+    if (error) return void toast.error("Couldn't move this session.");
+    toast.success(`Moved to week ${moveWeek}, ${moveDay}.`);
+    setMoveOpen(false);
+    onStructureChanged?.();
+  }
+
+  async function removeSession() {
+    if (!window.confirm("Delete this session? Its topic and notes will be lost.")) return;
+    const { error } = await supabase.from("sessions").delete().eq("id", session.id);
+    if (error) return void toast.error("Couldn't delete this session.");
+    toast.success("Session deleted.");
+    onStructureChanged?.();
+  }
   const style = subjectStyle(subject?.color_key);
   const [topic, setTopic] = useState(() =>
     detailedTopicText(subject?.name ?? "", session.topic_text),
@@ -111,9 +160,21 @@ export function SessionCard({
             Exam soon
           </span>
         ) : null}
-        <span className="ml-auto text-[11px] font-bold text-muted-foreground">
-          {minutes < 60 ? `${minutes} min` : `${minutes / 60} hr`}
-        </span>
+        {missed ? (
+          <span className="rounded-full bg-conf-low/10 px-2 py-0.5 text-[10px] font-extrabold text-conf-low">Missed</span>
+        ) : null}
+        <label className="ml-auto print:hidden">
+          <span className="sr-only">Session length</span>
+          <select
+            value={minutes}
+            onChange={(e) => void changeLength(Number(e.target.value))}
+            className="rounded-full bg-card px-2 py-0.5 text-[11px] font-bold text-muted-foreground ring-1 ring-border"
+          >
+            {[...new Set([15, 20, 25, 30, 45, 60, 90, minutes])].sort((a, b) => a - b).map((m) => (
+              <option key={m} value={m}>{m < 60 ? `${m} min` : `${m / 60} hr`}</option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <p className="print-topic hidden">{topic || "Topic to be decided"}</p>
@@ -157,6 +218,29 @@ export function SessionCard({
           {regenerating ? "Thinking…" : "New topic"}
         </button>
       </div>
+
+      <div className="print-action mt-2 flex flex-wrap items-center gap-3 text-[11px] font-bold text-muted-foreground">
+        <button type="button" onClick={() => void toggleMissed()} aria-pressed={missed} className="inline-flex items-center gap-1 hover:text-foreground">
+          <CalendarX2 className="size-3" /> {missed ? "Undo missed" : "Mark missed"}
+        </button>
+        <button type="button" onClick={() => setMoveOpen((o) => !o)} className="inline-flex items-center gap-1 hover:text-foreground">
+          <MoveRight className="size-3" /> Move
+        </button>
+        <button type="button" onClick={() => void removeSession()} className="ml-auto inline-flex items-center gap-1 text-conf-low hover:underline">
+          <Trash2 className="size-3" /> Delete
+        </button>
+      </div>
+      {moveOpen ? (
+        <div className="print-action mt-2 flex flex-wrap items-center gap-2 rounded-[10px] bg-card p-2 ring-1 ring-border">
+          <select aria-label="Move to week" value={moveWeek} onChange={(e) => setMoveWeek(Number(e.target.value))} className="rounded-md bg-background px-2 py-1 text-[12px] ring-1 ring-border">
+            {Array.from({ length: weeks }, (_, i) => i + 1).map((w) => <option key={w} value={w}>Week {w}</option>)}
+          </select>
+          <select aria-label="Move to day" value={moveDay} onChange={(e) => setMoveDay(e.target.value)} className="rounded-md bg-background px-2 py-1 text-[12px] ring-1 ring-border">
+            {[...new Set([...days, session.day_label])].map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <button type="button" onClick={() => void moveSession()} className="rounded-full bg-primary px-3 py-1 text-[11px] font-extrabold text-primary-foreground">Move session</button>
+        </div>
+      ) : null}
 
       <p className="print-notes hidden">
         <strong>Gaps:</strong> {notes || "—"}

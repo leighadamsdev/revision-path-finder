@@ -48,3 +48,6 @@
 - [x] Five-step progress bar, Low/Medium/High subject confidence, Quick/Topic/Personalised plans, knowledge check, priorities review, autosave on device, plan-type note on timetable.
 - [x] Session controls: move, missed, add extra, change duration (rebuilds already keep completed sessions).
 - [x] Setup drafts saved to the account; manual priority order kept as topic order.
+- [x] Foolproof guide: next-best-action card (home + timetable), review/decision screen before first timetable, "Plan setup: n of 5" wording, focus moves to each new screen.
+- [ ] Split Step 1 into five separate mini-screens (subjects, exam dates, time, confidence, review) — currently three parts.
+- [ ] Preview what changes before rebuilding a timetable.

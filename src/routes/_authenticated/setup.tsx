@@ -796,112 +796,55 @@ function SetupPage() {
 
               {picks.length ? (
                 <div className="mt-5">
-                  <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                    Your subjects
-                  </p>
-                  <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-                    Add exam dates — optional, and sooner exams get more sessions. You'll rate how
-                    confident you feel on the next step.
-                  </p>
-
-                  <div className="mt-2">
-                    <ExamDateUpload
-                      subjects={picks.map((p) => p.name)}
-                      onApply={(dates) =>
-                        setExamDates((prev) => {
-                          const next = { ...prev };
-                          for (const [subject, list] of Object.entries(dates)) {
-                            const merged = [
-                              ...new Set([...(next[subject] ?? []).filter(Boolean), ...list]),
-                            ].sort();
-                            next[subject] = merged.slice(0, 3);
-                          }
-                          return next;
-                        })
-                      }
-                    />
-                  </div>
+                  <p className="text-[11px] font-extrabold uppercase text-muted-foreground">Your subjects</p>
                   <div className="mt-2 space-y-2">
                     {picks.map((pick) => (
-                      <div
-                        key={pick.name}
-                        className="rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border"
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-bold">{pick.name}</span>
-                          {isTiered(pick.name) ? (
-                            <div className="ml-auto flex gap-1">
-                              {(["Foundation", "Higher"] as const).map((tier) => (
-                                <button
-                                  key={tier}
-                                  onClick={() => setTier(pick.name, tier)}
-                                  className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
-                                    pick.tier === tier
-                                      ? "bg-structure text-structure-foreground"
-                                      : "bg-card text-muted-foreground ring-1 ring-border"
-                                  }`}
-                                >
-                                  {tier}
-                                </button>
-                              ))}
-                            </div>
-                          ) : null}
-                          <button
-                            onClick={() =>
-                              setPicks((prev) => prev.filter((p) => p.name !== pick.name))
-                            }
-                            className={`text-[12px] font-bold text-muted-foreground hover:text-foreground ${
-                              isTiered(pick.name) ? "" : "ml-auto"
-                            }`}
-                          >
-                            Remove
-                          </button>
-                        </div>
-
-                        <div className="mt-2.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                            How confident do you feel in {pick.name}? (required)
-                          </span>
-                          <div className="mt-1">
-                            <SubjectConfidence
-                              subject={pick.name}
-                              value={confidences[pick.name]}
-                              onChange={(v) => setConfidences((prev) => ({ ...prev, [pick.name]: v }))}
-                            />
-                          </div>
-                          <p className="mt-1 text-[11px] font-medium text-muted-foreground">
-                            Low-confidence subjects get more sessions; high-confidence ones are kept fresh.
-                          </p>
-                        </div>
-                        <div className="mt-2.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                            Exam dates (optional, up to 3)
-                          </span>
-                          <div className="mt-1">
-                            <ExamDatesField
-                              dates={examDates[pick.name] ?? []}
-                              onChange={(dates) =>
-                                setExamDates((prev) => ({ ...prev, [pick.name]: dates }))
-                              }
-                              label="Not sure yet"
-                            />
-                          </div>
-                        </div>
+                      <div key={pick.name} className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border">
+                        <span className="min-w-0 flex-1 text-sm font-bold">{pick.name}</span>
+                        {isTiered(pick.name) && !pick.tier ? <span className="text-xs font-bold text-destructive">Choose a tier</span> : pick.tier ? <span className="text-xs font-bold text-muted-foreground">{pick.tier}</span> : null}
+                        <button type="button" onClick={() => setPicks((prev) => prev.filter((p) => p.name !== pick.name))} className="text-xs font-bold text-muted-foreground underline">Remove</button>
                       </div>
                     ))}
                   </div>
-
-                  {missingTiers ? (
-                    <p className="mt-2 text-[12px] font-bold text-muted-foreground">
-                      {missingTiers} still need a tier — pick Foundation or Higher.
-                    </p>
-                  ) : null}
                 </div>
-              ) : (
-                <p className="mt-3 text-[12px] font-bold text-muted-foreground">
-                  No subjects picked yet.
-                </p>
-              )}
+              ) : <p className="mt-3 text-[12px] font-bold text-muted-foreground">No subjects picked yet.</p>}
+            </>
+          ) : null}
+
+          {step === 4 ? (
+            <>
+              <p className="text-lg font-extrabold">When are your exams?</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">Exam dates are optional. Add them now or come back later; closer exams get more attention.</p>
+              <div className="mt-4">
+                <ExamDateUpload subjects={picks.map((p) => p.name)} onApply={(dates) => setExamDates((prev) => {
+                  const next = { ...prev };
+                  for (const [subject, list] of Object.entries(dates)) next[subject] = [...new Set([...(next[subject] ?? []).filter(Boolean), ...list])].sort().slice(0, 3);
+                  return next;
+                })} />
+              </div>
+              <div className="mt-4 space-y-3">
+                {picks.map((pick) => (
+                  <div key={pick.name} className="rounded-[12px] bg-background px-3 py-3 ring-1 ring-border">
+                    <p className="mb-2 text-sm font-bold">{pick.name}</p>
+                    <ExamDatesField dates={examDates[pick.name] ?? []} onChange={(dates) => setExamDates((prev) => ({ ...prev, [pick.name]: dates }))} label="Not sure yet" />
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {step === 8 ? (
+            <>
+              <p className="text-lg font-extrabold">How confident do you feel?</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">Rate each subject. Subjects you find harder get more revision sessions.</p>
+              <div className="mt-4 space-y-3">
+                {picks.map((pick) => (
+                  <div key={pick.name} className="rounded-[12px] bg-background px-3 py-3 ring-1 ring-border">
+                    <p className="mb-2 text-sm font-bold">{pick.name} <span className="text-xs font-medium text-muted-foreground">(required)</span></p>
+                    <SubjectConfidence subject={pick.name} value={confidences[pick.name]} onChange={(v) => setConfidences((prev) => ({ ...prev, [pick.name]: v }))} />
+                  </div>
+                ))}
+              </div>
             </>
           ) : null}
 
@@ -1344,8 +1287,10 @@ function SetupPage() {
                 <Row label="Total sessions" value={String(totalSessions)} />
               </div>
               <div className="mt-3 flex flex-wrap gap-3 text-[12px] font-bold">
-                <button type="button" className="underline" onClick={() => setStep(1)}>Change subjects or confidence</button>
+                <button type="button" className="underline" onClick={() => setStep(1)}>Change subjects</button>
+                <button type="button" className="underline" onClick={() => setStep(4)}>Change exam dates</button>
                 <button type="button" className="underline" onClick={() => setStep(3)}>Change revision time</button>
+                <button type="button" className="underline" onClick={() => setStep(8)}>Change confidence</button>
               </div>
               <p className="mt-4 text-[13px] font-extrabold">What would you like to do next?</p>
               <p className="text-[12px] font-medium text-muted-foreground">
@@ -1357,21 +1302,27 @@ function SetupPage() {
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {step !== 1 ? (
               <button
-                onClick={() => setStep(step === 3 ? 1 : step === 7 ? 3 : step === 2 ? 7 : step === 5 ? 2 : 5)}
+                onClick={() => setStep(step === 4 ? 1 : step === 3 ? 4 : step === 8 ? 3 : step === 7 ? 8 : step === 2 ? 7 : step === 5 ? 2 : 5)}
                 className="rounded-full px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-background"
               >
                 Back
               </button>
             ) : null}
             {step === 1 ? (
-              <button onClick={() => setStep(3)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                Continue to availability
+              <button onClick={() => setStep(4)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                Continue to exam dates
               </button>
             ) : null}
+            {step === 4 ? (
+              <button onClick={() => setStep(3)} className="flex-1 rounded-full py-3 text-sm font-extrabold bg-primary text-primary-foreground">Continue to study time</button>
+            ) : null}
             {step === 3 ? (
-              <button onClick={() => setStep(7)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                Review my details
+              <button onClick={() => setStep(8)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                Continue to confidence
               </button>
+            ) : null}
+            {step === 8 ? (
+              <button onClick={() => setStep(7)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">Review my details</button>
             ) : null}
             {step === 7 ? (
               <>
@@ -1425,8 +1376,8 @@ function SetupPage() {
                       nameError,
                       picks.length === 0 ? "Choose at least one subject." : null,
                       missingTierNames.length ? `Choose a tier for ${missingTierNames.join(", ")}.` : null,
-                      missingConfidence.length ? `Choose how confident you feel in ${missingConfidence.join(", ")}.` : null,
                     ]
+                  : step === 8 ? [missingConfidence.length ? `Choose how confident you feel in ${missingConfidence.join(", ")}.` : null]
                   : [
                       !startDate ? "Choose a plan start date." : null,
                       studyDays.length === 0 ? "Choose at least one study day." : null,

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { LogoOnDark } from "@/components/Logo";
 import { PublicHeader } from "@/components/PublicHeader";
+import { NextBestAction } from "@/components/planner/NextBestAction";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,6 +58,7 @@ function Landing() {
       <PublicHeader />
 
       <main className="mx-auto max-w-4xl px-5 pb-20 pt-6">
+        <NextBestAction />
         <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           GCSE revision planner
         </p>

@@ -43,3 +43,8 @@
 - [x] Mark session complete, mastery ring per subject
 - [x] School on sign-up (admin list), parent email + digest opt-in on Account
 - [ ] Weekly digest email — blocked: needs an email domain the user owns
+
+## Five-step planner journey
+- [x] Five-step progress bar, Low/Medium/High subject confidence, Quick/Topic/Personalised plans, knowledge check, priorities review, autosave on device, plan-type note on timetable.
+- [ ] Session controls: move, missed, add extra, change duration; regeneration preview keeping completed sessions.
+- [ ] Save setup drafts to the account (currently saved on the device) and keep manual priority order after the plan is built.

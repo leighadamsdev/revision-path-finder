@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790863080141,
+      "tag": "0000_plan_type_and_journey",
+      "breakpoints": true
+    }
+  ]
 }

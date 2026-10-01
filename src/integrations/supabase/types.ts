@@ -701,7 +701,9 @@ export type Database = {
           id: string
           intensity_sessions_per_day: number | null
           intensity_weeks: number | null
+          journey: Json
           name: string
+          plan_type: string
           pre_exam_boost: boolean
           pre_exam_weeks: number
           profile_id: string
@@ -723,7 +725,9 @@ export type Database = {
           id?: string
           intensity_sessions_per_day?: number | null
           intensity_weeks?: number | null
+          journey?: Json
           name?: string
+          plan_type?: string
           pre_exam_boost?: boolean
           pre_exam_weeks?: number
           profile_id: string
@@ -745,7 +749,9 @@ export type Database = {
           id?: string
           intensity_sessions_per_day?: number | null
           intensity_weeks?: number | null
+          journey?: Json
           name?: string
+          plan_type?: string
           pre_exam_boost?: boolean
           pre_exam_weeks?: number
           profile_id?: string

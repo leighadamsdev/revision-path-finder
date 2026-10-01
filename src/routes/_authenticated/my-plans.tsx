@@ -74,7 +74,9 @@ function MyPlansPage() {
                 </p>
               </div>
               <Button size="sm" onClick={() => open(p.id, "/plan")}><FolderOpen /> Open</Button>
-              <Button size="sm" variant="outline" onClick={() => open(p.id, "/edit-plan")}><Pencil /> Edit</Button>
+              <Button size="sm" variant="outline" onClick={() => navigate({ to: "/setup", search: { from: p.id, mode: "edit" } })}><Pencil /> Edit from the start</Button>
+              <Button size="sm" variant="outline" onClick={() => open(p.id, "/edit-plan")}>Quick edit</Button>
+              <Button size="sm" variant="outline" onClick={() => navigate({ to: "/setup", search: { from: p.id, mode: "copy" } })}>Copy and edit</Button>
               <Button size="sm" variant="ghost" onClick={() => { setTyped(""); setToDelete(p); }}><Trash2 /> Delete</Button>
             </div>
           ))}

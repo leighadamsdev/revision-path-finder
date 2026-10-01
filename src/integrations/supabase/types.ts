@@ -636,6 +636,7 @@ export type Database = {
         Row: {
           confidence: number | null
           created_at: string
+          excluded: boolean
           id: string
           is_priority: boolean
           library_topic_id: string | null
@@ -647,6 +648,7 @@ export type Database = {
         Insert: {
           confidence?: number | null
           created_at?: string
+          excluded?: boolean
           id?: string
           is_priority?: boolean
           library_topic_id?: string | null
@@ -658,6 +660,7 @@ export type Database = {
         Update: {
           confidence?: number | null
           created_at?: string
+          excluded?: boolean
           id?: string
           is_priority?: boolean
           library_topic_id?: string | null
@@ -863,6 +866,7 @@ export type Database = {
           id: string
           kind: string
           length_minutes: number | null
+          missed_at: string | null
           pinned: boolean
           plan_id: string
           session_slot: number
@@ -880,6 +884,7 @@ export type Database = {
           id?: string
           kind?: string
           length_minutes?: number | null
+          missed_at?: string | null
           pinned?: boolean
           plan_id: string
           session_slot?: number
@@ -897,6 +902,7 @@ export type Database = {
           id?: string
           kind?: string
           length_minutes?: number | null
+          missed_at?: string | null
           pinned?: boolean
           plan_id?: string
           session_slot?: number
@@ -921,6 +927,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      setup_drafts: {
+        Row: {
+          data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          data?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       subjects: {
         Row: {

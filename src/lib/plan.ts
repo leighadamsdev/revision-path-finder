@@ -222,6 +222,8 @@ export type PlanDraft = {
   /** One entry per study day, each with its own session count and length. */
   days: DaySetting[];
   contentMode: "ai" | "manual" | "library";
+  /** Quick (subject-level), Topic (topics, no check) or Personalised (checked + prioritised). */
+  planType?: "quick" | "topic" | "personalised";
   subjectIds: string[];
   /** Foundation / Higher per subject id, where the subject is tiered. */
   tiers?: Record<string, string | null>;
@@ -522,6 +524,7 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       intensity_weeks: draft.intensity?.weeks ?? null,
       intensity_sessions_per_day: draft.intensity?.sessions ?? null,
       holiday_periods: draft.holidays ?? [],
+      plan_type: draft.planType ?? "personalised",
     })
     .select("id")
     .single();
@@ -563,7 +566,11 @@ export async function createPlan(profileId: string, draft: PlanDraft) {
       day_label: slot.day,
       session_slot: slot.slot,
       subject_id: slot.subjectId,
-      topic_text: pool.length ? (pool[used % pool.length] ?? "") : "",
+      topic_text: pool.length
+        ? (pool[used % pool.length] ?? "")
+        : draft.planType === "quick"
+          ? "Subject revision — choose a weak area, recall from memory, then check and correct"
+          : "",
       gap_notes: "",
       length_minutes: slot.minutes,
       pinned: slot.pinned,

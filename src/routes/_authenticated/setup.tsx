@@ -10,7 +10,13 @@ import { useAuth, ensureProfile } from "@/hooks/useAuth";
 import {
   createPlan,
   fetchSubjects,
+  fetchPlanSubjects,
+  fetchPlanTopics,
+  regeneratePlanSessions,
   resolveSubjectId,
+  savePlanSubjects,
+  savePlanTopics,
+  updatePlanSettings,
   type HolidayPeriod,
   type Intensity,
 } from "@/lib/plan";
@@ -51,8 +57,11 @@ export const Route = createFileRoute("/_authenticated/setup")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (raw: Record<string, unknown>): { step?: number } =>
-    typeof raw["step"] === "number" ? { step: raw["step"] } : {},
+  validateSearch: (raw: Record<string, unknown>): { step?: number; from?: string; mode?: "edit" | "copy" } => ({
+    ...(typeof raw["step"] === "number" ? { step: raw["step"] } : {}),
+    ...(typeof raw["from"] === "string" ? { from: raw["from"] } : {}),
+    ...(raw["mode"] === "edit" || raw["mode"] === "copy" ? { mode: raw["mode"] } : {}),
+  }),
   component: SetupPage,
 });
 
@@ -133,7 +142,11 @@ function SetupPage() {
 
   const [name, setName] = useState("");
   const trimmedName = name.trim();
-  const nameTaken = plans.some((p) => p.name.trim().toLowerCase() === trimmedName.toLowerCase());
+  const fromId = routeSearch.from;
+  const editing = Boolean(fromId) && routeSearch.mode === "edit";
+  const copying = Boolean(fromId) && routeSearch.mode === "copy";
+  const sourcePlan = plans.find((p) => p.id === fromId) ?? null;
+  const nameTaken = plans.some((p) => p.name.trim().toLowerCase() === trimmedName.toLowerCase() && !(editing && p.id === fromId));
   const nameError = !trimmedName ? "Give this plan a name so you can tell your plans apart." : nameTaken ? "You already have a plan with this name — choose a different one." : null;
   const [startDate, setStartDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [weeks, setWeeks] = useState(6);
@@ -146,8 +159,51 @@ function SetupPage() {
   const [generating, setGenerating] = useState(false);
 
   // Autosave the in-progress journey so refreshes and later visits resume.
+  // Editing or copying an existing plan: load it into the journey from Step 1.
   useEffect(() => {
-    if (!user || restored) return;
+    if (!user || restored || !fromId) return;
+    const p = plans.find((x) => x.id === fromId);
+    if (!p) return;
+    setRestored(true);
+    void (async () => {
+      try {
+        const [subs, tops] = await Promise.all([fetchPlanSubjects(p.id), fetchPlanTopics(p.id)]);
+        setPicks(subs.map((s) => ({ name: s.name, tier: (s.tier as Tier | null) ?? null })));
+        setExamDates(Object.fromEntries(subs.map((s) => [s.name, s.exam_dates])));
+        setConfidences(Object.fromEntries(subs.map((s) => [s.name, s.confidence])));
+        const nameOf = (id: string) => subs.find((s) => s.id === id)?.name ?? "";
+        const byName: Record<string, string[]> = {};
+        const ratings: Record<string, Record<string, number | null>> = {};
+        const prios: Record<string, string[]> = {};
+        for (const t of tops) {
+          const n = nameOf(t.subject_id);
+          if (!n) continue;
+          (byName[n] ??= []).push(t.topic);
+          (ratings[n] ??= {})[t.topic] = t.confidence;
+          if (t.is_priority) (prios[n] ??= []).push(t.topic);
+        }
+        setChosen(byName);
+        setSource(Object.fromEntries(Object.keys(byName).map((n) => [n, "upload" as TopicSource])));
+        setTopicRatings(ratings);
+        setPriorities(prios);
+        if (Object.keys(byName).length) setTopicsVisited(true);
+        setOrder(tops.map((t) => `${nameOf(t.subject_id)}|||${t.topic}`));
+        setName(routeSearch.mode === "copy" ? `Copy of ${p.name}` : p.name);
+        setStartDate(p.start_date);
+        setWeeks(p.weeks);
+        const dp = p.day_plan?.length ? p.day_plan : p.study_days.map((day) => ({ day, sessions: p.sessions_per_day, minutes: p.session_length_minutes }));
+        setDayConfigs(Object.fromEntries(dp.map((d) => [d.day, { sessions: d.sessions, minutes: d.minutes }])));
+        setHolidays(p.holiday_periods ?? []);
+        setIntensity(p.intensity_weeks && p.intensity_sessions_per_day ? { weeks: p.intensity_weeks, sessions: p.intensity_sessions_per_day } : null);
+        setStepRaw(1);
+      } catch {
+        toast.error("We couldn't load that plan — try again.");
+      }
+    })();
+  }, [user, restored, fromId, plans, routeSearch.mode]);
+
+  useEffect(() => {
+    if (!user || restored || fromId) return;
     setRestored(true);
     void (async () => {
     try {
@@ -183,7 +239,7 @@ function SetupPage() {
   }, [user, restored, routeSearch.step]);
 
   useEffect(() => {
-    if (!user || !restored) return;
+    if (!user || !restored || fromId) return;
     const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step };
     window.localStorage.setItem(DRAFT_KEY + user.id, JSON.stringify(d));
     // Also save to the student's account (debounced) so it resumes on any device.
@@ -360,7 +416,7 @@ function SetupPage() {
   async function generate(kind: PlanKind) {
     if (!user) return;
     if (nameError) {
-      setStep(3);
+      setStep(1);
       toast.error(nameError);
       return;
     }
@@ -404,6 +460,36 @@ function SetupPage() {
       }
       await queryClient.invalidateQueries({ queryKey: ["subjects"] });
 
+      if (editing && fromId) {
+        // Update the existing plan in place so completed sessions and notes are kept.
+        const daySettings = studyDays.map((day) => ({
+          day,
+          sessions: dayConfigs[day]?.sessions ?? DEFAULT_DAY.sessions,
+          minutes: dayConfigs[day]?.minutes ?? DEFAULT_DAY.minutes,
+        }));
+        const cleanHolidays = holidays.filter((h) => h.start && h.end);
+        await savePlanSubjects(fromId, subjectIds.map((id) => ({ subjectId: id, tier: tiers[id] ?? null, examDates: examDateMap[id] ?? [], confidence: confidenceMap[id] ?? null })));
+        const topicRows = subjectIds.flatMap((id) => (chosenTopics[id] ?? []).map((topic) => ({ subjectId: id, topic, confidence: topicConfidence[id]?.[topic] ?? null, isPriority: (priorityTopics[id] ?? []).includes(topic) })));
+        await savePlanTopics(fromId, topicRows);
+        await updatePlanSettings(fromId, { name: trimmedName, startDate, weeks, days: daySettings, intensity, holidays: cleanHolidays });
+        await supabase.from("plans").update({ plan_type: kind }).eq("id", fromId);
+        await regeneratePlanSessions(fromId, {
+          startDate, weeks, days: daySettings, intensity, holidays: cleanHolidays,
+          subjects: picks.map((pick, i) => {
+            const id = subjectIds[i]!;
+            return {
+              subjectId: id, name: pick.name, examDates: examDateMap[id] ?? [], confidence: confidenceMap[id] ?? null,
+              topics: topicRows.filter((t) => t.subjectId === id).map((t) => ({ topic: t.topic, confidence: t.confidence, isPriority: t.isPriority })),
+            };
+          }),
+        });
+        window.localStorage.setItem("revisionpath.activePlan", fromId);
+        await queryClient.invalidateQueries();
+        toast.success("Plan updated — your timetable has been rebuilt.");
+        navigate({ to: "/plan" });
+        return;
+      }
+
       const planId = await createPlan(user.id, {
         name: trimmedName,
         startDate,
@@ -428,8 +514,10 @@ function SetupPage() {
       });
 
       window.localStorage.setItem("revisionpath.activePlan", planId);
-      window.localStorage.removeItem(DRAFT_KEY + user.id);
-      await supabase.from("setup_drafts").delete().eq("user_id", user.id);
+      if (!copying) {
+        window.localStorage.removeItem(DRAFT_KEY + user.id);
+        await supabase.from("setup_drafts").delete().eq("user_id", user.id);
+      }
       await queryClient.invalidateQueries();
       navigate({ to: "/plan" });
     } catch (error) {
@@ -450,9 +538,9 @@ function SetupPage() {
 
   const canContinue =
     step === 1
-      ? picks.length > 0 && missingTiers === 0 && picks.every((p) => confidences[p.name] != null)
+      ? !nameError && picks.length > 0 && missingTiers === 0 && picks.every((p) => confidences[p.name] != null)
       : step === 3
-          ? !nameError && studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start)
+          ? studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start)
           : true;
   const missingTierNames = picks.filter((pick) => isTiered(pick.name) && !pick.tier).map((pick) => pick.name);
   const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
@@ -522,6 +610,13 @@ function SetupPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
+        {editing || copying ? (
+          <p className="mb-3 rounded-[12px] bg-secondary px-3 py-2 text-[13px] font-bold">
+            {editing
+              ? `Editing “${sourcePlan?.name ?? "your plan"}” from the start — your completed sessions and notes are kept when you rebuild.`
+              : `Copying “${sourcePlan?.name ?? "a plan"}” — change anything you like, then build it as a new plan.`}
+          </p>
+        ) : null}
         <JourneyProgress statuses={journey} onSelect={selectJourney} />
         <p className="mb-3 text-[12px] font-extrabold text-muted-foreground" aria-live="polite">
           {step === 1 || step === 3 || step === 7
@@ -546,6 +641,19 @@ function SetupPage() {
                 you're sitting, and choose Foundation or Higher where it applies. You can change
                 these at any time.
               </p>
+
+              <label className="mt-4 block">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                  First, name your plan
+                </span>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Summer GCSE revision"
+                  className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none"
+                />
+                {nameError && trimmedName ? <span className="mt-1 block text-[12px] font-bold text-destructive">{nameError}</span> : null}
+              </label>
 
               <div className="mt-4 flex items-center gap-2 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border">
                 <Search className="size-4 text-muted-foreground" strokeWidth={2.5} />
@@ -967,16 +1075,6 @@ function SetupPage() {
                 have its own number of sessions and length.
               </p>
 
-              <label className="mt-4 block">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Plan name
-                </span>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1 w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none"
-                />
-              </label>
 
               <div className="mt-4">
                 <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -1270,21 +1368,26 @@ function SetupPage() {
             </button>
           </div>
           {!canContinue ? (
-            <p className="mt-2 text-[12px] font-bold text-destructive" role="alert">
-              {step === 1 && picks.length === 0
-                ? "Choose at least one subject to continue."
-                : step === 1 && missingTierNames.length
-                  ? `Choose a tier for ${missingTierNames.join(", ")}.`
-                  : step === 1 && missingConfidence.length
-                    ? `Choose how confident you feel in ${missingConfidence.join(", ")}.`
-                  : step === 3 && nameError
-                    ? nameError
-                  : step === 3 && !startDate
-                    ? "Choose a plan start date to continue."
-                    : step === 3 && holidayError
-                      ? "Fix the holiday dates to continue."
-                    : "Choose at least one study day to continue."}
-            </p>
+            <div className="mt-2 rounded-[10px] bg-destructive/10 p-3 text-[12px] font-bold text-destructive" role="alert">
+              <p>Before you continue:</p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                {(step === 1
+                  ? [
+                      nameError,
+                      picks.length === 0 ? "Choose at least one subject." : null,
+                      missingTierNames.length ? `Choose a tier for ${missingTierNames.join(", ")}.` : null,
+                      missingConfidence.length ? `Choose how confident you feel in ${missingConfidence.join(", ")}.` : null,
+                    ]
+                  : [
+                      !startDate ? "Choose a plan start date." : null,
+                      studyDays.length === 0 ? "Choose at least one study day." : null,
+                      holidayError ? "Fix the holiday dates." : null,
+                    ]
+                )
+                  .filter(Boolean)
+                  .map((msg) => <li key={msg}>{msg}</li>)}
+              </ul>
+            </div>
           ) : null}
           {holidayError ? <p className="mt-2 text-[12px] font-bold text-destructive">Fix the holiday dates before generating your timetable.</p> : null}
         </div>

@@ -73,8 +73,13 @@ type Pick = { name: string; tier: Tier | null };
 type DayConfig = { sessions: number; minutes: number };
 
 const DEFAULT_DAY: DayConfig = { sessions: 3, minutes: 30 };
-const TOTAL_STEPS = 4;
-const STEP_LABELS = ["Pick subjects", "Choose topics", "Set timeframe", "Review"];
+const FIRST_STAGE = [
+  { step: 1, label: "Subjects" },
+  { step: 4, label: "Exam dates" },
+  { step: 3, label: "Study time" },
+  { step: 8, label: "Confidence" },
+  { step: 7, label: "Review" },
+] as const;
 
 type TopicSource = "dfe" | "manual" | "upload" | "library";
 
@@ -98,7 +103,7 @@ function SetupPage() {
   }
 
   const routeSearch = Route.useSearch();
-  /** Screens: 1 subjects, 3 time (journey step 1), 2 topics, 5 knowledge check, 6 priorities. */
+  /** First stage: 1 subjects, 4 exam dates, 3 study time, 8 confidence, 7 review. */
   const [step, setStepRaw] = useState(routeSearch.step === 2 ? 2 : 1);
   function setStep(n: number) {
     setStepRaw(n);
@@ -232,6 +237,7 @@ function SetupPage() {
       if (d.topicRatings) setTopicRatings(d.topicRatings);
       if (d.priorities) setPriorities(d.priorities);
       if (d.dayConfigs) setDayConfigs(d.dayConfigs);
+       if (d.startDate) setStartDate(d.startDate);
       if (d.weeks) setWeeks(d.weeks);
       if (d.name) setName(d.name);
       if (d.holidays) setHolidays(d.holidays);
@@ -240,7 +246,7 @@ function SetupPage() {
       if (d.topicsVisited) setTopicsVisited(true);
       if (d.order) setOrder(d.order);
       if (d.excluded) setExcluded(d.excluded);
-      if (routeSearch.step !== 2 && d.step && d.step !== 4) setStepRaw(d.step);
+       if (routeSearch.step !== 2 && d.step) setStepRaw(d.step);
       toast.message("We've restored your unfinished plan setup.");
     } catch {
       /* ignore a broken draft */
@@ -250,14 +256,14 @@ function SetupPage() {
 
   useEffect(() => {
     if (!user || !restored || fromId) return;
-    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step };
+    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step };
     window.localStorage.setItem(DRAFT_KEY + user.id, JSON.stringify(d));
     // Also save to the student's account (debounced) so it resumes on any device.
     const t = setTimeout(() => {
       void supabase.from("setup_drafts").upsert({ user_id: user.id, data: d as never, updated_at: new Date().toISOString() });
     }, 1200);
     return () => clearTimeout(t);
-  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step]);
+  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step]);
 
   const studyDays = useMemo(
     () => WEEK_DAYS.filter((d) => dayConfigs[d]).map((d) => d as string),
@@ -559,20 +565,21 @@ function SetupPage() {
   }
 
   const missingTiers = picks.filter((p) => isTiered(p.name) && !p.tier).length;
+  const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
+  const missingConfidence = picks.filter((p) => confidences[p.name] == null).map((p) => p.name);
+  const readyForPlan = !nameError && picks.length > 0 && missingTiers === 0 && studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidayError && missingConfidence.length === 0;
   const totalSessions =
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
 
   const totalChosen = picks.reduce((sum, p) => sum + topicsFor(p.name).length, 0);
 
   const canContinue =
-    step === 1
-      ? !nameError && picks.length > 0 && missingTiers === 0 && picks.every((p) => confidences[p.name] != null)
-      : step === 3
-          ? studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start)
+    step === 1 ? !nameError && picks.length > 0 && missingTiers === 0
+      : step === 3 ? studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidayError
+        : step === 8 ? missingConfidence.length === 0
+          : step === 7 ? readyForPlan
           : true;
   const missingTierNames = picks.filter((pick) => isTiered(pick.name) && !pick.tier).map((pick) => pick.name);
-  const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
-  const missingConfidence = picks.filter((p) => confidences[p.name] == null).map((p) => p.name);
 
   const ranked: RankedTopic[] = useMemo(() => {
     const today = new Date();
@@ -618,7 +625,7 @@ function SetupPage() {
   const anyTopics = ranked.length > 0;
 
   const journey: Record<number, JourneyStatus> = {
-    1: step === 1 || step === 3 || step === 7 ? "current" : "done",
+    1: FIRST_STAGE.some((screen) => screen.step === step) ? "current" : "done",
     2: step === 2 ? "current" : topicsVisited ? "done" : "optional",
     3: step === 5 ? "current" : checkState === "done" ? "done" : checkState === "skipped" ? "skipped" : "optional",
     4: step === 6 ? "current" : checkState === "done" ? "done" : "locked",
@@ -647,8 +654,8 @@ function SetupPage() {
         ) : null}
         <JourneyProgress statuses={journey} onSelect={selectJourney} />
         <p className="mb-3 text-[12px] font-extrabold text-muted-foreground" aria-live="polite">
-          {step === 1 || step === 3 || step === 7
-            ? `Plan setup: 1 of 5 · ${step === 1 ? "Part 1 of 3 — subjects, exam dates and confidence" : step === 3 ? "Part 2 of 3 — your revision time" : "Part 3 of 3 — review your details"}`
+          {FIRST_STAGE.some((screen) => screen.step === step)
+            ? `Plan setup: 1 of 5 · Part ${FIRST_STAGE.findIndex((screen) => screen.step === step) + 1} of 5 — ${FIRST_STAGE.find((screen) => screen.step === step)?.label}`
             : step === 2
               ? "Plan setup: 2 of 5 · Step 2 is optional"
               : step === 5
@@ -657,6 +664,23 @@ function SetupPage() {
           {checkState === "skipped" && step !== 5 ? " · Knowledge check skipped — you can complete it later." : ""}
           {checkState !== "done" && step === 5 ? " · Priorities unlock after you finish the knowledge check." : ""}
         </p>
+
+        {FIRST_STAGE.some((screen) => screen.step === step) ? (
+          <nav aria-label="Exams and availability screens" className="mb-4">
+            <ol className="grid grid-cols-5 gap-1 text-center">
+              {FIRST_STAGE.map((screen, index) => {
+                const current = FIRST_STAGE.findIndex((item) => item.step === step);
+                return (
+                  <li key={screen.step}>
+                  <button type="button" onClick={() => setStep(screen.step)} disabled={index > current || (index > 0 && (!picks.length || Boolean(nameError) || missingTiers > 0))} aria-current={screen.step === step ? "step" : undefined} className={`w-full border-t-2 pt-2 text-[11px] font-bold leading-tight disabled:cursor-default ${index <= current ? "border-primary text-foreground" : "border-border text-muted-foreground"}`}>
+                      {index + 1}. {screen.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+        ) : null}
 
         <div id="step-card" tabIndex={-1} className="rounded-[18px] bg-card p-4 ring-1 ring-black/5 outline-none sm:p-5">
           {step === 1 ? (
@@ -775,112 +799,55 @@ function SetupPage() {
 
               {picks.length ? (
                 <div className="mt-5">
-                  <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                    Your subjects
-                  </p>
-                  <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-                    Add exam dates — optional, and sooner exams get more sessions. You'll rate how
-                    confident you feel on the next step.
-                  </p>
-
-                  <div className="mt-2">
-                    <ExamDateUpload
-                      subjects={picks.map((p) => p.name)}
-                      onApply={(dates) =>
-                        setExamDates((prev) => {
-                          const next = { ...prev };
-                          for (const [subject, list] of Object.entries(dates)) {
-                            const merged = [
-                              ...new Set([...(next[subject] ?? []).filter(Boolean), ...list]),
-                            ].sort();
-                            next[subject] = merged.slice(0, 3);
-                          }
-                          return next;
-                        })
-                      }
-                    />
-                  </div>
+                  <p className="text-[11px] font-extrabold uppercase text-muted-foreground">Your subjects</p>
                   <div className="mt-2 space-y-2">
                     {picks.map((pick) => (
-                      <div
-                        key={pick.name}
-                        className="rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border"
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-bold">{pick.name}</span>
-                          {isTiered(pick.name) ? (
-                            <div className="ml-auto flex gap-1">
-                              {(["Foundation", "Higher"] as const).map((tier) => (
-                                <button
-                                  key={tier}
-                                  onClick={() => setTier(pick.name, tier)}
-                                  className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
-                                    pick.tier === tier
-                                      ? "bg-structure text-structure-foreground"
-                                      : "bg-card text-muted-foreground ring-1 ring-border"
-                                  }`}
-                                >
-                                  {tier}
-                                </button>
-                              ))}
-                            </div>
-                          ) : null}
-                          <button
-                            onClick={() =>
-                              setPicks((prev) => prev.filter((p) => p.name !== pick.name))
-                            }
-                            className={`text-[12px] font-bold text-muted-foreground hover:text-foreground ${
-                              isTiered(pick.name) ? "" : "ml-auto"
-                            }`}
-                          >
-                            Remove
-                          </button>
-                        </div>
-
-                        <div className="mt-2.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                            How confident do you feel in {pick.name}? (required)
-                          </span>
-                          <div className="mt-1">
-                            <SubjectConfidence
-                              subject={pick.name}
-                              value={confidences[pick.name]}
-                              onChange={(v) => setConfidences((prev) => ({ ...prev, [pick.name]: v }))}
-                            />
-                          </div>
-                          <p className="mt-1 text-[11px] font-medium text-muted-foreground">
-                            Low-confidence subjects get more sessions; high-confidence ones are kept fresh.
-                          </p>
-                        </div>
-                        <div className="mt-2.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                            Exam dates (optional, up to 3)
-                          </span>
-                          <div className="mt-1">
-                            <ExamDatesField
-                              dates={examDates[pick.name] ?? []}
-                              onChange={(dates) =>
-                                setExamDates((prev) => ({ ...prev, [pick.name]: dates }))
-                              }
-                              label="Not sure yet"
-                            />
-                          </div>
-                        </div>
+                      <div key={pick.name} className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border">
+                        <span className="min-w-0 flex-1 text-sm font-bold">{pick.name}</span>
+                        {isTiered(pick.name) && !pick.tier ? <span className="text-xs font-bold text-destructive">Choose a tier</span> : pick.tier ? <span className="text-xs font-bold text-muted-foreground">{pick.tier}</span> : null}
+                        <button type="button" onClick={() => setPicks((prev) => prev.filter((p) => p.name !== pick.name))} className="text-xs font-bold text-muted-foreground underline">Remove</button>
                       </div>
                     ))}
                   </div>
-
-                  {missingTiers ? (
-                    <p className="mt-2 text-[12px] font-bold text-muted-foreground">
-                      {missingTiers} still need a tier — pick Foundation or Higher.
-                    </p>
-                  ) : null}
                 </div>
-              ) : (
-                <p className="mt-3 text-[12px] font-bold text-muted-foreground">
-                  No subjects picked yet.
-                </p>
-              )}
+              ) : <p className="mt-3 text-[12px] font-bold text-muted-foreground">No subjects picked yet.</p>}
+            </>
+          ) : null}
+
+          {step === 4 ? (
+            <>
+              <p className="text-lg font-extrabold">When are your exams?</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">Exam dates are optional. Add them now or come back later; closer exams get more attention.</p>
+              <div className="mt-4">
+                <ExamDateUpload subjects={picks.map((p) => p.name)} onApply={(dates) => setExamDates((prev) => {
+                  const next = { ...prev };
+                  for (const [subject, list] of Object.entries(dates)) next[subject] = [...new Set([...(next[subject] ?? []).filter(Boolean), ...list])].sort().slice(0, 3);
+                  return next;
+                })} />
+              </div>
+              <div className="mt-4 space-y-3">
+                {picks.map((pick) => (
+                  <div key={pick.name} className="rounded-[12px] bg-background px-3 py-3 ring-1 ring-border">
+                    <p className="mb-2 text-sm font-bold">{pick.name}</p>
+                    <ExamDatesField dates={examDates[pick.name] ?? []} onChange={(dates) => setExamDates((prev) => ({ ...prev, [pick.name]: dates }))} label="Not sure yet" />
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {step === 8 ? (
+            <>
+              <p className="text-lg font-extrabold">How confident do you feel?</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">Rate each subject. Subjects you find harder get more revision sessions.</p>
+              <div className="mt-4 space-y-3">
+                {picks.map((pick) => (
+                  <div key={pick.name} className="rounded-[12px] bg-background px-3 py-3 ring-1 ring-border">
+                    <p className="mb-2 text-sm font-bold">{pick.name} <span className="text-xs font-medium text-muted-foreground">(required)</span></p>
+                    <SubjectConfidence subject={pick.name} value={confidences[pick.name]} onChange={(v) => setConfidences((prev) => ({ ...prev, [pick.name]: v }))} />
+                  </div>
+                ))}
+              </div>
             </>
           ) : null}
 
@@ -1323,8 +1290,10 @@ function SetupPage() {
                 <Row label="Total sessions" value={String(totalSessions)} />
               </div>
               <div className="mt-3 flex flex-wrap gap-3 text-[12px] font-bold">
-                <button type="button" className="underline" onClick={() => setStep(1)}>Change subjects or confidence</button>
+                <button type="button" className="underline" onClick={() => setStep(1)}>Change subjects</button>
+                <button type="button" className="underline" onClick={() => setStep(4)}>Change exam dates</button>
                 <button type="button" className="underline" onClick={() => setStep(3)}>Change revision time</button>
+                <button type="button" className="underline" onClick={() => setStep(8)}>Change confidence</button>
               </div>
               <p className="mt-4 text-[13px] font-extrabold">What would you like to do next?</p>
               <p className="text-[12px] font-medium text-muted-foreground">
@@ -1336,30 +1305,36 @@ function SetupPage() {
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {step !== 1 ? (
               <button
-                onClick={() => setStep(step === 3 ? 1 : step === 7 ? 3 : step === 2 ? 7 : step === 5 ? 2 : 5)}
+                onClick={() => setStep(step === 4 ? 1 : step === 3 ? 4 : step === 8 ? 3 : step === 7 ? 8 : step === 2 ? 7 : step === 5 ? 2 : 5)}
                 className="rounded-full px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-background"
               >
                 Back
               </button>
             ) : null}
             {step === 1 ? (
-              <button onClick={() => setStep(3)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                Continue to availability
+              <button onClick={() => setStep(4)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                Continue to exam dates
               </button>
             ) : null}
+            {step === 4 ? (
+              <button onClick={() => setStep(3)} className="flex-1 rounded-full py-3 text-sm font-extrabold bg-primary text-primary-foreground">Continue to study time</button>
+            ) : null}
             {step === 3 ? (
-              <button onClick={() => setStep(7)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                Review my details
+              <button onClick={() => setStep(8)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                Continue to confidence
               </button>
+            ) : null}
+            {step === 8 ? (
+              <button onClick={() => setStep(7)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">Review my details</button>
             ) : null}
             {step === 7 ? (
               <>
-                <button onClick={() => void generate("quick")} disabled={generating || picks.length === 0 || studyDays.length === 0} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                <button onClick={() => void generate("quick")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
                   {generating ? "Building your timetable…" : "Create my Quick Plan"}
                 </button>
                 <button
                   onClick={() => { setTopicsVisited(true); setOpenSubject(picks[0]?.name ?? null); setStep(2); }}
-                  disabled={picks.length === 0}
+                  disabled={!readyForPlan}
                   className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background"
                 >
                   Make my plan more personalised
@@ -1368,26 +1343,26 @@ function SetupPage() {
             ) : null}
             {step === 2 ? (
               <>
-                <button onClick={() => setStep(5)} disabled={!anyTopics} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                <button onClick={() => setStep(5)} disabled={!anyTopics || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
                   Check what I know
                 </button>
-                <button onClick={() => void generate(anyTopics ? "topic" : "quick")} disabled={generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background">
+                <button onClick={() => void generate(anyTopics ? "topic" : "quick")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background">
                   {generating ? "Building…" : "Create my timetable now"}
                 </button>
               </>
             ) : null}
             {step === 5 ? (
               <>
-                <button onClick={openPriorities} disabled={!anyTopics} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                <button onClick={openPriorities} disabled={!anyTopics || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
                   Finish knowledge check
                 </button>
-                <button onClick={() => { setCheckState("skipped"); void generate(anyTopics ? "topic" : "quick"); }} disabled={generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-card text-foreground ring-1 ring-border">
+                <button onClick={() => { setCheckState("skipped"); void generate(anyTopics ? "topic" : "quick"); }} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-card text-foreground ring-1 ring-border">
                   Skip for now
                 </button>
               </>
             ) : null}
             {step === 6 ? (
-              <button onClick={() => void generate("personalised")} disabled={generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+              <button onClick={() => void generate("personalised")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
                 {generating ? "Building your timetable…" : "Create my personalised timetable"}
               </button>
             ) : null}
@@ -1404,8 +1379,9 @@ function SetupPage() {
                       nameError,
                       picks.length === 0 ? "Choose at least one subject." : null,
                       missingTierNames.length ? `Choose a tier for ${missingTierNames.join(", ")}.` : null,
-                      missingConfidence.length ? `Choose how confident you feel in ${missingConfidence.join(", ")}.` : null,
                     ]
+                  : step === 8 ? [missingConfidence.length ? `Choose how confident you feel in ${missingConfidence.join(", ")}.` : null]
+                  : step === 7 ? [nameError, picks.length === 0 ? "Choose at least one subject." : null, missingTierNames.length ? `Choose a tier for ${missingTierNames.join(", ")}.` : null, !startDate ? "Choose a plan start date." : null, studyDays.length === 0 ? "Choose at least one study day." : null, holidayError ? "Fix the holiday dates." : null, missingConfidence.length ? `Choose how confident you feel in ${missingConfidence.join(", ")}.` : null]
                   : [
                       !startDate ? "Choose a plan start date." : null,
                       studyDays.length === 0 ? "Choose at least one study day." : null,

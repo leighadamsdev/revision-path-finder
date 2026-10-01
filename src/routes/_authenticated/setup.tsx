@@ -73,8 +73,13 @@ type Pick = { name: string; tier: Tier | null };
 type DayConfig = { sessions: number; minutes: number };
 
 const DEFAULT_DAY: DayConfig = { sessions: 3, minutes: 30 };
-const TOTAL_STEPS = 4;
-const STEP_LABELS = ["Pick subjects", "Choose topics", "Set timeframe", "Review"];
+const FIRST_STAGE = [
+  { step: 1, label: "Subjects" },
+  { step: 4, label: "Exam dates" },
+  { step: 3, label: "Study time" },
+  { step: 8, label: "Confidence" },
+  { step: 7, label: "Review" },
+] as const;
 
 type TopicSource = "dfe" | "manual" | "upload" | "library";
 
@@ -98,7 +103,7 @@ function SetupPage() {
   }
 
   const routeSearch = Route.useSearch();
-  /** Screens: 1 subjects, 3 time (journey step 1), 2 topics, 5 knowledge check, 6 priorities. */
+  /** First stage: 1 subjects, 4 exam dates, 3 study time, 8 confidence, 7 review. */
   const [step, setStepRaw] = useState(routeSearch.step === 2 ? 2 : 1);
   function setStep(n: number) {
     setStepRaw(n);
@@ -565,10 +570,9 @@ function SetupPage() {
   const totalChosen = picks.reduce((sum, p) => sum + topicsFor(p.name).length, 0);
 
   const canContinue =
-    step === 1
-      ? !nameError && picks.length > 0 && missingTiers === 0 && picks.every((p) => confidences[p.name] != null)
-      : step === 3
-          ? studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start)
+    step === 1 ? !nameError && picks.length > 0 && missingTiers === 0
+      : step === 3 ? studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start)
+        : step === 8 ? picks.every((p) => confidences[p.name] != null)
           : true;
   const missingTierNames = picks.filter((pick) => isTiered(pick.name) && !pick.tier).map((pick) => pick.name);
   const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
@@ -618,7 +622,7 @@ function SetupPage() {
   const anyTopics = ranked.length > 0;
 
   const journey: Record<number, JourneyStatus> = {
-    1: step === 1 || step === 3 || step === 7 ? "current" : "done",
+    1: FIRST_STAGE.some((screen) => screen.step === step) ? "current" : "done",
     2: step === 2 ? "current" : topicsVisited ? "done" : "optional",
     3: step === 5 ? "current" : checkState === "done" ? "done" : checkState === "skipped" ? "skipped" : "optional",
     4: step === 6 ? "current" : checkState === "done" ? "done" : "locked",
@@ -647,8 +651,8 @@ function SetupPage() {
         ) : null}
         <JourneyProgress statuses={journey} onSelect={selectJourney} />
         <p className="mb-3 text-[12px] font-extrabold text-muted-foreground" aria-live="polite">
-          {step === 1 || step === 3 || step === 7
-            ? `Plan setup: 1 of 5 · ${step === 1 ? "Part 1 of 3 — subjects, exam dates and confidence" : step === 3 ? "Part 2 of 3 — your revision time" : "Part 3 of 3 — review your details"}`
+          {FIRST_STAGE.some((screen) => screen.step === step)
+            ? `Plan setup: 1 of 5 · Part ${FIRST_STAGE.findIndex((screen) => screen.step === step) + 1} of 5 — ${FIRST_STAGE.find((screen) => screen.step === step)?.label}`
             : step === 2
               ? "Plan setup: 2 of 5 · Step 2 is optional"
               : step === 5
@@ -657,6 +661,23 @@ function SetupPage() {
           {checkState === "skipped" && step !== 5 ? " · Knowledge check skipped — you can complete it later." : ""}
           {checkState !== "done" && step === 5 ? " · Priorities unlock after you finish the knowledge check." : ""}
         </p>
+
+        {FIRST_STAGE.some((screen) => screen.step === step) ? (
+          <nav aria-label="Exams and availability screens" className="mb-4">
+            <ol className="grid grid-cols-5 gap-1 text-center">
+              {FIRST_STAGE.map((screen, index) => {
+                const current = FIRST_STAGE.findIndex((item) => item.step === step);
+                return (
+                  <li key={screen.step}>
+                    <button type="button" onClick={() => setStep(screen.step)} disabled={index > current || (index > 0 && (!picks.length || Boolean(nameError) || missingTiers > 0))} aria-current={screen.step === step ? "step" : undefined} className={`w-full border-t-2 pt-2 text-[11px] font-bold leading-tight disabled:cursor-default ${index <= current ? "border-primary text-foreground" : "border-border text-muted-foreground"}`}>
+                      {index + 1}. {screen.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+        ) : null}
 
         <div id="step-card" tabIndex={-1} className="rounded-[18px] bg-card p-4 ring-1 ring-black/5 outline-none sm:p-5">
           {step === 1 ? (

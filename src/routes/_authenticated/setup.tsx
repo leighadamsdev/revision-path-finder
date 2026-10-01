@@ -93,7 +93,10 @@ function SetupPage() {
   const [step, setStepRaw] = useState(routeSearch.step === 2 ? 2 : 1);
   function setStep(n: number) {
     setStepRaw(n);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0 });
+      window.setTimeout(() => document.getElementById("step-card")?.focus(), 50);
+    }
   }
   const [checkState, setCheckState] = useState<"todo" | "skipped" | "done">("todo");
   const [topicsVisited, setTopicsVisited] = useState(false);
@@ -499,7 +502,7 @@ function SetupPage() {
   const anyTopics = ranked.length > 0;
 
   const journey: Record<number, JourneyStatus> = {
-    1: step === 1 || step === 3 ? "current" : "done",
+    1: step === 1 || step === 3 || step === 7 ? "current" : "done",
     2: step === 2 ? "current" : topicsVisited ? "done" : "optional",
     3: step === 5 ? "current" : checkState === "done" ? "done" : checkState === "skipped" ? "skipped" : "optional",
     4: step === 6 ? "current" : checkState === "done" ? "done" : "locked",
@@ -520,8 +523,19 @@ function SetupPage() {
     <AppShell>
       <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
         <JourneyProgress statuses={journey} onSelect={selectJourney} />
+        <p className="mb-3 text-[12px] font-extrabold text-muted-foreground" aria-live="polite">
+          {step === 1 || step === 3 || step === 7
+            ? `Plan setup: 1 of 5 · ${step === 1 ? "Part 1 of 3 — subjects, exam dates and confidence" : step === 3 ? "Part 2 of 3 — your revision time" : "Part 3 of 3 — review your details"}`
+            : step === 2
+              ? "Plan setup: 2 of 5 · Step 2 is optional"
+              : step === 5
+                ? "Plan setup: 3 of 5 · Optional — skip any time"
+                : "Plan setup: 4 of 5 · Review your priorities"}
+          {checkState === "skipped" && step !== 5 ? " · Knowledge check skipped — you can complete it later." : ""}
+          {checkState !== "done" && step === 5 ? " · Priorities unlock after you finish the knowledge check." : ""}
+        </p>
 
-        <div className="rounded-[18px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
+        <div id="step-card" tabIndex={-1} className="rounded-[18px] bg-card p-4 ring-1 ring-black/5 outline-none sm:p-5">
           {step === 1 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">
@@ -1164,10 +1178,39 @@ function SetupPage() {
             </>
           ) : null}
 
+          {step === 7 ? (
+            <>
+              <p className="text-lg font-extrabold tracking-tight">You're ready to create your timetable.</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">
+                Check your details below. Nothing is created until you choose an option.
+              </p>
+              <div className="mt-4 space-y-1.5 text-[13px]">
+                {picks.map((p) => (
+                  <Row
+                    key={p.name}
+                    label={`${p.name}${p.tier ? ` (${p.tier})` : ""}`}
+                    value={`${confidences[p.name] == null ? "Confidence not set" : (confidences[p.name] ?? 0) <= 2 ? "Low confidence" : (confidences[p.name] ?? 0) <= 4 ? "Medium confidence" : "High confidence"} · ${(examDates[p.name] ?? []).filter(Boolean).length ? `${(examDates[p.name] ?? []).filter(Boolean).length} exam date(s)` : "No exam date yet"}`}
+                  />
+                ))}
+                <Row label="Study days" value={studyDays.length ? studyDays.join(", ") : "None"} />
+                <Row label="Weeks" value={String(weeks)} />
+                <Row label="Total sessions" value={String(totalSessions)} />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-3 text-[12px] font-bold">
+                <button type="button" className="underline" onClick={() => setStep(1)}>Change subjects or confidence</button>
+                <button type="button" className="underline" onClick={() => setStep(3)}>Change revision time</button>
+              </div>
+              <p className="mt-4 text-[13px] font-extrabold">What would you like to do next?</p>
+              <p className="text-[12px] font-medium text-muted-foreground">
+                A Quick Plan is ready in seconds — you can personalise it later. Or add topics now for a more tailored timetable.
+              </p>
+            </>
+          ) : null}
+
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {step !== 1 ? (
               <button
-                onClick={() => setStep(step === 3 ? 1 : step === 2 ? 3 : step === 5 ? 2 : 5)}
+                onClick={() => setStep(step === 3 ? 1 : step === 7 ? 3 : step === 2 ? 7 : step === 5 ? 2 : 5)}
                 className="rounded-full px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-background"
               >
                 Back
@@ -1179,13 +1222,18 @@ function SetupPage() {
               </button>
             ) : null}
             {step === 3 ? (
+              <button onClick={() => setStep(7)} disabled={!canContinue} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                Review my details
+              </button>
+            ) : null}
+            {step === 7 ? (
               <>
-                <button onClick={() => void generate("quick")} disabled={!canContinue || generating} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                  {generating ? "Building your timetable…" : "Create my quick timetable"}
+                <button onClick={() => void generate("quick")} disabled={generating || picks.length === 0 || studyDays.length === 0} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                  {generating ? "Building your timetable…" : "Create my Quick Plan"}
                 </button>
                 <button
                   onClick={() => { setTopicsVisited(true); setOpenSubject(picks[0]?.name ?? null); setStep(2); }}
-                  disabled={!canContinue}
+                  disabled={picks.length === 0}
                   className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background"
                 >
                   Make my plan more personalised

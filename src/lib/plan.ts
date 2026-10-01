@@ -102,6 +102,7 @@ export type SessionRow = {
   completed_at: string | null;
   kind: string;
   pinned: boolean;
+  missed_at?: string | null;
 };
 
 export async function fetchSubjects(): Promise<Subject[]> {
@@ -197,7 +198,7 @@ export async function fetchSessions(planId: string): Promise<SessionRow[]> {
   const { data, error } = await supabase
     .from("sessions")
     .select(
-      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence_before, confidence, gap_notes, length_minutes, completed_at, kind, pinned",
+      "id, plan_id, week_number, day_label, session_slot, subject_id, topic_text, confidence_before, confidence, gap_notes, length_minutes, completed_at, kind, pinned, missed_at",
     )
     .eq("plan_id", planId)
     .order("week_number")
@@ -948,5 +949,28 @@ export async function updatePlanCapacity(planId: string, capacity: Capacity) {
       pre_exam_weeks: capacity.preExamWeeks ?? 4,
     })
     .eq("id", planId);
+  if (error) throw error;
+}
+
+/** Adds an extra session at the end of a day. */
+export async function addExtraSession(
+  planId: string,
+  week: number,
+  day: string,
+  subjectId: string | null,
+  minutes: number,
+  nextSlot: number,
+) {
+  const { error } = await supabase.from("sessions").insert({
+    plan_id: planId,
+    week_number: week,
+    day_label: day,
+    session_slot: nextSlot,
+    subject_id: subjectId,
+    topic_text: "",
+    gap_notes: "",
+    length_minutes: minutes,
+    kind: "extra",
+  });
   if (error) throw error;
 }

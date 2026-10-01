@@ -145,10 +145,13 @@ function SetupPage() {
   useEffect(() => {
     if (!user || restored) return;
     setRestored(true);
+    void (async () => {
     try {
+      const { data: row } = await supabase.from("setup_drafts").select("data").eq("user_id", user.id).maybeSingle();
       const raw = window.localStorage.getItem(DRAFT_KEY + user.id);
-      if (!raw) return;
-      const d = JSON.parse(raw);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d: any = row?.data && Object.keys(row.data as object).length ? row.data : raw ? JSON.parse(raw) : null;
+      if (!d) return;
       if (d.picks?.length) setPicks(d.picks);
       if (d.chosen) setChosen(d.chosen);
       if (d.source) setSource(d.source);
@@ -172,12 +175,18 @@ function SetupPage() {
     } catch {
       /* ignore a broken draft */
     }
+    })();
   }, [user, restored, routeSearch.step]);
 
   useEffect(() => {
     if (!user || !restored) return;
     const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step };
     window.localStorage.setItem(DRAFT_KEY + user.id, JSON.stringify(d));
+    // Also save to the student's account (debounced) so it resumes on any device.
+    const t = setTimeout(() => {
+      void supabase.from("setup_drafts").upsert({ user_id: user.id, data: d as never, updated_at: new Date().toISOString() });
+    }, 1200);
+    return () => clearTimeout(t);
   }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step]);
 
   const studyDays = useMemo(
@@ -368,8 +377,13 @@ function SetupPage() {
         examDateMap[id] = [...new Set((examDates[pick.name] ?? []).filter(Boolean))].sort();
         // Quick plans are subject-level; personalised plans drop excluded topics.
         const all = kind === "quick" ? [] : topicsFor(pick.name);
+        // Personalised plans keep the student's reviewed order (saved as topic position).
+        const rank = (t: string) => {
+          const i = order.indexOf(`${pick.name}|||${t}`);
+          return i < 0 ? Number.MAX_SAFE_INTEGER : i;
+        };
         const topics = kind === "personalised"
-          ? all.filter((t) => !excluded.includes(`${pick.name}|||${t}`))
+          ? all.filter((t) => !excluded.includes(`${pick.name}|||${t}`)).sort((a, b) => rank(a) - rank(b))
           : all;
         confidenceMap[id] = confidences[pick.name] ?? null;
         if (topics.length) {
@@ -411,6 +425,7 @@ function SetupPage() {
 
       window.localStorage.setItem("revisionpath.activePlan", planId);
       window.localStorage.removeItem(DRAFT_KEY + user.id);
+      await supabase.from("setup_drafts").delete().eq("user_id", user.id);
       await queryClient.invalidateQueries();
       navigate({ to: "/plan" });
     } catch (error) {

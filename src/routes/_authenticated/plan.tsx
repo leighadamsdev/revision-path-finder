@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
+import { NextBestAction } from "@/components/planner/NextBestAction";
 import { addExtraSession } from "@/lib/plan";
 import { ExamCountdown } from "@/components/ExamCountdown";
 import { SessionCard } from "@/components/SessionCard";
@@ -239,6 +240,7 @@ function TimetablePage() {
         </div>
       }
     >
+      <NextBestAction hideTimetableLink />
       <div className="mb-5 flex flex-col items-start justify-between gap-3 print:hidden sm:flex-row sm:items-center">
         <div>
           <h1 className="text-xl font-extrabold tracking-tight">Week {week}</h1>

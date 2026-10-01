@@ -50,9 +50,8 @@ export const Route = createFileRoute("/_authenticated/setup")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    step: typeof search.step === "number" ? search.step : undefined,
-  }),
+  validateSearch: (raw: Record<string, unknown>): { step?: number } =>
+    typeof raw["step"] === "number" ? { step: raw["step"] } : {},
   component: SetupPage,
 });
 
@@ -88,9 +87,9 @@ function SetupPage() {
     return (s?.topics ?? []).map(libraryTopicText);
   }
 
-  const search = Route.useSearch();
+  const routeSearch = Route.useSearch();
   /** Screens: 1 subjects, 3 time (journey step 1), 2 topics, 5 knowledge check, 6 priorities. */
-  const [step, setStepRaw] = useState(search.step === 2 ? 2 : 1);
+  const [step, setStepRaw] = useState(routeSearch.step === 2 ? 2 : 1);
   function setStep(n: number) {
     setStepRaw(n);
     if (typeof window !== "undefined") window.scrollTo({ top: 0 });
@@ -168,12 +167,12 @@ function SetupPage() {
       if (d.topicsVisited) setTopicsVisited(true);
       if (d.order) setOrder(d.order);
       if (d.excluded) setExcluded(d.excluded);
-      if (search.step !== 2 && d.step && d.step !== 4) setStepRaw(d.step);
+      if (routeSearch.step !== 2 && d.step && d.step !== 4) setStepRaw(d.step);
       toast.message("We've restored your unfinished plan setup.");
     } catch {
       /* ignore a broken draft */
     }
-  }, [user, restored, search.step]);
+  }, [user, restored, routeSearch.step]);
 
   useEffect(() => {
     if (!user || !restored) return;
@@ -892,7 +891,7 @@ function SetupPage() {
                             </p>
                           ) : null}
 
-                          {finalTopics.length && step === 5 ? (
+                          {finalTopics.length && (step as number) === 5 ? (
                             <div className="mt-4 border-t border-border pt-3">
                               <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
                                 Rate each topic

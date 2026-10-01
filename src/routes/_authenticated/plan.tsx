@@ -486,8 +486,8 @@ const PLAN_TYPES: Record<string, { label: string; text: string }> = {
   },
 };
 
-function PlanTypeNote({ type }: { type?: string | null }) {
-  const info = PLAN_TYPES[type ?? "personalised"] ?? PLAN_TYPES.personalised!;
+function PlanTypeNote({ type }: { type?: string | null | undefined }) {
+  const info = PLAN_TYPES[type ?? "personalised"] ?? PLAN_TYPES["personalised"]!;
   return (
     <div className="mt-2 max-w-xl rounded-[12px] bg-card px-3 py-2 ring-1 ring-border">
       <p className="text-[12px] font-extrabold">

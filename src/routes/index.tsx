@@ -405,7 +405,7 @@ function QuickLinks() {
         ))}
         <li className="flex items-center gap-3 rounded-[8px] border-l-4 border-primary bg-card p-4 shadow-sm ring-1 ring-border transition-colors hover:bg-accent/40">
           <span className="flex size-7 shrink-0 items-center justify-center rounded-[6px] bg-primary text-[13px] font-extrabold text-primary-foreground">
-            7
+            3
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[14px] font-extrabold">Find more help (free - no login needed)</p>

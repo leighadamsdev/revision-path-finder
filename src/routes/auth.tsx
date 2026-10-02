@@ -5,7 +5,6 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
-import { needsOnboarding } from "@/lib/library";
 import { PublicHeader } from "@/components/PublicHeader";
 import { SchoolSearch, fetchAllSchools } from "@/components/SchoolSearch";
 

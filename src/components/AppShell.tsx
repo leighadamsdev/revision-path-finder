@@ -33,7 +33,8 @@ const MY_REVISION_TABS = [
   { to: "/exams", label: "Exam timetable", icon: CalendarDays },
 ] as const;
 
-const GREAT_RESOURCE_TABS = [
+const FREE_RESOURCE_TABS = [
+  { to: "/revision-guide", label: "Effective Revision", icon: GraduationCap },
   { to: "/papers", label: "Past Papers", icon: FileText },
   { to: "/sites", label: "Revision Links", icon: Sparkles },
   { to: "/revision-tools", label: "Revision Tools", icon: Wrench },
@@ -43,10 +44,10 @@ import type { LucideIcon } from "lucide-react";
 
 const GROUPS: { label: string; items: readonly NavTab[] }[] = [
   { label: "My revision", items: MY_REVISION_TABS },
-  { label: "Great resources", items: GREAT_RESOURCE_TABS },
+  { label: "Free Resources", items: FREE_RESOURCE_TABS },
 ];
 
-const ALL_TABS: readonly NavTab[] = [...MY_REVISION_TABS, ...GREAT_RESOURCE_TABS];
+const ALL_TABS: readonly NavTab[] = [...MY_REVISION_TABS, ...FREE_RESOURCE_TABS];
 
 type NavTab = { to: string; label: string; icon: LucideIcon };
 
@@ -158,15 +159,6 @@ export function AppShell({
                 <House className="size-4 shrink-0" strokeWidth={2.5} />
                 <span className="whitespace-nowrap text-[11px] font-bold leading-tight">Home</span>
               </Link>
-              <Link
-                to="/revision-guide"
-                className="flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-[8px] px-3 py-2 text-center text-structure-foreground/70"
-                activeProps={{ className: "bg-structure-foreground/10 text-primary" }}
-                activeOptions={{ exact: true }}
-              >
-                <GraduationCap className="size-4 shrink-0" strokeWidth={2.5} />
-                <span className="whitespace-nowrap text-[11px] font-bold leading-tight">Effective Revision</span>
-              </Link>
               {GROUPS.map((group) => (
                 <div
                   key={group.label}
@@ -232,9 +224,6 @@ export function AppShell({
             </div>
             {moreOpen ? (
               <div className="absolute inset-x-0 top-full z-30 mt-2 rounded-[8px] bg-structure p-2 shadow-lg ring-1 ring-structure-foreground/15">
-                <Link to="/revision-guide" onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10" activeProps={{ className: "bg-structure-foreground/10 text-primary" }}>
-                  <GraduationCap className="size-4 shrink-0" />Effective Revision
-                </Link>
                 {GROUPS.map((group) => (
                   <div key={group.label}>
                     <p className="px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wide text-structure-foreground/50">{group.label}</p>

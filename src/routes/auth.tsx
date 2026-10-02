@@ -5,7 +5,6 @@ import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, useAuth } from "@/hooks/useAuth";
-import { needsOnboarding } from "@/lib/library";
 import { PublicHeader } from "@/components/PublicHeader";
 import { SchoolSearch, fetchAllSchools } from "@/components/SchoolSearch";
 
@@ -53,19 +52,8 @@ function AuthPage() {
     if (!loading && user) {
       void ensureProfile(user)
         .catch(() => undefined)
-        .then(async () => {
-          const { data } = await supabase.from("plans").select("id").limit(1);
-          const safeReturnTo = search.returnTo?.startsWith("/") && !search.returnTo.startsWith("//")
-            ? search.returnTo
-            : null;
-          if (await needsOnboarding(user.id)) {
-            navigate({ to: "/onboarding" });
-          } else if (safeReturnTo) {
-            navigate({ to: safeReturnTo });
-          } else {
-            void data;
-            navigate({ to: "/" });
-          }
+        .then(() => {
+          navigate({ to: "/" });
         });
     }
   }, [loading, user, navigate, search.returnTo]);

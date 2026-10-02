@@ -63,7 +63,7 @@ function Landing() {
           GCSE REVISION PLANNER AND KNOWELDGE CHECKER
         </p>
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          A bespoke revision timetable, designed around exactly what you need to focus on and the time you have
+          A bespoke revision timetable, built around exactly what you need to focus on and the time you have
         </h1>
         <div className="relative mt-8 w-full">
           <div

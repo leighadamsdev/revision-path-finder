@@ -58,7 +58,6 @@ function Landing() {
       <PublicHeader />
 
       <main className="mx-auto max-w-4xl px-5 pb-20 pt-6">
-        <NextBestAction />
         <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           GCSE REVISION PLANNER AND KNOWELDGE CHECKER
         </p>

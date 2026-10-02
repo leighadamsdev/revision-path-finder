@@ -85,6 +85,9 @@ function Landing() {
             ))}
           </ol>
         </div>
+        <div className="mt-8">
+          <NextBestAction />
+        </div>
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link
             to="/auth"

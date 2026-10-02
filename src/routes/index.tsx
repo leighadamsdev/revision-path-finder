@@ -60,7 +60,7 @@ function Landing() {
       <main className="mx-auto max-w-4xl px-5 pb-20 pt-6">
         <NextBestAction />
         <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          GCSE revision planner
+          GCSE REVISION PLANNER AND KNOWELDGE CHECKER
         </p>
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
           A bespoke revision timetable, designed around exactly what you need to focus on and the time you have

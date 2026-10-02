@@ -1,11 +1,11 @@
 {
-  "asset_id": "d5bb137d-2ce4-40d4-aaf4-9b903f43b0fa",
-  "content_type": "image/png",
-  "created_at": "2026-09-30T20:30:38Z",
-  "original_filename": "revplan-logo.png",
+  "version": 1,
+  "asset_id": "ad4b37e4-5609-4675-8e59-ecfbd6b7acd3",
   "project_id": "2e4f0b05-d403-4862-8f64-c487f1bbcae8",
-  "r2_key": "a/v1/2e4f0b05-d403-4862-8f64-c487f1bbcae8/d5bb137d-2ce4-40d4-aaf4-9b903f43b0fa/revplan-logo.png",
-  "size": 14540,
-  "url": "/__l5e/assets-v1/d5bb137d-2ce4-40d4-aaf4-9b903f43b0fa/revplan-logo.png",
-  "version": 1
+  "url": "/__l5e/assets-v1/ad4b37e4-5609-4675-8e59-ecfbd6b7acd3/revplan-logo.png",
+  "r2_key": "a/v1/2e4f0b05-d403-4862-8f64-c487f1bbcae8/ad4b37e4-5609-4675-8e59-ecfbd6b7acd3/revplan-logo.png",
+  "original_filename": "revplan-logo.png",
+  "size": 152070,
+  "content_type": "image/png",
+  "created_at": "2026-10-02T15:05:12Z"
 }

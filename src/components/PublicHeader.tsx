@@ -12,7 +12,8 @@ const MY_REVISION = [
   { to: "/knowledge-checker", label: "Knowledge Checker" },
 ] as const;
 
-const GREAT_RESOURCES = [
+const FREE_RESOURCES = [
+  { to: "/revision-guide", label: "Effective Revision" },
   { to: "/papers", label: "Past Papers" },
   { to: "/sites", label: "Revision Links" },
   { to: "/revision-tools", label: "Revision Tools" },
@@ -20,7 +21,7 @@ const GREAT_RESOURCES = [
 
 const GROUPS: { label: string; items: readonly { to: string; label: string }[] }[] = [
   { label: "My revision", items: MY_REVISION },
-  { label: "Great resources", items: GREAT_RESOURCES },
+  { label: "Free Resources", items: FREE_RESOURCES },
 ];
 
 const MOBILE_PRIMARY = ["/", "/knowledge-checker", "/papers"] as const;
@@ -64,14 +65,6 @@ export function PublicHeader() {
               activeOptions={{ exact: true }}
             >
               Home
-            </Link>
-            <Link
-              to="/revision-guide"
-              className={linkClass}
-              activeProps={{ className: activeLinkClass }}
-              activeOptions={{ exact: true }}
-            >
-              Effective Revision
             </Link>
             {GROUPS.map((group) => (
               <div
@@ -126,8 +119,7 @@ export function PublicHeader() {
           </div>
           {moreOpen ? (
             <div className="absolute inset-x-0 top-full z-30 mt-2 rounded-[8px] bg-card p-2 shadow-lg ring-1 ring-border">
-               <Link to="/revision-guide" onClick={() => setMoreOpen(false)} className={`block rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${isActive("/revision-guide") ? activeLinkClass : ""}`}>Effective Revision</Link>
-              {GROUPS.map((group) => (
+               {GROUPS.map((group) => (
                 <div key={group.label}>
                   <p className="px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70">{group.label}</p>
                   {group.items

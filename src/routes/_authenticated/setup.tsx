@@ -1103,29 +1103,43 @@ function SetupPage() {
                             </p>
                           ) : null}
 
-                          {finalTopics.length && (step as number) === 5 ? (
-                            <div className="mt-4 border-t border-border pt-3">
-                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                                Rate each topic
-                              </p>
-                              <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-                                Red means you need it most, green means you're confident. Red topics
-                                come first and get the most sessions — this builds your priority order.
-                              </p>
-                              <div className="mt-2">
-                                <TopicConfidenceList
-                                  topics={finalTopics}
-                                  ratings={topicRatings[pick.name] ?? {}}
-                                  onChange={(topic, value) =>
-                                    setTopicRatings((prev) => ({
-                                      ...prev,
-                                      [pick.name]: { ...(prev[pick.name] ?? {}), [topic]: value },
-                                    }))
+                          <div className="mt-4 border-t border-border pt-3">
+                            <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                              Your topic list — edit and rate
+                            </p>
+                            <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+                              Click a topic to rename it, add sub-topics, or delete anything you don't need. Rate each one: red means you need it most, green means you're confident.
+                            </p>
+                            <div className="mt-2">
+                              <EditableTopicList
+                                subject={pick.name}
+                                topics={finalTopics}
+                                ratings={topicRatings[pick.name] ?? {}}
+                                onChange={(next, rename) => {
+                                  setSource((prev) => ({ ...prev, [pick.name]: "edited" }));
+                                  setChosen((prev) => ({ ...prev, [pick.name]: next }));
+                                  if (rename) {
+                                    setTopicRatings((prev) => {
+                                      const r = { ...(prev[pick.name] ?? {}) };
+                                      for (const k of Object.keys(r)) {
+                                        if (k === rename.from || k.startsWith(rename.from + SUB_SEP)) {
+                                          r[rename.to + k.slice(rename.from.length)] = r[k] ?? null;
+                                          delete r[k];
+                                        }
+                                      }
+                                      return { ...prev, [pick.name]: r };
+                                    });
                                   }
-                                />
-                              </div>
+                                }}
+                                onRate={(topic, value) =>
+                                  setTopicRatings((prev) => ({
+                                    ...prev,
+                                    [pick.name]: { ...(prev[pick.name] ?? {}), [topic]: value },
+                                  }))
+                                }
+                              />
                             </div>
-                          ) : null}
+                          </div>
                         </div>
                       ) : null}
                     </div>

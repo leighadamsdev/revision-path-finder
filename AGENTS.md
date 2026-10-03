@@ -10,4 +10,5 @@
 <!-- LOVABLE:END -->
 
 - Use the semantic light-grey, deep-navy (#14133e), and orange (#fe9a00) palette across the app so every page shares one accessible visual system.
-- Keep the five first-stage planner screens within the existing setup route and persisted step state so drafts and edit/copy journeys remain compatible.
+- The planner is a 3-stage journey (Subjects & exams with five short screens, Check what I know, Choose & build) inside the existing setup route; internal step numbers stay persisted so old drafts and edit/copy journeys remain compatible.
+- Left-out plan topics are stored as plan_topics rows with excluded=true (fetchPlanTopics skips them) so they can be re-included later; sub-topics are stored as "Parent › Sub" topic text so they schedule like topics.

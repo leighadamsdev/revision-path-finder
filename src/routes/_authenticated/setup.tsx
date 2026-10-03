@@ -464,10 +464,44 @@ function SetupPage() {
     }
   }
 
+  /** Adds any new topics/sub-topics the student typed or edited to their Topic Library. */
+  async function writeBackToLibrary(list: Pick[]) {
+    if (!saveToLibrary) return;
+    try {
+      for (const pick of list) {
+        const mode = source[pick.name] ?? "dfe";
+        if (mode === "dfe" || mode === "library") continue;
+        const topics = topicsFor(pick.name);
+        if (!topics.length) continue;
+        const lib = library.subjects.find((x) => x.name.trim().toLowerCase() === pick.name.trim().toLowerCase());
+        const known = new Set((lib?.topics ?? []).map((t) => t.title.trim().toLowerCase()));
+        const groups = new Map<string, string[]>();
+        for (const t of topics) {
+          const parent = isSub(t) ? t.split(SUB_SEP)[0]! : t;
+          if (known.has(parent.trim().toLowerCase())) continue;
+          if (!groups.has(parent)) groups.set(parent, []);
+          if (isSub(t)) groups.get(parent)!.push(subLabel(t));
+        }
+        if (!groups.size) continue;
+        const subjectId = lib?.id ?? (await addLibrarySubject({ name: pick.name, qualification_level: pick.tier ? `GCSE ${pick.tier}` : "GCSE" }));
+        await saveLibraryTopics(
+          subjectId,
+          [...groups].map(([title, items]) => ({ key: newKey(), title, items: items.map((i) => ({ key: newKey(), title: i, uncertain: false })) })),
+          { type: "manual", path: null },
+          lib?.topics.length ?? 0,
+        );
+      }
+      await queryClient.invalidateQueries({ queryKey: ["library"] });
+    } catch (error) {
+      console.error(error);
+      toast.error("Your plan is saved, but we couldn't add the new topics to your Topic Library.");
+    }
+  }
+
   async function generate(kind: PlanKind) {
     if (!(editing && fromId && original)) return runGenerate(kind);
     const changes: string[] = [];
-    const now = picks.map((p) => p.name);
+    const now = picks.filter((p) => !excludedSubjects.includes(p.name)).map((p) => p.name);
     const added = now.filter((n) => !original.subjects.includes(n));
     const removed = original.subjects.filter((n) => !now.includes(n));
     if (added.length) changes.push(`Adding ${added.join(", ")}`);
@@ -499,7 +533,10 @@ function SetupPage() {
       const chosenTopics: Record<string, string[]> = {};
       const priorityTopics: Record<string, string[]> = {};
       const topicConfidence: Record<string, Record<string, number | null>> = {};
-      for (const pick of picks) {
+      const leftOut: Array<{ subjectId: string; topic: string; confidence: number | null }> = [];
+      const planPicks = picks.filter((p) => !excludedSubjects.includes(p.name));
+      if (!planPicks.length) throw new Error("Include at least one subject in this plan.");
+      for (const pick of planPicks) {
         const id = await resolveSubjectId(pick.name, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
@@ -514,6 +551,9 @@ function SetupPage() {
         const topics = kind === "personalised"
           ? all.filter((t) => !excluded.includes(`${pick.name}|||${t}`)).sort((a, b) => rank(a) - rank(b))
           : all;
+        if (kind === "personalised") {
+          for (const t of all) if (excluded.includes(`${pick.name}|||${t}`)) leftOut.push({ subjectId: id, topic: t, confidence: topicRatings[pick.name]?.[t] ?? null });
+        }
         confidenceMap[id] = confidences[pick.name] ?? null;
         if (topics.length) {
           chosenTopics[id] = topics;
@@ -542,9 +582,11 @@ function SetupPage() {
         await savePlanTopics(fromId, topicRows);
         await updatePlanSettings(fromId, { name: trimmedName, startDate, weeks, days: daySettings, intensity, holidays: cleanHolidays });
         await supabase.from("plans").update({ plan_type: kind }).eq("id", fromId);
+        await saveExcludedTopics(fromId, leftOut);
+        await writeBackToLibrary(planPicks);
         await regeneratePlanSessions(fromId, {
           startDate, weeks, days: daySettings, intensity, holidays: cleanHolidays,
-          subjects: picks.map((pick, i) => {
+          subjects: planPicks.map((pick, i) => {
             const id = subjectIds[i]!;
             return {
               subjectId: id, name: pick.name, examDates: examDateMap[id] ?? [], confidence: confidenceMap[id] ?? null,
@@ -582,6 +624,8 @@ function SetupPage() {
         holidays: holidays.filter((holiday) => holiday.start && holiday.end),
       });
 
+      await saveExcludedTopics(planId, leftOut);
+      await writeBackToLibrary(planPicks);
       window.localStorage.setItem("revisionpath.activePlan", planId);
       if (!copying) {
         window.localStorage.removeItem(DRAFT_KEY + user.id);

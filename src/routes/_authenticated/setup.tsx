@@ -33,7 +33,9 @@ import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan } from "@/hooks/useActivePlan";
 import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
-import { topicText as libraryTopicText } from "@/lib/library";
+import { topicText as libraryTopicText, addSubject as addLibrarySubject, saveTopics as saveLibraryTopics, newKey } from "@/lib/library";
+import { EditableTopicList, SUB_SEP, isSub, subLabel } from "@/components/planner/EditableTopicList";
+import { fetchExcludedTopics, saveExcludedTopics } from "@/lib/plan";
 
 import { JourneyProgress, SubjectConfidence, type JourneyStatus } from "@/components/planner/JourneyProgress";
 import { daysToNextExam, priorityScore } from "@/lib/scheduling";
@@ -81,7 +83,7 @@ const FIRST_STAGE = [
   { step: 7, label: "Review" },
 ] as const;
 
-type TopicSource = "dfe" | "manual" | "upload" | "library";
+type TopicSource = "dfe" | "manual" | "upload" | "library" | "edited";
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -116,6 +118,9 @@ function SetupPage() {
   const [topicsVisited, setTopicsVisited] = useState(false);
   const [order, setOrder] = useState<string[]>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
+  /** Subjects ticked off for this plan in Step 3 (kept in the list, not scheduled). */
+  const [excludedSubjects, setExcludedSubjects] = useState<string[]>([]);
+  const [saveToLibrary, setSaveToLibrary] = useState(true);
   const [restored, setRestored] = useState(false);
   const [original, setOriginal] = useState<{ subjects: string[]; name: string; startDate: string; weeks: number; days: string; kind: PlanKind } | null>(null);
   const [preview, setPreview] = useState<{ kind: PlanKind; changes: string[]; completed: number } | null>(null);
@@ -194,7 +199,16 @@ function SetupPage() {
         setTopicRatings(ratings);
         setPriorities(prios);
         if (Object.keys(byName).length) setTopicsVisited(true);
-        setOrder(tops.map((t) => `${nameOf(t.subject_id)}|||${t.topic}`));
+        const left = await fetchExcludedTopics(p.id);
+        for (const t of left) {
+          const n = nameOf(t.subject_id);
+          if (!n) continue;
+          (byName[n] ??= []).push(t.topic);
+          (ratings[n] ??= {})[t.topic] = t.confidence;
+        }
+        setExcluded(left.map((t) => `${nameOf(t.subject_id)}|||${t.topic}`));
+        setSource(Object.fromEntries(Object.keys(byName).map((n) => [n, "edited" as TopicSource])));
+        setOrder([...tops, ...left].map((t) => `${nameOf(t.subject_id)}|||${t.topic}`));
         setName(routeSearch.mode === "copy" ? `Copy of ${p.name}` : p.name);
         setStartDate(p.start_date);
         setWeeks(p.weeks);
@@ -246,7 +260,8 @@ function SetupPage() {
       if (d.topicsVisited) setTopicsVisited(true);
       if (d.order) setOrder(d.order);
       if (d.excluded) setExcluded(d.excluded);
-       if (routeSearch.step !== 2 && d.step) setStepRaw(d.step);
+      if (d.excludedSubjects) setExcludedSubjects(d.excludedSubjects);
+      if (routeSearch.step !== 2 && d.step) setStepRaw(d.step === 5 ? 2 : d.step);
       toast.message("We've restored your unfinished plan setup.");
     } catch {
       /* ignore a broken draft */
@@ -256,25 +271,42 @@ function SetupPage() {
 
   useEffect(() => {
     if (!user || !restored || fromId) return;
-    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step };
+    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step };
     window.localStorage.setItem(DRAFT_KEY + user.id, JSON.stringify(d));
     // Also save to the student's account (debounced) so it resumes on any device.
     const t = setTimeout(() => {
       void supabase.from("setup_drafts").upsert({ user_id: user.id, data: d as never, updated_at: new Date().toISOString() });
     }, 1200);
     return () => clearTimeout(t);
-  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step]);
+  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step]);
 
   const studyDays = useMemo(
     () => WEEK_DAYS.filter((d) => dayConfigs[d]).map((d) => d as string),
     [dayConfigs],
   );
 
+  /** Subjects from the student's other plans (newest first), with their last tier and exam dates. */
+  const pastSubjects = useQuery({
+    queryKey: ["past-plan-subjects", plans.map((p) => p.id).join(",")],
+    enabled: plans.length > 0,
+    queryFn: async () => {
+      const sorted = [...plans].sort((a, b) => b.created_at.localeCompare(a.created_at));
+      const lists = await Promise.all(sorted.map((p) => fetchPlanSubjects(p.id)));
+      const map: Record<string, { name: string; tier: Tier | null; examDates: string[] }> = {};
+      for (const list of lists) for (const s of list) {
+        const key = s.name.trim().toLowerCase();
+        if (!map[key]) map[key] = { name: s.name, tier: (s.tier as Tier | null) ?? null, examDates: s.exam_dates ?? [] };
+      }
+      return map;
+    },
+  });
+  const past = pastSubjects.data ?? {};
+
   /** The student's own subjects first, then the rest of the GCSE catalogue. */
   const myNames = useMemo(() => {
     const seen = new Set<string>();
     const names: string[] = [];
-    for (const s of library.subjects) {
+    for (const s of [...library.subjects, ...Object.values(past)]) {
       const subjectName = s.name.trim();
       if (!subjectName) continue;
       const key = subjectName.toLowerCase();
@@ -283,7 +315,7 @@ function SetupPage() {
       names.push(subjectName);
     }
     return names.sort((a, b) => a.localeCompare(b));
-  }, [library.subjects]);
+  }, [library.subjects, past]);
 
   /** Subjects chosen before (in the library) start ticked — students can untick them. */
   const [prefilled, setPrefilled] = useState(false);
@@ -329,7 +361,9 @@ function SetupPage() {
       if (prev.some((p) => p.name === subjectName)) {
         return prev.filter((p) => p.name !== subjectName);
       }
-      return [...prev, { name: subjectName, tier: null }];
+      const before = past[subjectName.trim().toLowerCase()];
+      if (before?.examDates.length) setExamDates((d) => (d[subjectName]?.length ? d : { ...d, [subjectName]: before.examDates }));
+      return [...prev, { name: subjectName, tier: before?.tier ?? null }];
     });
   }
 
@@ -372,6 +406,7 @@ function SetupPage() {
   function topicsFor(subjectName: string): string[] {
     const mode = source[subjectName] ?? "dfe";
     if (mode === "manual") return manualLines(manualText[subjectName]);
+    if (mode === "edited") return chosen[subjectName] ?? [];
     const topics = chosen[subjectName] ?? [];
     return mode === "dfe" ? topics.map((topic) => detailedTopicText(subjectName, topic)) : topics;
   }

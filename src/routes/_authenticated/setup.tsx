@@ -33,7 +33,9 @@ import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan } from "@/hooks/useActivePlan";
 import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
-import { topicText as libraryTopicText } from "@/lib/library";
+import { topicText as libraryTopicText, addSubject as addLibrarySubject, saveTopics as saveLibraryTopics, newKey } from "@/lib/library";
+import { EditableTopicList, SUB_SEP, isSub, subLabel } from "@/components/planner/EditableTopicList";
+import { fetchExcludedTopics, saveExcludedTopics } from "@/lib/plan";
 
 import { JourneyProgress, SubjectConfidence, type JourneyStatus } from "@/components/planner/JourneyProgress";
 import { daysToNextExam, priorityScore } from "@/lib/scheduling";
@@ -81,7 +83,7 @@ const FIRST_STAGE = [
   { step: 7, label: "Review" },
 ] as const;
 
-type TopicSource = "dfe" | "manual" | "upload" | "library";
+type TopicSource = "dfe" | "manual" | "upload" | "library" | "edited";
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -116,6 +118,9 @@ function SetupPage() {
   const [topicsVisited, setTopicsVisited] = useState(false);
   const [order, setOrder] = useState<string[]>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
+  /** Subjects ticked off for this plan in Step 3 (kept in the list, not scheduled). */
+  const [excludedSubjects, setExcludedSubjects] = useState<string[]>([]);
+  const [saveToLibrary, setSaveToLibrary] = useState(true);
   const [restored, setRestored] = useState(false);
   const [original, setOriginal] = useState<{ subjects: string[]; name: string; startDate: string; weeks: number; days: string; kind: PlanKind } | null>(null);
   const [preview, setPreview] = useState<{ kind: PlanKind; changes: string[]; completed: number } | null>(null);
@@ -194,7 +199,16 @@ function SetupPage() {
         setTopicRatings(ratings);
         setPriorities(prios);
         if (Object.keys(byName).length) setTopicsVisited(true);
-        setOrder(tops.map((t) => `${nameOf(t.subject_id)}|||${t.topic}`));
+        const left = await fetchExcludedTopics(p.id);
+        for (const t of left) {
+          const n = nameOf(t.subject_id);
+          if (!n) continue;
+          (byName[n] ??= []).push(t.topic);
+          (ratings[n] ??= {})[t.topic] = t.confidence;
+        }
+        setExcluded(left.map((t) => `${nameOf(t.subject_id)}|||${t.topic}`));
+        setSource(Object.fromEntries(Object.keys(byName).map((n) => [n, "edited" as TopicSource])));
+        setOrder([...tops, ...left].map((t) => `${nameOf(t.subject_id)}|||${t.topic}`));
         setName(routeSearch.mode === "copy" ? `Copy of ${p.name}` : p.name);
         setStartDate(p.start_date);
         setWeeks(p.weeks);
@@ -246,7 +260,8 @@ function SetupPage() {
       if (d.topicsVisited) setTopicsVisited(true);
       if (d.order) setOrder(d.order);
       if (d.excluded) setExcluded(d.excluded);
-       if (routeSearch.step !== 2 && d.step) setStepRaw(d.step);
+      if (d.excludedSubjects) setExcludedSubjects(d.excludedSubjects);
+      if (routeSearch.step !== 2 && d.step) setStepRaw(d.step === 5 ? 2 : d.step);
       toast.message("We've restored your unfinished plan setup.");
     } catch {
       /* ignore a broken draft */
@@ -256,25 +271,42 @@ function SetupPage() {
 
   useEffect(() => {
     if (!user || !restored || fromId) return;
-    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step };
+    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step };
     window.localStorage.setItem(DRAFT_KEY + user.id, JSON.stringify(d));
     // Also save to the student's account (debounced) so it resumes on any device.
     const t = setTimeout(() => {
       void supabase.from("setup_drafts").upsert({ user_id: user.id, data: d as never, updated_at: new Date().toISOString() });
     }, 1200);
     return () => clearTimeout(t);
-  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, step]);
+  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step]);
 
   const studyDays = useMemo(
     () => WEEK_DAYS.filter((d) => dayConfigs[d]).map((d) => d as string),
     [dayConfigs],
   );
 
+  /** Subjects from the student's other plans (newest first), with their last tier and exam dates. */
+  const pastSubjects = useQuery({
+    queryKey: ["past-plan-subjects", plans.map((p) => p.id).join(",")],
+    enabled: plans.length > 0,
+    queryFn: async () => {
+      const sorted = [...plans].sort((a, b) => b.created_at.localeCompare(a.created_at));
+      const lists = await Promise.all(sorted.map((p) => fetchPlanSubjects(p.id)));
+      const map: Record<string, { name: string; tier: Tier | null; examDates: string[] }> = {};
+      for (const list of lists) for (const s of list) {
+        const key = s.name.trim().toLowerCase();
+        if (!map[key]) map[key] = { name: s.name, tier: (s.tier as Tier | null) ?? null, examDates: s.exam_dates ?? [] };
+      }
+      return map;
+    },
+  });
+  const past = pastSubjects.data ?? {};
+
   /** The student's own subjects first, then the rest of the GCSE catalogue. */
   const myNames = useMemo(() => {
     const seen = new Set<string>();
     const names: string[] = [];
-    for (const s of library.subjects) {
+    for (const s of [...library.subjects, ...Object.values(past)]) {
       const subjectName = s.name.trim();
       if (!subjectName) continue;
       const key = subjectName.toLowerCase();
@@ -283,7 +315,7 @@ function SetupPage() {
       names.push(subjectName);
     }
     return names.sort((a, b) => a.localeCompare(b));
-  }, [library.subjects]);
+  }, [library.subjects, past]);
 
   /** Subjects chosen before (in the library) start ticked — students can untick them. */
   const [prefilled, setPrefilled] = useState(false);
@@ -308,7 +340,7 @@ function SetupPage() {
   const listedGroups = useMemo(() => {
     const seen = new Set(myNames.map((n) => n.toLowerCase()));
     const groups: { label: string; names: string[] }[] = [];
-    if (myNames.length) groups.push({ label: "Your subjects", names: myNames });
+    if (myNames.length) groups.push({ label: "Your saved subjects — tick to include in this plan", names: myNames });
     for (const g of SUBJECT_GROUPS) {
       const names = GCSE_SUBJECTS.filter((s) => s.group === g && !seen.has(s.name.toLowerCase())).map((s) => s.name);
       if (names.length) groups.push({ label: g, names });
@@ -329,7 +361,9 @@ function SetupPage() {
       if (prev.some((p) => p.name === subjectName)) {
         return prev.filter((p) => p.name !== subjectName);
       }
-      return [...prev, { name: subjectName, tier: null }];
+      const before = past[subjectName.trim().toLowerCase()];
+      if (before?.examDates.length) setExamDates((d) => (d[subjectName]?.length ? d : { ...d, [subjectName]: before.examDates }));
+      return [...prev, { name: subjectName, tier: before?.tier ?? null }];
     });
   }
 
@@ -372,6 +406,7 @@ function SetupPage() {
   function topicsFor(subjectName: string): string[] {
     const mode = source[subjectName] ?? "dfe";
     if (mode === "manual") return manualLines(manualText[subjectName]);
+    if (mode === "edited") return chosen[subjectName] ?? [];
     const topics = chosen[subjectName] ?? [];
     return mode === "dfe" ? topics.map((topic) => detailedTopicText(subjectName, topic)) : topics;
   }
@@ -429,10 +464,44 @@ function SetupPage() {
     }
   }
 
+  /** Adds any new topics/sub-topics the student typed or edited to their Topic Library. */
+  async function writeBackToLibrary(list: Pick[]) {
+    if (!saveToLibrary) return;
+    try {
+      for (const pick of list) {
+        const mode = source[pick.name] ?? "dfe";
+        if (mode === "dfe" || mode === "library") continue;
+        const topics = topicsFor(pick.name);
+        if (!topics.length) continue;
+        const lib = library.subjects.find((x) => x.name.trim().toLowerCase() === pick.name.trim().toLowerCase());
+        const known = new Set((lib?.topics ?? []).map((t) => t.title.trim().toLowerCase()));
+        const groups = new Map<string, string[]>();
+        for (const t of topics) {
+          const parent = isSub(t) ? t.split(SUB_SEP)[0]! : t;
+          if (known.has(parent.trim().toLowerCase())) continue;
+          if (!groups.has(parent)) groups.set(parent, []);
+          if (isSub(t)) groups.get(parent)!.push(subLabel(t));
+        }
+        if (!groups.size) continue;
+        const subjectId = lib?.id ?? (await addLibrarySubject({ name: pick.name, qualification_level: pick.tier ? `GCSE ${pick.tier}` : "GCSE" }));
+        await saveLibraryTopics(
+          subjectId,
+          [...groups].map(([title, items]) => ({ key: newKey(), title, items: items.map((i) => ({ key: newKey(), title: i, uncertain: false })) })),
+          { type: "manual", path: null },
+          lib?.topics.length ?? 0,
+        );
+      }
+      await queryClient.invalidateQueries({ queryKey: ["library"] });
+    } catch (error) {
+      console.error(error);
+      toast.error("Your plan is saved, but we couldn't add the new topics to your Topic Library.");
+    }
+  }
+
   async function generate(kind: PlanKind) {
     if (!(editing && fromId && original)) return runGenerate(kind);
     const changes: string[] = [];
-    const now = picks.map((p) => p.name);
+    const now = picks.filter((p) => !excludedSubjects.includes(p.name)).map((p) => p.name);
     const added = now.filter((n) => !original.subjects.includes(n));
     const removed = original.subjects.filter((n) => !now.includes(n));
     if (added.length) changes.push(`Adding ${added.join(", ")}`);
@@ -464,7 +533,10 @@ function SetupPage() {
       const chosenTopics: Record<string, string[]> = {};
       const priorityTopics: Record<string, string[]> = {};
       const topicConfidence: Record<string, Record<string, number | null>> = {};
-      for (const pick of picks) {
+      const leftOut: Array<{ subjectId: string; topic: string; confidence: number | null }> = [];
+      const planPicks = picks.filter((p) => !excludedSubjects.includes(p.name));
+      if (!planPicks.length) throw new Error("Include at least one subject in this plan.");
+      for (const pick of planPicks) {
         const id = await resolveSubjectId(pick.name, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
@@ -479,6 +551,9 @@ function SetupPage() {
         const topics = kind === "personalised"
           ? all.filter((t) => !excluded.includes(`${pick.name}|||${t}`)).sort((a, b) => rank(a) - rank(b))
           : all;
+        if (kind === "personalised") {
+          for (const t of all) if (excluded.includes(`${pick.name}|||${t}`)) leftOut.push({ subjectId: id, topic: t, confidence: topicRatings[pick.name]?.[t] ?? null });
+        }
         confidenceMap[id] = confidences[pick.name] ?? null;
         if (topics.length) {
           chosenTopics[id] = topics;
@@ -507,9 +582,11 @@ function SetupPage() {
         await savePlanTopics(fromId, topicRows);
         await updatePlanSettings(fromId, { name: trimmedName, startDate, weeks, days: daySettings, intensity, holidays: cleanHolidays });
         await supabase.from("plans").update({ plan_type: kind }).eq("id", fromId);
+        await saveExcludedTopics(fromId, leftOut);
+        await writeBackToLibrary(planPicks);
         await regeneratePlanSessions(fromId, {
           startDate, weeks, days: daySettings, intensity, holidays: cleanHolidays,
-          subjects: picks.map((pick, i) => {
+          subjects: planPicks.map((pick, i) => {
             const id = subjectIds[i]!;
             return {
               subjectId: id, name: pick.name, examDates: examDateMap[id] ?? [], confidence: confidenceMap[id] ?? null,
@@ -547,6 +624,8 @@ function SetupPage() {
         holidays: holidays.filter((holiday) => holiday.start && holiday.end),
       });
 
+      await saveExcludedTopics(planId, leftOut);
+      await writeBackToLibrary(planPicks);
       window.localStorage.setItem("revisionpath.activePlan", planId);
       if (!copying) {
         window.localStorage.removeItem(DRAFT_KEY + user.id);
@@ -605,7 +684,7 @@ function SetupPage() {
   }, [picks, examDates, topicRatings, chosen, source, manualText]);
 
   function openPriorities() {
-    setCheckState("done");
+    setCheckState(ranked.some((r) => r.rating != null) ? "done" : "skipped");
     const keys = ranked.map((r) => r.key);
     setOrder((prev) => [...prev.filter((k) => keys.includes(k)), ...keys.filter((k) => !prev.includes(k))].length && prev.length ? [...prev.filter((k) => keys.includes(k)), ...keys.filter((k) => !prev.includes(k))] : keys);
     setStep(6);
@@ -623,19 +702,17 @@ function SetupPage() {
   const rankedByKey = new Map(ranked.map((r) => [r.key, r]));
   const orderedRanked = order.map((k) => rankedByKey.get(k)).filter((r): r is RankedTopic => Boolean(r));
   const anyTopics = ranked.length > 0;
+  const includedSubjects = picks.map((p) => p.name).filter((n) => !excludedSubjects.includes(n));
 
   const journey: Record<number, JourneyStatus> = {
     1: FIRST_STAGE.some((screen) => screen.step === step) ? "current" : "done",
-    2: step === 2 ? "current" : topicsVisited ? "done" : "optional",
-    3: step === 5 ? "current" : checkState === "done" ? "done" : checkState === "skipped" ? "skipped" : "optional",
-    4: step === 6 ? "current" : checkState === "done" ? "done" : "locked",
-    5: "todo",
+    2: step === 2 || step === 5 ? "current" : topicsVisited ? "done" : "optional",
+    3: step === 6 ? "current" : readyForPlan && topicsVisited ? "optional" : "todo",
   };
   function selectJourney(n: number) {
     if (n === 1) setStep(1);
-    else if (n === 2) setStep(2);
-    else if (n === 3) setStep(5);
-    else if (n === 4 && checkState === "done") openPriorities();
+    else if (n === 2) { setTopicsVisited(true); setStep(2); }
+    else if (n === 3 && readyForPlan) openPriorities();
   }
   function saveAndExit() {
     toast.success("Saved — come back any time to carry on.");
@@ -655,14 +732,11 @@ function SetupPage() {
         <JourneyProgress statuses={journey} onSelect={selectJourney} />
         <p className="mb-3 text-[12px] font-extrabold text-muted-foreground" aria-live="polite">
           {FIRST_STAGE.some((screen) => screen.step === step)
-            ? `Plan setup: 1 of 5 · Part ${FIRST_STAGE.findIndex((screen) => screen.step === step) + 1} of 5 — ${FIRST_STAGE.find((screen) => screen.step === step)?.label}`
-            : step === 2
-              ? "Plan setup: 2 of 5 · Step 2 is optional"
-              : step === 5
-                ? "Plan setup: 3 of 5 · Optional — skip any time"
-                : "Plan setup: 4 of 5 · Review your priorities"}
-          {checkState === "skipped" && step !== 5 ? " · Knowledge check skipped — you can complete it later." : ""}
-          {checkState !== "done" && step === 5 ? " · Priorities unlock after you finish the knowledge check." : ""}
+            ? `Step 1 of 3 · Part ${FIRST_STAGE.findIndex((screen) => screen.step === step) + 1} of 5 — ${FIRST_STAGE.find((screen) => screen.step === step)?.label}`
+            : step === 2 || step === 5
+              ? "Step 2 of 3 · Optional — skip any time"
+              : "Step 3 of 3 · Choose what goes in this plan"}
+          {checkState === "skipped" && step === 6 ? " · Knowledge check skipped — you can complete it later." : ""}
         </p>
 
         {FIRST_STAGE.some((screen) => screen.step === step) ? (
@@ -854,13 +928,17 @@ function SetupPage() {
           {step === 2 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">
-                Which topics do you want to cover?
+                Check what you know
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                For each subject, pick where the topics come from: the official DfE content list,
-                your own typing, or a document you upload. Leave a subject blank and we'll fill it
-                in for you.
+                Open each subject, choose where its topics come from (your Topic Library, the DfE
+                list, typing or a document), then edit the list and rate each topic. This step is
+                optional — leave a subject blank and we'll fill it in for you.
               </p>
+              <label className="mt-3 flex items-center gap-2 text-[12px] font-bold">
+                <input type="checkbox" checked={saveToLibrary} onChange={(e) => setSaveToLibrary(e.target.checked)} className="size-4 accent-primary" />
+                Save new or edited topics to my Topic Library for next time
+              </label>
 
               <div className="mt-4 space-y-2">
                 {picks.map((pick) => {
@@ -869,7 +947,9 @@ function SetupPage() {
                   const ticked = chosen[pick.name] ?? [];
                   const open = openSubject === pick.name;
                   const options =
-                    mode === "upload"
+                    mode === "edited"
+                      ? []
+                      : mode === "upload"
                       ? (uploaded[pick.name] ?? [])
                       : mode === "library"
                         ? libraryOptions(pick.name)
@@ -902,6 +982,7 @@ function SetupPage() {
                                 ["dfe", "DfE content list"],
                                 ["manual", "Type my own"],
                                 ["upload", "Upload a document"],
+                                ...(mode === "edited" ? [["edited", "My edited list"] as const] : []),
                               ] as const
                             ).map(([key, label]) => (
                               <button
@@ -1024,29 +1105,43 @@ function SetupPage() {
                             </p>
                           ) : null}
 
-                          {finalTopics.length && (step as number) === 5 ? (
-                            <div className="mt-4 border-t border-border pt-3">
-                              <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                                Rate each topic
-                              </p>
-                              <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-                                Red means you need it most, green means you're confident. Red topics
-                                come first and get the most sessions — this builds your priority order.
-                              </p>
-                              <div className="mt-2">
-                                <TopicConfidenceList
-                                  topics={finalTopics}
-                                  ratings={topicRatings[pick.name] ?? {}}
-                                  onChange={(topic, value) =>
-                                    setTopicRatings((prev) => ({
-                                      ...prev,
-                                      [pick.name]: { ...(prev[pick.name] ?? {}), [topic]: value },
-                                    }))
+                          <div className="mt-4 border-t border-border pt-3">
+                            <p className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                              Your topic list — edit and rate
+                            </p>
+                            <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+                              Click a topic to rename it, add sub-topics, or delete anything you don't need. Rate each one: red means you need it most, green means you're confident.
+                            </p>
+                            <div className="mt-2">
+                              <EditableTopicList
+                                subject={pick.name}
+                                topics={finalTopics}
+                                ratings={topicRatings[pick.name] ?? {}}
+                                onChange={(next, rename) => {
+                                  setSource((prev) => ({ ...prev, [pick.name]: "edited" }));
+                                  setChosen((prev) => ({ ...prev, [pick.name]: next }));
+                                  if (rename) {
+                                    setTopicRatings((prev) => {
+                                      const r = { ...(prev[pick.name] ?? {}) };
+                                      for (const k of Object.keys(r)) {
+                                        if (k === rename.from || k.startsWith(rename.from + SUB_SEP)) {
+                                          r[rename.to + k.slice(rename.from.length)] = r[k] ?? null;
+                                          delete r[k];
+                                        }
+                                      }
+                                      return { ...prev, [pick.name]: r };
+                                    });
                                   }
-                                />
-                              </div>
+                                }}
+                                onRate={(topic, value) =>
+                                  setTopicRatings((prev) => ({
+                                    ...prev,
+                                    [pick.name]: { ...(prev[pick.name] ?? {}), [topic]: value },
+                                  }))
+                                }
+                              />
                             </div>
-                          ) : null}
+                          </div>
                         </div>
                       ) : null}
                     </div>
@@ -1231,41 +1326,87 @@ function SetupPage() {
 
           {step === 6 ? (
             <>
-              <p className="text-lg font-extrabold tracking-tight">Review your priorities</p>
+              <p className="text-lg font-extrabold tracking-tight">Choose what goes in this plan</p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Ranked by confidence and how soon each exam is. Move topics up or down, or leave one out for now.
+                Everything is ticked to start. Untick any subject or topic you don't want in this plan — it's kept for later, not deleted. Use the arrows to change the order topics come up.
               </p>
-              <ol className="mt-4 space-y-1.5">
-                {orderedRanked.map((r, i) => {
-                  const out = excluded.includes(r.key);
+              <div className="mt-4 space-y-3">
+                {picks.map((p) => {
+                  const subjectOn = !excludedSubjects.includes(p.name);
+                  const rows = orderedRanked.filter((r) => r.subject === p.name);
                   const live = orderedRanked.filter((x) => !excluded.includes(x.key));
-                  const pos = live.indexOf(r);
-                  const band = out ? "Left out" : pos < Math.ceil(live.length / 3) ? "High priority" : pos < Math.ceil((live.length * 2) / 3) ? "Medium priority" : "Maintain confidence";
+                  const allOn = rows.every((r) => !excluded.includes(r.key));
                   return (
-                    <li key={r.key} className={`flex items-center gap-2 rounded-[10px] bg-background px-3 py-2 ring-1 ring-border ${out ? "opacity-50" : ""}`}>
-                      <span className="w-6 text-[12px] font-extrabold text-muted-foreground">{i + 1}</span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-extrabold">{r.topic}</p>
-                        <p className="text-[11px] font-bold text-muted-foreground">
-                          {r.subject} · {band} · {r.reason}
-                        </p>
+                    <div key={p.name} className="rounded-[14px] bg-background p-3 ring-1 ring-border">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={subjectOn}
+                          onClick={() => setExcludedSubjects((prev) => (subjectOn ? [...prev, p.name] : prev.filter((n) => n !== p.name)))}
+                          className="flex items-center gap-2.5 text-left"
+                        >
+                          <span className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${subjectOn ? "bg-structure" : "ring-1 ring-border"}`}>
+                            {subjectOn ? <Check className="size-3 text-structure-foreground" strokeWidth={3} /> : null}
+                          </span>
+                          <span className="text-sm font-extrabold">{p.name}{p.tier ? ` (${p.tier})` : ""}</span>
+                        </button>
+                        <span className="ml-auto text-[11px] font-bold text-muted-foreground">
+                          {!subjectOn ? "Not in this plan" : rows.length ? `${rows.filter((r) => !excluded.includes(r.key)).length}/${rows.length} topics` : "Subject-level sessions"}
+                        </span>
+                        {subjectOn && rows.length ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const keys = rows.map((r) => r.key);
+                              setExcluded((prev) => (allOn ? [...new Set([...prev, ...keys])] : prev.filter((k) => !keys.includes(k))));
+                            }}
+                            className="rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-border"
+                          >
+                            {allOn ? "Select none" : "Select all"}
+                          </button>
+                        ) : null}
                       </div>
-                      <button type="button" onClick={() => move(r.key, -1)} aria-label={`Move ${r.topic} up`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↑</button>
-                      <button type="button" onClick={() => move(r.key, 1)} aria-label={`Move ${r.topic} down`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↓</button>
-                      <button
-                        type="button"
-                        onClick={() => setExcluded((prev) => (out ? prev.filter((k) => k !== r.key) : [...prev, r.key]))}
-                        className="rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-border"
-                      >
-                        {out ? "Include" : "Leave out"}
-                      </button>
-                    </li>
+                      {subjectOn && rows.length ? (
+                        <ol className="mt-2 space-y-1.5">
+                          {rows.map((r) => {
+                            const out = excluded.includes(r.key);
+                            const pos = live.indexOf(r);
+                            const band = out ? "Left out" : pos < Math.ceil(live.length / 3) ? "High priority" : pos < Math.ceil((live.length * 2) / 3) ? "Medium priority" : "Maintain confidence";
+                            const tone = r.rating == null ? "bg-muted" : r.rating <= 2 ? "bg-conf-low" : r.rating <= 4 ? "bg-conf-mid" : "bg-conf-high";
+                            return (
+                              <li key={r.key} className={`flex items-center gap-2 rounded-[10px] bg-card px-2.5 py-2 ring-1 ring-border ${isSub(r.topic) ? "ml-6" : ""} ${out ? "opacity-60" : ""}`}>
+                                <button
+                                  type="button"
+                                  role="checkbox"
+                                  aria-checked={!out}
+                                  aria-label={`Include ${subLabel(r.topic)}`}
+                                  onClick={() => setExcluded((prev) => (out ? prev.filter((k) => k !== r.key) : [...prev, r.key]))}
+                                  className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${!out ? "bg-structure" : "ring-1 ring-border"}`}
+                                >
+                                  {!out ? <Check className="size-3 text-structure-foreground" strokeWidth={3} /> : null}
+                                </button>
+                                <span className={`size-2.5 shrink-0 rounded-full ${tone}`} aria-hidden="true" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-[13px] font-extrabold">{subLabel(r.topic)}</p>
+                                  <p className="text-[11px] font-bold text-muted-foreground">{band} · {r.reason}</p>
+                                </div>
+                                <button type="button" onClick={() => move(r.key, -1)} aria-label={`Move ${r.topic} up`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↑</button>
+                                <button type="button" onClick={() => move(r.key, 1)} aria-label={`Move ${r.topic} down`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↓</button>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      ) : null}
+                    </div>
                   );
                 })}
-              </ol>
+              </div>
+              <p className="mt-3 rounded-[10px] bg-secondary px-3 py-2 text-[12px] font-bold">
+                {includedSubjects.length} subject{includedSubjects.length === 1 ? "" : "s"} · {orderedRanked.filter((r) => !excluded.includes(r.key) && includedSubjects.includes(r.subject)).length} topics · {totalSessions} sessions over {weeks} week{weeks === 1 ? "" : "s"}
+              </p>
               <div className="mt-3 flex flex-wrap gap-3 text-[12px] font-bold">
-                <button type="button" className="underline" onClick={() => setStep(5)}>Change confidence ratings</button>
-                <button type="button" className="underline" onClick={() => setStep(2)}>Edit topics</button>
+                <button type="button" className="underline" onClick={() => setStep(2)}>Edit topics and ratings</button>
                 <button type="button" className="underline" onClick={() => setStep(3)}>Edit availability</button>
               </div>
             </>
@@ -1305,7 +1446,7 @@ function SetupPage() {
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {step !== 1 ? (
               <button
-                onClick={() => setStep(step === 4 ? 1 : step === 3 ? 4 : step === 8 ? 3 : step === 7 ? 8 : step === 2 ? 7 : step === 5 ? 2 : 5)}
+                onClick={() => setStep(step === 4 ? 1 : step === 3 ? 4 : step === 8 ? 3 : step === 7 ? 8 : step === 2 ? 7 : 2)}
                 className="rounded-full px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-background"
               >
                 Back
@@ -1337,17 +1478,17 @@ function SetupPage() {
                   disabled={!readyForPlan}
                   className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background"
                 >
-                  Make my plan more personalised
+                  Check what I know (Step 2)
                 </button>
               </>
             ) : null}
             {step === 2 ? (
               <>
-                <button onClick={() => setStep(5)} disabled={!anyTopics || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                  Check what I know
+                <button onClick={openPriorities} disabled={!readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                  Next: choose what to include
                 </button>
-                <button onClick={() => void generate(anyTopics ? "topic" : "quick")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background">
-                  {generating ? "Building…" : "Create my timetable now"}
+                <button onClick={() => { setCheckState("skipped"); void generate("quick"); }} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-card text-foreground ring-1 ring-border">
+                  {generating ? "Building…" : "Skip — build a Quick Plan"}
                 </button>
               </>
             ) : null}
@@ -1362,8 +1503,8 @@ function SetupPage() {
               </>
             ) : null}
             {step === 6 ? (
-              <button onClick={() => void generate("personalised")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                {generating ? "Building your timetable…" : "Create my personalised timetable"}
+              <button onClick={() => void generate("personalised")} disabled={generating || !readyForPlan || includedSubjects.length === 0} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                {generating ? "Building your timetable…" : "Build my timetable"}
               </button>
             ) : null}
             <button onClick={saveAndExit} className="w-full rounded-full py-2 text-[12px] font-bold text-muted-foreground underline">

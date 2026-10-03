@@ -53,3 +53,9 @@
 - [x] Preview what changes before rebuilding a timetable.
 - [x] Name the plan on the first screen; all missing items listed together before continuing.
 - [x] Edit any plan from Step 1 (keeps completed sessions) and copy an existing plan to edit as a new one.
+
+## Streamlined 3-step planner
+- [x] Saved subjects (library + past plans) toggle on in step 1 with tier/dates prefilled
+- [x] Inline-editable topic lists with sub-topics and ratings in step 2; write-back to Topic Library
+- [x] Step 3 include/exclude subjects and topics; left-out topics saved for later
+- [x] Knowledge Checker sub-points

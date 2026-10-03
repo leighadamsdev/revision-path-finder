@@ -407,15 +407,50 @@ function draftWeightings(draft: PlanDraft): SubjectWeighting[] {
   }));
 }
 
-/** Every topic saved against a plan, with its rating. */
+/** Every included topic saved against a plan, with its rating (left-out topics are skipped). */
 export async function fetchPlanTopics(planId: string): Promise<PlanTopic[]> {
   const { data, error } = await supabase
     .from("plan_topics")
     .select("id, subject_id, topic, confidence, is_priority, position")
     .eq("plan_id", planId)
+    .eq("excluded", false)
     .order("position");
   if (error) throw error;
   return (data ?? []) as unknown as PlanTopic[];
+}
+
+/** Topics the student chose to leave out of a plan — kept so they can be ticked back in later. */
+export async function fetchExcludedTopics(planId: string) {
+  const { data, error } = await supabase
+    .from("plan_topics")
+    .select("subject_id, topic, confidence")
+    .eq("plan_id", planId)
+    .eq("excluded", true)
+    .order("position");
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Replaces a plan's left-out topics. */
+export async function saveExcludedTopics(
+  planId: string,
+  topics: Array<{ subjectId: string; topic: string; confidence: number | null }>,
+) {
+  const { error } = await supabase.from("plan_topics").delete().eq("plan_id", planId).eq("excluded", true);
+  if (error) throw error;
+  if (!topics.length) return;
+  const { error: insertError } = await supabase.from("plan_topics").insert(
+    topics.map((t, i) => ({
+      plan_id: planId,
+      subject_id: t.subjectId,
+      topic: t.topic,
+      confidence: t.confidence,
+      is_priority: false,
+      position: 10000 + i,
+      excluded: true,
+    })),
+  );
+  if (insertError) throw insertError;
 }
 
 /**

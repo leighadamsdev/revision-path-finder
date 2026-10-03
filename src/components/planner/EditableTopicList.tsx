@@ -23,7 +23,7 @@ export function EditableTopicList({
   topics: string[];
   ratings: Record<string, number | null>;
   onChange: (next: string[], rename?: { from: string; to: string }) => void;
-  onRate: (topic: string, value: number) => void;
+  onRate: (topic: string, value: number | null) => void;
 }) {
   const [newTopic, setNewTopic] = useState("");
   const [subFor, setSubFor] = useState<string | null>(null);
@@ -106,6 +106,7 @@ export function EditableTopicList({
                 value={ratings[topic] ?? null}
                 onChange={(v) => onRate(topic, v)}
                 label={`${subject}: ${label} confidence`}
+                size="sm"
               />
               {!sub ? (
                 <button

@@ -684,7 +684,7 @@ function SetupPage() {
   }, [picks, examDates, topicRatings, chosen, source, manualText]);
 
   function openPriorities() {
-    setCheckState("done");
+    setCheckState(ranked.some((r) => r.rating != null) ? "done" : "skipped");
     const keys = ranked.map((r) => r.key);
     setOrder((prev) => [...prev.filter((k) => keys.includes(k)), ...keys.filter((k) => !prev.includes(k))].length && prev.length ? [...prev.filter((k) => keys.includes(k)), ...keys.filter((k) => !prev.includes(k))] : keys);
     setStep(6);
@@ -702,19 +702,17 @@ function SetupPage() {
   const rankedByKey = new Map(ranked.map((r) => [r.key, r]));
   const orderedRanked = order.map((k) => rankedByKey.get(k)).filter((r): r is RankedTopic => Boolean(r));
   const anyTopics = ranked.length > 0;
+  const includedSubjects = picks.map((p) => p.name).filter((n) => !excludedSubjects.includes(n));
 
   const journey: Record<number, JourneyStatus> = {
     1: FIRST_STAGE.some((screen) => screen.step === step) ? "current" : "done",
-    2: step === 2 ? "current" : topicsVisited ? "done" : "optional",
-    3: step === 5 ? "current" : checkState === "done" ? "done" : checkState === "skipped" ? "skipped" : "optional",
-    4: step === 6 ? "current" : checkState === "done" ? "done" : "locked",
-    5: "todo",
+    2: step === 2 || step === 5 ? "current" : topicsVisited ? "done" : "optional",
+    3: step === 6 ? "current" : readyForPlan && topicsVisited ? "optional" : "todo",
   };
   function selectJourney(n: number) {
     if (n === 1) setStep(1);
-    else if (n === 2) setStep(2);
-    else if (n === 3) setStep(5);
-    else if (n === 4 && checkState === "done") openPriorities();
+    else if (n === 2) { setTopicsVisited(true); setStep(2); }
+    else if (n === 3 && readyForPlan) openPriorities();
   }
   function saveAndExit() {
     toast.success("Saved — come back any time to carry on.");
@@ -734,14 +732,11 @@ function SetupPage() {
         <JourneyProgress statuses={journey} onSelect={selectJourney} />
         <p className="mb-3 text-[12px] font-extrabold text-muted-foreground" aria-live="polite">
           {FIRST_STAGE.some((screen) => screen.step === step)
-            ? `Plan setup: 1 of 5 · Part ${FIRST_STAGE.findIndex((screen) => screen.step === step) + 1} of 5 — ${FIRST_STAGE.find((screen) => screen.step === step)?.label}`
-            : step === 2
-              ? "Plan setup: 2 of 5 · Step 2 is optional"
-              : step === 5
-                ? "Plan setup: 3 of 5 · Optional — skip any time"
-                : "Plan setup: 4 of 5 · Review your priorities"}
-          {checkState === "skipped" && step !== 5 ? " · Knowledge check skipped — you can complete it later." : ""}
-          {checkState !== "done" && step === 5 ? " · Priorities unlock after you finish the knowledge check." : ""}
+            ? `Step 1 of 3 · Part ${FIRST_STAGE.findIndex((screen) => screen.step === step) + 1} of 5 — ${FIRST_STAGE.find((screen) => screen.step === step)?.label}`
+            : step === 2 || step === 5
+              ? "Step 2 of 3 · Optional — skip any time"
+              : "Step 3 of 3 · Choose what goes in this plan"}
+          {checkState === "skipped" && step === 6 ? " · Knowledge check skipped — you can complete it later." : ""}
         </p>
 
         {FIRST_STAGE.some((screen) => screen.step === step) ? (
@@ -933,13 +928,17 @@ function SetupPage() {
           {step === 2 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">
-                Which topics do you want to cover?
+                Check what you know
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                For each subject, pick where the topics come from: the official DfE content list,
-                your own typing, or a document you upload. Leave a subject blank and we'll fill it
-                in for you.
+                Open each subject, choose where its topics come from (your Topic Library, the DfE
+                list, typing or a document), then edit the list and rate each topic. This step is
+                optional — leave a subject blank and we'll fill it in for you.
               </p>
+              <label className="mt-3 flex items-center gap-2 text-[12px] font-bold">
+                <input type="checkbox" checked={saveToLibrary} onChange={(e) => setSaveToLibrary(e.target.checked)} className="size-4 accent-primary" />
+                Save new or edited topics to my Topic Library for next time
+              </label>
 
               <div className="mt-4 space-y-2">
                 {picks.map((pick) => {
@@ -948,7 +947,9 @@ function SetupPage() {
                   const ticked = chosen[pick.name] ?? [];
                   const open = openSubject === pick.name;
                   const options =
-                    mode === "upload"
+                    mode === "edited"
+                      ? []
+                      : mode === "upload"
                       ? (uploaded[pick.name] ?? [])
                       : mode === "library"
                         ? libraryOptions(pick.name)
@@ -981,6 +982,7 @@ function SetupPage() {
                                 ["dfe", "DfE content list"],
                                 ["manual", "Type my own"],
                                 ["upload", "Upload a document"],
+                                ...(mode === "edited" ? [["edited", "My edited list"] as const] : []),
                               ] as const
                             ).map(([key, label]) => (
                               <button
@@ -1324,41 +1326,87 @@ function SetupPage() {
 
           {step === 6 ? (
             <>
-              <p className="text-lg font-extrabold tracking-tight">Review your priorities</p>
+              <p className="text-lg font-extrabold tracking-tight">Choose what goes in this plan</p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Ranked by confidence and how soon each exam is. Move topics up or down, or leave one out for now.
+                Everything is ticked to start. Untick any subject or topic you don't want in this plan — it's kept for later, not deleted. Use the arrows to change the order topics come up.
               </p>
-              <ol className="mt-4 space-y-1.5">
-                {orderedRanked.map((r, i) => {
-                  const out = excluded.includes(r.key);
+              <div className="mt-4 space-y-3">
+                {picks.map((p) => {
+                  const subjectOn = !excludedSubjects.includes(p.name);
+                  const rows = orderedRanked.filter((r) => r.subject === p.name);
                   const live = orderedRanked.filter((x) => !excluded.includes(x.key));
-                  const pos = live.indexOf(r);
-                  const band = out ? "Left out" : pos < Math.ceil(live.length / 3) ? "High priority" : pos < Math.ceil((live.length * 2) / 3) ? "Medium priority" : "Maintain confidence";
+                  const allOn = rows.every((r) => !excluded.includes(r.key));
                   return (
-                    <li key={r.key} className={`flex items-center gap-2 rounded-[10px] bg-background px-3 py-2 ring-1 ring-border ${out ? "opacity-50" : ""}`}>
-                      <span className="w-6 text-[12px] font-extrabold text-muted-foreground">{i + 1}</span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-extrabold">{r.topic}</p>
-                        <p className="text-[11px] font-bold text-muted-foreground">
-                          {r.subject} · {band} · {r.reason}
-                        </p>
+                    <div key={p.name} className="rounded-[14px] bg-background p-3 ring-1 ring-border">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={subjectOn}
+                          onClick={() => setExcludedSubjects((prev) => (subjectOn ? [...prev, p.name] : prev.filter((n) => n !== p.name)))}
+                          className="flex items-center gap-2.5 text-left"
+                        >
+                          <span className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${subjectOn ? "bg-structure" : "ring-1 ring-border"}`}>
+                            {subjectOn ? <Check className="size-3 text-structure-foreground" strokeWidth={3} /> : null}
+                          </span>
+                          <span className="text-sm font-extrabold">{p.name}{p.tier ? ` (${p.tier})` : ""}</span>
+                        </button>
+                        <span className="ml-auto text-[11px] font-bold text-muted-foreground">
+                          {!subjectOn ? "Not in this plan" : rows.length ? `${rows.filter((r) => !excluded.includes(r.key)).length}/${rows.length} topics` : "Subject-level sessions"}
+                        </span>
+                        {subjectOn && rows.length ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const keys = rows.map((r) => r.key);
+                              setExcluded((prev) => (allOn ? [...new Set([...prev, ...keys])] : prev.filter((k) => !keys.includes(k))));
+                            }}
+                            className="rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-border"
+                          >
+                            {allOn ? "Select none" : "Select all"}
+                          </button>
+                        ) : null}
                       </div>
-                      <button type="button" onClick={() => move(r.key, -1)} aria-label={`Move ${r.topic} up`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↑</button>
-                      <button type="button" onClick={() => move(r.key, 1)} aria-label={`Move ${r.topic} down`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↓</button>
-                      <button
-                        type="button"
-                        onClick={() => setExcluded((prev) => (out ? prev.filter((k) => k !== r.key) : [...prev, r.key]))}
-                        className="rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-border"
-                      >
-                        {out ? "Include" : "Leave out"}
-                      </button>
-                    </li>
+                      {subjectOn && rows.length ? (
+                        <ol className="mt-2 space-y-1.5">
+                          {rows.map((r) => {
+                            const out = excluded.includes(r.key);
+                            const pos = live.indexOf(r);
+                            const band = out ? "Left out" : pos < Math.ceil(live.length / 3) ? "High priority" : pos < Math.ceil((live.length * 2) / 3) ? "Medium priority" : "Maintain confidence";
+                            const tone = r.rating == null ? "bg-muted" : r.rating <= 2 ? "bg-conf-low" : r.rating <= 4 ? "bg-conf-mid" : "bg-conf-high";
+                            return (
+                              <li key={r.key} className={`flex items-center gap-2 rounded-[10px] bg-card px-2.5 py-2 ring-1 ring-border ${isSub(r.topic) ? "ml-6" : ""} ${out ? "opacity-60" : ""}`}>
+                                <button
+                                  type="button"
+                                  role="checkbox"
+                                  aria-checked={!out}
+                                  aria-label={`Include ${subLabel(r.topic)}`}
+                                  onClick={() => setExcluded((prev) => (out ? prev.filter((k) => k !== r.key) : [...prev, r.key]))}
+                                  className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${!out ? "bg-structure" : "ring-1 ring-border"}`}
+                                >
+                                  {!out ? <Check className="size-3 text-structure-foreground" strokeWidth={3} /> : null}
+                                </button>
+                                <span className={`size-2.5 shrink-0 rounded-full ${tone}`} aria-hidden="true" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-[13px] font-extrabold">{subLabel(r.topic)}</p>
+                                  <p className="text-[11px] font-bold text-muted-foreground">{band} · {r.reason}</p>
+                                </div>
+                                <button type="button" onClick={() => move(r.key, -1)} aria-label={`Move ${r.topic} up`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↑</button>
+                                <button type="button" onClick={() => move(r.key, 1)} aria-label={`Move ${r.topic} down`} className="rounded-full px-2 py-1 text-sm font-bold ring-1 ring-border">↓</button>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      ) : null}
+                    </div>
                   );
                 })}
-              </ol>
+              </div>
+              <p className="mt-3 rounded-[10px] bg-secondary px-3 py-2 text-[12px] font-bold">
+                {includedSubjects.length} subject{includedSubjects.length === 1 ? "" : "s"} · {orderedRanked.filter((r) => !excluded.includes(r.key) && includedSubjects.includes(r.subject)).length} topics · {totalSessions} sessions over {weeks} week{weeks === 1 ? "" : "s"}
+              </p>
               <div className="mt-3 flex flex-wrap gap-3 text-[12px] font-bold">
-                <button type="button" className="underline" onClick={() => setStep(5)}>Change confidence ratings</button>
-                <button type="button" className="underline" onClick={() => setStep(2)}>Edit topics</button>
+                <button type="button" className="underline" onClick={() => setStep(2)}>Edit topics and ratings</button>
                 <button type="button" className="underline" onClick={() => setStep(3)}>Edit availability</button>
               </div>
             </>
@@ -1398,7 +1446,7 @@ function SetupPage() {
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {step !== 1 ? (
               <button
-                onClick={() => setStep(step === 4 ? 1 : step === 3 ? 4 : step === 8 ? 3 : step === 7 ? 8 : step === 2 ? 7 : step === 5 ? 2 : 5)}
+                onClick={() => setStep(step === 4 ? 1 : step === 3 ? 4 : step === 8 ? 3 : step === 7 ? 8 : step === 2 ? 7 : 2)}
                 className="rounded-full px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-background"
               >
                 Back
@@ -1430,17 +1478,17 @@ function SetupPage() {
                   disabled={!readyForPlan}
                   className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background"
                 >
-                  Make my plan more personalised
+                  Check what I know (Step 2)
                 </button>
               </>
             ) : null}
             {step === 2 ? (
               <>
-                <button onClick={() => setStep(5)} disabled={!anyTopics || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                  Check what I know
+                <button onClick={openPriorities} disabled={!readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                  Next: choose what to include
                 </button>
-                <button onClick={() => void generate(anyTopics ? "topic" : "quick")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-foreground text-background">
-                  {generating ? "Building…" : "Create my timetable now"}
+                <button onClick={() => { setCheckState("skipped"); void generate("quick"); }} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-card text-foreground ring-1 ring-border">
+                  {generating ? "Building…" : "Skip — build a Quick Plan"}
                 </button>
               </>
             ) : null}
@@ -1455,8 +1503,8 @@ function SetupPage() {
               </>
             ) : null}
             {step === 6 ? (
-              <button onClick={() => void generate("personalised")} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                {generating ? "Building your timetable…" : "Create my personalised timetable"}
+              <button onClick={() => void generate("personalised")} disabled={generating || !readyForPlan || includedSubjects.length === 0} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
+                {generating ? "Building your timetable…" : "Build my timetable"}
               </button>
             ) : null}
             <button onClick={saveAndExit} className="w-full rounded-full py-2 text-[12px] font-bold text-muted-foreground underline">

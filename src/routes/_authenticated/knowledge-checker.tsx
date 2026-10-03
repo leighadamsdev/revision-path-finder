@@ -215,6 +215,17 @@ function KnowledgeCheckerPage() {
     }));
   }
 
+  function addSubRow(id: string) {
+    setDraft((current) => {
+      const i = current.rows.findIndex((row) => row.id === id);
+      if (i < 0) return current;
+      const parent = current.rows[i]!.component.split(" › ")[0]!.trim();
+      const rows = [...current.rows];
+      rows.splice(i + 1, 0, { id: `row-${Date.now()}`, component: parent ? `${parent} › ` : "", recall: "", gaps: "" });
+      return { ...current, rows };
+    });
+  }
+
   function removeRow(id: string) {
     setDraft((current) => ({ ...current, rows: current.rows.filter((row) => row.id !== id) }));
   }
@@ -441,6 +452,7 @@ function KnowledgeCheckerPage() {
                     {draft.rows.length > 1 ? <Button type="button" size="icon" variant="ghost" aria-label={`Remove component ${index + 1}`} onClick={() => removeRow(row.id)} className="size-8 text-muted-foreground print:hidden"><Trash2 /></Button> : null}
                   </div>
                   <Input id={`component-${row.id}`} value={row.component} onChange={(event) => patchRow(row.id, { component: event.target.value })} placeholder="e.g. Lock-and-key model" className="mt-3 h-11 bg-card font-bold" />
+                  <Button type="button" variant="ghost" size="sm" onClick={() => addSubRow(row.id)} className="mt-2 text-xs font-bold text-muted-foreground print:hidden"><Plus /> Add sub-point</Button>
                 </div>
                 <div className="grid gap-3 p-4 sm:grid-cols-2">
                   <label className="text-xs font-extrabold uppercase text-muted-foreground">What I already know

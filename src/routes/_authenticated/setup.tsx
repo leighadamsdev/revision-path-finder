@@ -340,7 +340,7 @@ function SetupPage() {
   const listedGroups = useMemo(() => {
     const seen = new Set(myNames.map((n) => n.toLowerCase()));
     const groups: { label: string; names: string[] }[] = [];
-    if (myNames.length) groups.push({ label: "Your subjects", names: myNames });
+    if (myNames.length) groups.push({ label: "Your saved subjects — tick to include in this plan", names: myNames });
     for (const g of SUBJECT_GROUPS) {
       const names = GCSE_SUBJECTS.filter((s) => s.group === g && !seen.has(s.name.toLowerCase())).map((s) => s.name);
       if (names.length) groups.push({ label: g, names });

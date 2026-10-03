@@ -3,11 +3,9 @@ import { Check, Lock } from "lucide-react";
 export type JourneyStatus = "current" | "done" | "optional" | "skipped" | "locked" | "todo";
 
 const STEPS = [
-  { n: 1, label: "Exams and availability", optional: false },
-  { n: 2, label: "Add topics", optional: true },
-  { n: 3, label: "Knowledge check", optional: true },
-  { n: 4, label: "Priorities", optional: false },
-  { n: 5, label: "My timetable", optional: false },
+  { n: 1, label: "Subjects & exams", optional: false },
+  { n: 2, label: "Check what I know", optional: true },
+  { n: 3, label: "Choose & build", optional: false },
 ];
 
 const STATUS_TEXT: Record<JourneyStatus, string> = {
@@ -19,7 +17,7 @@ const STATUS_TEXT: Record<JourneyStatus, string> = {
   todo: "Not started",
 };
 
-/** The persistent five-step progress bar for the planner journey. */
+/** The persistent three-step progress bar for the planner journey. */
 export function JourneyProgress({
   statuses,
   onSelect,
@@ -29,7 +27,7 @@ export function JourneyProgress({
 }) {
   return (
     <nav aria-label="Planner progress" className="mb-5">
-      <ol className="grid grid-cols-5 gap-1.5">
+      <ol className="grid grid-cols-3 gap-1.5">
         {STEPS.map((s) => {
           const status = statuses[s.n] ?? "todo";
           const clickable = Boolean(onSelect) && (status === "done" || status === "skipped" || status === "optional");

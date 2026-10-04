@@ -114,7 +114,6 @@ function OnboardingPage() {
                         {s.name}
                         <span className="ml-2 font-medium text-muted-foreground">{[s.exam_board, s.qualification_level].filter(Boolean).join(" · ")}</span>
                       </span>
-                      <Button size="sm" variant="outline" onClick={() => setImportAfterCreate(s)}>Add topics</Button>
                       <Button size="icon" variant="ghost" aria-label="Edit subject" onClick={() => { setEditing(s.id); setValue({ name: s.name, exam_board: s.exam_board ?? "", qualification_level: s.qualification_level ?? "" }); }}><Pencil /></Button>
                       <Button size="icon" variant="ghost" aria-label="Delete subject" onClick={async () => { await deleteSubject(s.id); refresh(); }}><Trash2 /></Button>
                     </li>

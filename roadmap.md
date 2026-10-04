@@ -55,6 +55,7 @@
 - [x] Edit any plan from Step 1 (keeps completed sessions) and copy an existing plan to edit as a new one.
 
 ## Streamlined 3-step planner
+- [x] Separate subject creation from topic editing into My Subjects and My Topics screens; order both revision menus around that journey.
 - [x] Saved subjects (library + past plans) toggle on in step 1 with tier/dates prefilled
 - [x] Inline-editable topic lists with sub-topics and ratings in step 2; write-back to Topic Library
 - [x] Step 3 include/exclude subjects and topics; left-out topics saved for later

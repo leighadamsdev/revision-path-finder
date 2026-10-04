@@ -252,9 +252,9 @@ function TimetablePage() {
         </div>
         <div className="relative grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <Button asChild variant="outline">
-            <Link to="/library">
+            <Link to="/topics">
               <BookOpen aria-hidden="true" />
-              Manage Subjects and Topics
+              My Topics
             </Link>
           </Button>
           <Button asChild variant="outline">

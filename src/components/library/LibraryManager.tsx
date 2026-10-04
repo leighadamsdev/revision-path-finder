@@ -89,7 +89,7 @@ export function SubjectFields({
 }
 
 /** Subject cards with import / manual add / edit / remove, shared by onboarding and the library page. */
-export function LibraryManager({ subjects, refresh, showTopics = true }: { subjects: LibSubject[]; refresh: () => void; showTopics?: boolean }) {
+export function LibraryManager({ subjects, refresh, showTopics = true, mode = "all" }: { subjects: LibSubject[]; refresh: () => void; showTopics?: boolean; mode?: "all" | "subjects" | "topics" }) {
   const [importFor, setImportFor] = useState<LibSubject | null>(null);
   const [manualFor, setManualFor] = useState<LibSubject | null>(null);
   const [editSubject, setEditSubject] = useState<LibSubject | null>(null);
@@ -112,13 +112,13 @@ export function LibraryManager({ subjects, refresh, showTopics = true }: { subje
     <div className="space-y-3">
       {subjects.map((s) => {
         const items = s.topics.reduce((n, t) => n + t.items.length, 0);
-        const isOpen = open.has(s.id);
+        const isOpen = mode === "topics" || open.has(s.id);
         return (
           <div key={s.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
             <div className="flex items-start gap-2">
-              <button className="mt-0.5" aria-label={isOpen ? "Collapse" : "Expand"} onClick={() => setOpen((o) => { const n = new Set(o); if (n.has(s.id)) n.delete(s.id); else n.add(s.id); return n; })}>
+              {mode === "all" ? <Button size="icon" variant="ghost" aria-label={isOpen ? "Collapse" : "Expand"} onClick={() => setOpen((o) => { const n = new Set(o); if (n.has(s.id)) n.delete(s.id); else n.add(s.id); return n; })}>
                 {isOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-              </button>
+              </Button> : null}
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-extrabold">{s.name}</p>
                 <p className="text-[12px] font-medium text-muted-foreground">
@@ -127,10 +127,10 @@ export function LibraryManager({ subjects, refresh, showTopics = true }: { subje
               </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => setImportFor(s)}><Upload /> Import Topics from a Contents Page</Button>
-              <Button size="sm" variant="outline" onClick={() => setManualFor(s)}><Plus /> Add Topic Manually</Button>
-              <Button size="sm" variant="outline" onClick={() => setEditSubject(s)}><Pencil /> Edit Subject</Button>
-              <Button
+              {mode !== "subjects" ? <Button size="sm" onClick={() => setImportFor(s)}><Upload /> Import Topics from a Contents Page</Button> : null}
+              {mode !== "subjects" ? <Button size="sm" variant="outline" onClick={() => setManualFor(s)}><Plus /> Add Topic Manually</Button> : null}
+              {mode !== "topics" ? <Button size="sm" variant="outline" onClick={() => setEditSubject(s)}><Pencil /> Edit Subject</Button> : null}
+              {mode !== "topics" ? <Button
                 size="sm"
                 variant="ghost"
                 onClick={async () => {
@@ -140,9 +140,9 @@ export function LibraryManager({ subjects, refresh, showTopics = true }: { subje
                 }}
               >
                 <Trash2 /> Remove Subject
-              </Button>
+              </Button> : null}
             </div>
-            {showTopics && isOpen ? (
+            {mode !== "subjects" && showTopics && isOpen ? (
               <ul className="mt-3 space-y-2">
                 {s.topics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No Topics yet.</li> : null}
                 {s.topics.map((t, i) => (

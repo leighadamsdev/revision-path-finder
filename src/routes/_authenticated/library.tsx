@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -13,10 +13,10 @@ import { addSubject } from "@/lib/library";
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({
     meta: [
-      { title: "My Topic Library — rev.plan" },
-      { name: "description", content: "Your subjects, Topics and content items for the Knowledge Checker and Revision Planner." },
-      { property: "og:title", content: "My Topic Library — rev.plan" },
-      { property: "og:description", content: "Manage the subjects and Topics you are studying." },
+      { title: "My Subjects — RevPlan" },
+      { name: "description", content: "Add and manage your GCSE subjects before adding topics to your revision library." },
+      { property: "og:title", content: "My Subjects — RevPlan" },
+      { property: "og:description", content: "Add and manage your GCSE subjects before adding topics to your revision library." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -32,9 +32,9 @@ function LibraryPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-3xl">
-        <h1 className="text-xl font-extrabold tracking-tight">My Topic Library</h1>
+        <h1 className="text-xl font-extrabold tracking-tight">My Subjects</h1>
         <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-          These subjects and Topics are the content for your Knowledge Checker and Revision Planner. Your revision priorities are still set the usual way.
+          Add your subjects and tiers here. Add topics for each subject on the next screen.
         </p>
         <div className="mt-4 rounded-[16px] bg-card p-4 ring-1 ring-black/5">
           {adding ? (
@@ -60,10 +60,11 @@ function LibraryPage() {
           )}
         </div>
         <div className="mt-4">
-          {isLoading ? <Skeleton className="h-24 w-full" /> : subjects.length ? <LibraryManager subjects={subjects} refresh={refresh} /> : (
+          {isLoading ? <Skeleton className="h-24 w-full" /> : subjects.length ? <LibraryManager subjects={subjects} refresh={refresh} mode="subjects" /> : (
             <p className="text-[13px] font-medium text-muted-foreground">No subjects yet — add one above.</p>
           )}
         </div>
+        {subjects.length ? <div className="mt-6 flex justify-end"><Button asChild><Link to="/topics">Continue to My Topics <ArrowRight /></Link></Button></div> : null}
       </div>
     </AppShell>
   );

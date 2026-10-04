@@ -26,11 +26,11 @@ import { LogoOnDark } from "@/components/Logo";
 
 
 const MY_REVISION_TABS = [
-  { to: "/plan", label: "Revision Planner", icon: CalendarDays },
-  { to: "/my-plans", label: "My plans", icon: FolderOpen },
-  { to: "/library", label: "My Subjects & Topics", icon: BookOpen },
+  { to: "/library", label: "My Subjects", icon: BookOpen },
+  { to: "/topics", label: "My Topics", icon: FolderOpen },
   { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
   { to: "/exams", label: "Exam timetable", icon: CalendarDays },
+  { to: "/plan", label: "Revision Planner", icon: CalendarDays },
 ] as const;
 
 const FREE_RESOURCE_TABS = [
@@ -53,7 +53,7 @@ type NavTab = { to: string; label: string; icon: LucideIcon };
 
 const ADMIN_TAB = { to: "/admin", label: "Admin", icon: Settings } as const;
 
-const MOBILE_PRIMARY = ["/plan", "/knowledge-checker", "/papers"] as const;
+const MOBILE_PRIMARY = ["/library", "/topics"] as const;
 
 export function AppShell({
   children,
@@ -211,6 +211,9 @@ export function AppShell({
           </nav>
           <nav className="relative mt-3 border-t border-structure-foreground/15 pt-2 sm:hidden" aria-label="Mobile navigation">
             <div className="grid grid-cols-4 gap-1">
+              <Link to="/" className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-[8px] px-1 text-structure-foreground/70" activeProps={{ className: "bg-structure-foreground/10 text-primary" }} activeOptions={{ exact: true }}>
+                <House className="size-4" /><span className="text-[10px] font-bold">Home</span>
+              </Link>
               {ALL_TABS.filter((tab) => (MOBILE_PRIMARY as readonly string[]).includes(tab.to)).map((tab) => (
                 <Link key={tab.to} to={tab.to} className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-[8px] px-1 text-structure-foreground/70" activeProps={{ className: "bg-structure-foreground/10 text-primary" }} activeOptions={{ exact: true }}>
                   <tab.icon className="size-4" strokeWidth={2.5} />

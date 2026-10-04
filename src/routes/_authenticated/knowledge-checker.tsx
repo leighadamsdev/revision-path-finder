@@ -362,7 +362,7 @@ function KnowledgeCheckerPage() {
           </div>
           <div className="flex flex-wrap gap-2 print:hidden">
             <Button asChild variant="outline">
-              <Link to="/library"><BookOpen /> Manage Subjects and Topics</Link>
+              <Link to="/topics"><BookOpen /> My Topics</Link>
             </Button>
             <Button type="button" variant="outline" onClick={downloadBlankPdf}>
               <Download /> Blank PDF
@@ -417,7 +417,7 @@ function KnowledgeCheckerPage() {
                 {libSubject.topics.length
                   ? `You haven't added your own content for ${libSubject.name} yet, so the DfE content list is shown. `
                   : `There's no content for ${libSubject.name} yet. `}
-                You can <Link to="/library" className="font-extrabold underline">upload a contents page or topic list</Link>, use the DfE content, or type the topic and components in below.
+                You can <Link to="/topics" className="font-extrabold underline">upload a contents page or topic list</Link>, use the DfE content, or type the topic and components in below.
               </div>
             ) : null}
             </>

@@ -6,10 +6,11 @@ import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
 
 const MY_REVISION = [
-  { to: "/plan", label: "Revision Planner" },
-  { to: "/my-plans", label: "My plans" },
-  { to: "/library", label: "My Subjects & Topics" },
+  { to: "/library", label: "My Subjects" },
+  { to: "/topics", label: "My Topics" },
   { to: "/knowledge-checker", label: "Knowledge Checker" },
+  { to: "/exams", label: "Exam timetable" },
+  { to: "/plan", label: "Revision Planner" },
 ] as const;
 
 const FREE_RESOURCES = [
@@ -24,7 +25,7 @@ const GROUPS: { label: string; items: readonly { to: string; label: string }[] }
   { label: "Free Resources", items: FREE_RESOURCES },
 ];
 
-const MOBILE_PRIMARY = ["/", "/knowledge-checker", "/papers"] as const;
+const MOBILE_PRIMARY = ["/library", "/topics"] as const;
 
 export function PublicHeader() {
   const { user } = useAuth();
@@ -108,6 +109,7 @@ export function PublicHeader() {
         </nav>
         <nav className="relative mt-3 border-t border-border pt-2 sm:hidden" aria-label="Mobile navigation">
           <div className="grid grid-cols-4 gap-1">
+            <Link to="/" className="flex min-h-11 items-center justify-center rounded-[8px] px-1 text-center text-[11px] font-bold text-muted-foreground" activeProps={{ className: activeLinkClass }} activeOptions={{ exact: true }}>Home</Link>
             {GROUPS.flatMap((group) => group.items)
               .filter((item) => (MOBILE_PRIMARY as readonly string[]).includes(item.to))
               .map((item) => (

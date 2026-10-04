@@ -6,11 +6,10 @@ import { toast } from "sonner";
 import { PublicHeader } from "@/components/PublicHeader";
 import { Button } from "@/components/ui/button";
 import { LibraryManager, SubjectFields } from "@/components/library/LibraryManager";
-import { ImportPanel } from "@/components/library/ImportPanel";
 import { useLibrary } from "@/hooks/useLibrary";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { addSubject, deleteSubject, markOnboardingComplete, updateSubject, type LibSubject } from "@/lib/library";
+import { addSubject, deleteSubject, markOnboardingComplete, updateSubject } from "@/lib/library";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -36,20 +35,16 @@ function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [value, setValue] = useState(blank);
   const [editing, setEditing] = useState<string | null>(null);
-  const [importAfterCreate, setImportAfterCreate] = useState<LibSubject | null>(null);
   const [saving, setSaving] = useState(false);
 
   const totalTopics = subjects.reduce((n, s) => n + s.topics.length, 0);
   const totalItems = subjects.reduce((n, s) => n + s.topics.reduce((m, t) => m + t.items.length, 0), 0);
 
-  async function saveSubject(thenImport = false) {
+  async function saveSubject() {
     if (!value.name.trim()) return void toast.error("Enter the subject name first.");
     try {
       if (editing) await updateSubject(editing, { name: value.name.trim(), exam_board: value.exam_board || null, qualification_level: value.qualification_level || null });
-      else {
-        const id = await addSubject(value);
-        if (thenImport) setImportAfterCreate({ id, name: value.name.trim(), exam_board: null, qualification_level: null, position: 0, topics: [] });
-      }
+      else await addSubject(value);
       setValue(blank);
       setEditing(null);
       refresh();
@@ -101,7 +96,7 @@ function OnboardingPage() {
                 <Button onClick={() => void saveSubject()}><Plus /> {editing ? "Save changes" : "Add subject"}</Button>
                 {editing ? <Button variant="ghost" onClick={() => { setEditing(null); setValue(blank); }}>Cancel</Button> : null}
               </div>
-              {!editing ? <p className="mt-2 text-[12px] font-medium text-muted-foreground">Add your subjects and tier. You can add topics for each one straight away, or leave it until later.</p> : null}
+              {!editing ? <p className="mt-2 text-[12px] font-medium text-muted-foreground">Add your subjects and tiers first. Topics come next and are optional.</p> : null}
             </div>
 
             {subjects.length ? (
@@ -114,7 +109,6 @@ function OnboardingPage() {
                         {s.name}
                         <span className="ml-2 font-medium text-muted-foreground">{[s.exam_board, s.qualification_level].filter(Boolean).join(" · ")}</span>
                       </span>
-                      <Button size="sm" variant="outline" onClick={() => setImportAfterCreate(s)}>Add topics</Button>
                       <Button size="icon" variant="ghost" aria-label="Edit subject" onClick={() => { setEditing(s.id); setValue({ name: s.name, exam_board: s.exam_board ?? "", qualification_level: s.qualification_level ?? "" }); }}><Pencil /></Button>
                       <Button size="icon" variant="ghost" aria-label="Delete subject" onClick={async () => { await deleteSubject(s.id); refresh(); }}><Trash2 /></Button>
                     </li>
@@ -132,7 +126,7 @@ function OnboardingPage() {
 
         {step === 1 ? (
           <section className="mt-6 space-y-4">
-            <LibraryManager subjects={subjects} refresh={refresh} />
+            <LibraryManager subjects={subjects} refresh={refresh} mode="topics" />
             <div className="flex flex-wrap justify-between gap-2">
               <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
               <div className="flex flex-wrap gap-2">
@@ -141,7 +135,7 @@ function OnboardingPage() {
               </div>
             </div>
             <p className="text-right text-[12px] font-medium text-muted-foreground">
-              Topics are optional here — you can add them later in My Topic Library or when you build a knowledge checker.
+              Topics are optional here — you can add them later in My Topics or when you build a knowledge checker.
             </p>
           </section>
         ) : null}
@@ -154,7 +148,7 @@ function OnboardingPage() {
             <p className="text-[13px] font-medium text-muted-foreground">
               {subjects.length} subjects · {totalTopics} Topics · {totalItems} content items. Tap a subject's arrow to see its Topics.
             </p>
-            <LibraryManager subjects={subjects} refresh={refresh} />
+            <LibraryManager subjects={subjects} refresh={refresh} mode="topics" />
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
               <Button disabled={saving || !subjects.length} onClick={() => void finish()}>
@@ -165,9 +159,6 @@ function OnboardingPage() {
         ) : null}
       </main>
 
-      {importAfterCreate ? (
-        <ImportPanel open onOpenChange={(v) => !v && setImportAfterCreate(null)} subjectId={importAfterCreate.id} subjectName={importAfterCreate.name} existingCount={subjects.find((s) => s.id === importAfterCreate.id)?.topics.length ?? 0} onSaved={refresh} />
-      ) : null}
     </div>
   );
 }

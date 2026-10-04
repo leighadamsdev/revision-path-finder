@@ -29,6 +29,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
+import { Route as AuthenticatedTopicsRouteImport } from './routes/_authenticated/topics'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -131,6 +132,11 @@ const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTopicsRoute = AuthenticatedTopicsRouteImport.update({
+  id: '/topics',
+  path: '/topics',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ShareTokenRoute = ShareTokenRouteImport.update({
   id: '/share/$token',
   path: '/share/$token',
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/topics': typeof AuthenticatedTopicsRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesByTo {
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/topics': typeof AuthenticatedTopicsRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesById {
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
+  '/_authenticated/topics': typeof AuthenticatedTopicsRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRouteTypes {
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/plan'
     | '/print-plan'
     | '/setup'
+    | '/topics'
     | '/share/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/plan'
     | '/print-plan'
     | '/setup'
+    | '/topics'
     | '/share/$token'
   id:
     | '__root__'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
     | '/_authenticated/setup'
+    | '/_authenticated/topics'
     | '/share/$token'
   fileRoutesById: FileRoutesById
 }
@@ -430,6 +442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/topics': {
+      id: '/_authenticated/topics'
+      path: '/topics'
+      fullPath: '/topics'
+      preLoaderRoute: typeof AuthenticatedTopicsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/share/$token': {
       id: '/share/$token'
       path: '/share/$token'
@@ -452,6 +471,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
+  AuthenticatedTopicsRoute: typeof AuthenticatedTopicsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -466,6 +486,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
+  AuthenticatedTopicsRoute: AuthenticatedTopicsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -32,7 +32,7 @@ import { IntensityField } from "@/components/IntensityField";
 import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan } from "@/hooks/useActivePlan";
-import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
+import { useLibrary } from "@/hooks/useLibrary";
 import { topicText as libraryTopicText, addSubject as addLibrarySubject, saveTopics as saveLibraryTopics, newKey } from "@/lib/library";
 import { EditableTopicList, SUB_SEP, isSub, subLabel } from "@/components/planner/EditableTopicList";
 import { fetchExcludedTopics, saveExcludedTopics } from "@/lib/plan";
@@ -89,8 +89,29 @@ function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
 }
 
+/** A knowledge-checker sheet with gaps, left on this device by the standalone Knowledge Checker. */
+type CheckerHandoff = { subject: string; topic: string; gaps: number };
+
+function readCheckerHandoff(): CheckerHandoff | null {
+  try {
+    const raw = window.localStorage.getItem("revplan.knowledgeChecker");
+    if (!raw) return null;
+    const d = JSON.parse(raw) as { subject?: unknown; topic?: unknown; rows?: unknown };
+    if (typeof d.subject !== "string" || typeof d.topic !== "string" || !Array.isArray(d.rows)) return null;
+    const subject = d.subject.trim();
+    const topic = d.topic.trim();
+    if (!subject || !topic) return null;
+    let gaps = 0;
+    for (const row of d.rows as Array<{ gaps?: unknown }>) {
+      if (typeof row?.gaps === "string") gaps += row.gaps.split("\n").filter((line) => line.trim()).length;
+    }
+    return gaps > 0 ? { subject, topic, gaps } : null;
+  } catch {
+    return null;
+  }
+}
+
 function SetupPage() {
-  useOnboardingGate();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -409,6 +430,37 @@ function SetupPage() {
     if (mode === "edited") return chosen[subjectName] ?? [];
     const topics = chosen[subjectName] ?? [];
     return mode === "dfe" ? topics.map((topic) => detailedTopicText(subjectName, topic)) : topics;
+  }
+
+  /** Knowledge Checker gaps found on this device, offered once the student reaches the topic step. */
+  const [checkerHandoff, setCheckerHandoff] = useState<CheckerHandoff | null>(null);
+  useEffect(() => {
+    if (step === 2) setCheckerHandoff(readCheckerHandoff());
+  }, [step]);
+  const checkerPick = checkerHandoff
+    ? picks.find((p) => p.name.trim().toLowerCase() === checkerHandoff.subject.toLowerCase())
+    : undefined;
+
+  /** Marks the checker's topic red (1) in the plan, adding it to the subject's list if it isn't there yet. */
+  function applyCheckerGaps() {
+    if (!checkerHandoff || !checkerPick) return;
+    const name = checkerPick.name;
+    const wanted = checkerHandoff.topic.toLowerCase();
+    const existing = topicsFor(name);
+    const matches = existing.filter((topic) => topic.toLowerCase().includes(wanted));
+    const targets = matches.length ? matches : [checkerHandoff.topic];
+    if (!matches.length) {
+      setSource((prev) => ({ ...prev, [name]: "edited" }));
+      setChosen((prev) => ({ ...prev, [name]: [...existing, checkerHandoff.topic] }));
+    }
+    setTopicRatings((prev) => {
+      const next = { ...(prev[name] ?? {}) };
+      for (const topic of targets) next[topic] = 1;
+      return { ...prev, [name]: next };
+    });
+    setOpenSubject(name);
+    setCheckerHandoff(null);
+    toast.success(`${targets.length === 1 ? targets[0] : `${targets.length} topics`} marked red so ${name} gets more time on it.`);
   }
 
   function prioritiesFor(subjectName: string): string[] {
@@ -939,6 +991,24 @@ function SetupPage() {
                 <input type="checkbox" checked={saveToLibrary} onChange={(e) => setSaveToLibrary(e.target.checked)} className="size-4 accent-primary" />
                 Save new or edited topics to my Topic Library for next time
               </label>
+              {checkerHandoff ? (
+                <div className="mt-3 rounded-[10px] bg-secondary p-3 text-[12px] font-semibold" role="status">
+                  {checkerPick ? (
+                    <>
+                      <p>
+                        Your Knowledge Checker found {checkerHandoff.gaps} {checkerHandoff.gaps === 1 ? "gap" : "gaps"} in {checkerHandoff.topic} ({checkerPick.name}). Add them to this plan?
+                      </p>
+                      <button type="button" onClick={applyCheckerGaps} className="mt-2 rounded-full bg-primary px-4 py-2 text-[12px] font-bold text-primary-foreground">
+                        Mark {checkerHandoff.topic} red in my plan
+                      </button>
+                    </>
+                  ) : (
+                    <p>
+                      Your Knowledge Checker has gaps in {checkerHandoff.topic} ({checkerHandoff.subject}), but {checkerHandoff.subject} isn't one of this plan's subjects. Add that subject in step 1 to use them.
+                    </p>
+                  )}
+                </div>
+              ) : null}
 
               <div className="mt-4 space-y-2">
                 {picks.map((pick) => {

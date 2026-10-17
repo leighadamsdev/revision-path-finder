@@ -27,11 +27,11 @@ export const Route = createFileRoute("/")({
 });
 
 const HOW_STEPS = [
-  "Tell RevPlan the subjects and tiers you are studying, lock in how many weeks you have until exam day and how many times a week you want to study and for how long",
-  "Upload a topic list or take a photo of your revision book contents page and let revplan create your knowledge checkers for you, subject by subject",
+  "Tell rev.plan the subjects and tiers you are studying, lock in how many weeks you have until exam day and how many times a week you want to study and for how long",
+  "Upload a topic list or take a photo of your revision book contents page and let rev.plan create your knowledge checkers for you, subject by subject",
   "Use your bespoke knowledge checker to work out what you know and what you don't, before you create your revision plan or any flashcards",
   "Focus on what you don't know to build a list of the topics you need to commit to long term memory, adding in your confidence level",
-  "Let RevPlan build you a week-by-week, session by session plan, linked to exam dates. You can add in extra sessions during the holidays and ramp things and prioritise subjects up closer to the day",
+  "Let rev.plan build you a week-by-week, session by session plan, linked to exam dates. You can add in extra sessions during the holidays and ramp things and prioritise subjects up closer to the day",
 ];
 
 const POINTS = [
@@ -59,7 +59,7 @@ function Landing() {
 
       <main className="mx-auto max-w-4xl px-5 pb-20 pt-6">
         <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          GCSE REVISION PLANNER AND KNOWELDGE CHECKER
+          GCSE REVISION PLANNER AND KNOWLEDGE CHECKER
         </p>
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
           A bespoke revision timetable, built around exactly what you need to focus on and the time you have
@@ -295,7 +295,7 @@ function CheckerMockup() {
         <div className="flex flex-wrap items-center justify-between gap-3 bg-structure px-4 py-3 text-structure-foreground">
           <div>
             <p className="text-[11px] font-extrabold uppercase text-primary">
-              revplan. · active recall
+              rev.plan · active recall
             </p>
             <p className="mt-0.5 text-[15px] font-extrabold">
               Closed book first. Be honest with the gaps.
@@ -391,7 +391,7 @@ const QUICK_ACTIONS = [
 function QuickLinks() {
   return (
     <section className="mt-10" aria-labelledby="quick-links-heading">
-      <h2 id="quick-links-heading" className="text-xl font-extrabold tracking-tight">You can do the follow things for free</h2>
+      <h2 id="quick-links-heading" className="text-xl font-extrabold tracking-tight">You can do the following for free</h2>
       <ol className="mt-4 space-y-3">
         {QUICK_ACTIONS.map((q, i) => (
           <li key={q.to} className="flex items-center gap-3 rounded-[8px] border-l-4 border-primary bg-card p-4 shadow-sm ring-1 ring-border transition-colors hover:bg-accent/40">

@@ -706,7 +706,7 @@ function SetupPage() {
 
   const journey: Record<number, JourneyStatus> = {
     1: FIRST_STAGE.some((screen) => screen.step === step) ? "current" : "done",
-    2: step === 2 || step === 5 ? "current" : topicsVisited ? "done" : "optional",
+    2: step === 2 ? "current" : topicsVisited ? "done" : "optional",
     3: step === 6 ? "current" : readyForPlan && topicsVisited ? "optional" : "todo",
   };
   function selectJourney(n: number) {
@@ -733,7 +733,7 @@ function SetupPage() {
         <p className="mb-3 text-[12px] font-extrabold text-muted-foreground" aria-live="polite">
           {FIRST_STAGE.some((screen) => screen.step === step)
             ? `Step 1 of 3 · Part ${FIRST_STAGE.findIndex((screen) => screen.step === step) + 1} of 5 — ${FIRST_STAGE.find((screen) => screen.step === step)?.label}`
-            : step === 2 || step === 5
+            : step === 2
               ? "Step 2 of 3 · Optional — skip any time"
               : "Step 3 of 3 · Choose what goes in this plan"}
           {checkState === "skipped" && step === 6 ? " · Knowledge check skipped — you can complete it later." : ""}
@@ -931,9 +931,9 @@ function SetupPage() {
                 Check what you know
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Open each subject, choose where its topics come from (your Topic Library, the DfE
-                list, typing or a document), then edit the list and rate each topic. This step is
-                optional — leave a subject blank and we'll fill it in for you.
+                Open a subject, pick where its topics come from, then rate how well you know each
+                one. Low ratings get more revision time. This step is optional — skip it and we'll
+                fill in the topics for you.
               </p>
               <label className="mt-3 flex items-center gap-2 text-[12px] font-bold">
                 <input type="checkbox" checked={saveToLibrary} onChange={(e) => setSaveToLibrary(e.target.checked)} className="size-4 accent-primary" />
@@ -1281,49 +1281,6 @@ function SetupPage() {
             </>
           ) : null}
 
-          {step === 5 ? (
-            <>
-              <p className="text-lg font-extrabold tracking-tight">Check what you know</p>
-              <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-                Rate each topic in any order — your answers save as you go. Red: I do not know this yet.
-                Amber: I partly understand this. Green: I feel confident with this.
-              </p>
-              {!anyTopics ? (
-                <p className="mt-4 rounded-[12px] bg-secondary px-3 py-3 text-[13px] font-bold">
-                  Add some topics first, or skip this step and create your timetable now.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-4">
-                  {picks.map((p) => {
-                    const topics = topicsFor(p.name);
-                    if (!topics.length) return null;
-                    const done = topics.filter((t) => topicRatings[p.name]?.[t] != null).length;
-                    return (
-                      <div key={p.name}>
-                        <p className="text-sm font-extrabold">
-                          {p.name}{" "}
-                          <span className="text-[12px] font-bold text-muted-foreground">· {done}/{topics.length} rated</span>
-                        </p>
-                        <div className="mt-2">
-                          <TopicConfidenceList
-                            topics={topics}
-                            ratings={topicRatings[p.name] ?? {}}
-                            onChange={(topic, value) =>
-                              setTopicRatings((prev) => ({ ...prev, [p.name]: { ...(prev[p.name] ?? {}), [topic]: value } }))
-                            }
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              <p className="mt-3 text-[12px] font-medium text-muted-foreground">
-                Want to go deeper? The full <a href="/knowledge-checker" className="font-bold underline">Knowledge Checker</a> is still available any time.
-              </p>
-            </>
-          ) : null}
-
           {step === 6 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">Choose what goes in this plan</p>
@@ -1489,16 +1446,6 @@ function SetupPage() {
                 </button>
                 <button onClick={() => { setCheckState("skipped"); void generate("quick"); }} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-card text-foreground ring-1 ring-border">
                   {generating ? "Building…" : "Skip — build a Quick Plan"}
-                </button>
-              </>
-            ) : null}
-            {step === 5 ? (
-              <>
-                <button onClick={openPriorities} disabled={!anyTopics || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-primary text-primary-foreground">
-                  Finish knowledge check
-                </button>
-                <button onClick={() => { setCheckState("skipped"); void generate(anyTopics ? "topic" : "quick"); }} disabled={generating || !readyForPlan} className="flex-1 rounded-full py-3 text-sm font-extrabold disabled:opacity-50 bg-card text-foreground ring-1 ring-border">
-                  Skip for now
                 </button>
               </>
             ) : null}

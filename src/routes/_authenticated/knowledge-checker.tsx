@@ -313,7 +313,7 @@ function KnowledgeCheckerPage() {
             new Paragraph({
               alignment: AlignmentType.CENTER,
               spacing: { before: 240 },
-              children: [new TextRun({ text: "revplan. · made from highlighted knowledge gaps", size: 18, color: "527078" })],
+              children: [new TextRun({ text: "rev.plan · made from highlighted knowledge gaps", size: 18, color: "527078" })],
             }),
           ],
         },
@@ -374,7 +374,7 @@ function KnowledgeCheckerPage() {
         <section ref={sheetRef} className={`mt-7 rounded-[8px] border border-checker-ink bg-card shadow-sm print:hidden ${fullScreen ? "fixed inset-0 z-50 mt-0 overflow-y-auto rounded-none" : "overflow-hidden"}`}>
           <div className="flex flex-col gap-4 bg-checker-ink p-5 text-checker-paper sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-extrabold uppercase text-checker-mint">revplan. · active recall</p>
+              <p className="text-xs font-extrabold uppercase text-checker-mint">rev.plan · active recall</p>
               <p className="mt-1 text-lg font-extrabold">Closed book first. Be honest with the gaps.</p>
             </div>
             <div className="flex items-center gap-2 rounded-[8px] border border-checker-mint/35 px-3 py-2">

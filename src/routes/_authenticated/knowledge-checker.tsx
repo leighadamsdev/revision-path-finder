@@ -22,7 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
 import { FocusSound } from "@/components/FocusSound";
 import { subjectUnits } from "@/lib/gcse-topics";
-import { useLibrary, useOnboardingGate } from "@/hooks/useLibrary";
+import { useLibrary } from "@/hooks/useLibrary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -110,7 +110,6 @@ function buildFlashcards(rows: CheckerRow[]) {
 }
 
 function KnowledgeCheckerPage() {
-  useOnboardingGate();
   const library = useLibrary();
   const [libSubjectId, setLibSubjectId] = useState("");
   const [libTopicId, setLibTopicId] = useState("");
@@ -516,7 +515,7 @@ function KnowledgeCheckerPage() {
           }}
         />
         <section className="mt-8 rounded-[8px] bg-checker-ink p-6 text-checker-paper print:hidden sm:flex sm:items-center sm:justify-between sm:gap-6">
-          <div><h2 className="text-xl font-extrabold">Use these gaps to build your plan</h2><p className="mt-1 text-sm font-semibold text-checker-paper/70">Give the topics you missed a lower confidence rating so they get more revision time.</p></div>
+          <div><h2 className="text-xl font-extrabold">Use these gaps to build your plan</h2><p className="mt-1 text-sm font-semibold text-checker-paper/70">When you reach the topic step, rev.plan will offer to mark these gaps red so they get more revision time.</p></div>
           <Button asChild className="mt-4 shrink-0 sm:mt-0">
             {user ? (plan ? <Link to="/edit-plan">Update my plan</Link> : <Link to="/setup">Create your revision plan</Link>) : <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}>Create your revision plan</Link>}
           </Button>

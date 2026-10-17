@@ -16,14 +16,14 @@ export function useLibrary() {
   };
 }
 
-/** Sends accounts that haven't finished onboarding (and have no plan) to /onboarding. */
+/** Sends accounts with no plan yet straight to the plan wizard (there is no separate onboarding any more). */
 export function useOnboardingGate() {
   const { user } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
     if (!user) return;
     void needsOnboarding(user.id).then((needs) => {
-      if (needs) void navigate({ to: "/onboarding" });
+      if (needs) void navigate({ to: "/setup" });
     });
   }, [user, navigate]);
 }

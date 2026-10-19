@@ -121,7 +121,7 @@ function ExamCalendarPage() {
             </p>
           </div>
           <Button variant="outline" onClick={() => setEditing((v) => !v)}>
-            {editing ? "Close" : exams.length ? "Add or change exams" : "Add exams"}
+            {editing ? "Close" : exams.length ? "Add mocks or change exams" : "Add exams"}
           </Button>
         </div>
 

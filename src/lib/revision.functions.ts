@@ -165,26 +165,135 @@ export const extractTopicsFromDocument = createServerFn({ method: "POST" })
     }
   });
 
-const ExamDatesInput = z.object({
-  subjects: z.array(z.string()).max(40).default([]),
-  fileName: z.string().min(1),
-  mimeType: z.string().min(1),
-  dataUrl: z.string().min(16),
-});
+const ExamDatesInput = z
+  .object({
+    subjects: z.array(z.string()).max(40).default([]),
+    /** "final" for the summer exam timetable, "mock" for a school's mock timetable. */
+    kind: z.enum(["final", "mock"]).default("final"),
+    /** Today's date (yyyy-MM-dd), so mock dates without a year land in the right school year. */
+    today: z.string().optional(),
+    fileName: z.string().min(1).optional(),
+    mimeType: z.string().min(1).optional(),
+    dataUrl: z.string().min(16).optional(),
+    /** Text from a pasted list, CSV, Word or Excel file (read in the browser). */
+    text: z.string().min(1).max(120_000).optional(),
+    /** A web page or PDF link from the school's website. */
+    url: z.string().url().max(2000).optional(),
+  })
+  .refine((d) => Boolean(d.dataUrl || d.text || d.url), {
+    message: "Add a file, a link or some text.",
+  });
 
-/** Reads exam dates out of a school exam timetable (PDF, photo or scan). */
+/** Refuses links to this machine or private networks. */
+function isPublicUrl(raw: string) {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    const h = u.hostname.toLowerCase();
+    if (h === "localhost" || h.endsWith(".local") || h.endsWith(".internal") || !h.includes("."))
+      return false;
+    if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(h)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
+    if (h.startsWith("[")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Fetches a school web page (as readable text) or a linked PDF (as a file). */
+async function readLink(
+  url: string,
+): Promise<{ kind: "text"; text: string } | { kind: "pdf"; fileName: string; dataUrl: string }> {
+  if (!isPublicUrl(url)) throw new Error("That link can't be opened. Use a public web address.");
+  const res = await fetch(url, {
+    redirect: "follow",
+    headers: {
+      "User-Agent": "rev.plan exam date reader",
+      Accept: "text/html,application/pdf;q=0.9,*/*;q=0.5",
+    },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!res.ok)
+    throw new Error(
+      `That page couldn't be opened (error ${res.status}). Check the link, or download the timetable and upload it instead.`,
+    );
+  const type = res.headers.get("content-type") ?? "";
+  const buf = await res.arrayBuffer();
+  if (buf.byteLength > 15_000_000)
+    throw new Error("That file is too large to read. Try a smaller file.");
+  if (type.includes("pdf") || url.toLowerCase().endsWith(".pdf")) {
+    let binary = "";
+    const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.length; i += 0x8000)
+      binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return {
+      kind: "pdf",
+      fileName: url.split("/").pop() || "timetable.pdf",
+      dataUrl: `data:application/pdf;base64,${btoa(binary)}`,
+    };
+  }
+  const html = new TextDecoder().decode(buf);
+  const text = html
+    .replace(/<(script|style|noscript|svg)[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<(br|\/p|\/div|\/li|\/tr|\/h\d)[^>]*>/gi, "\n")
+    .replace(/<\/t[dh]>/gi, " | ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;|&rsquo;/g, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n+/g, "\n")
+    .trim()
+    .slice(0, 100_000);
+  if (text.length < 20)
+    throw new Error(
+      "That page didn't have any readable text. If the timetable is a picture, take a screenshot and upload it.",
+    );
+  return { kind: "text", text };
+}
+
+/** Reads exam dates out of an exam timetable: a PDF, photo, scan, web page or pasted/downloaded list. */
 export const extractExamDates = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => ExamDatesInput.parse(input))
   .handler(async ({ data }) => {
     const { askForJson, AiError } = await import("@/lib/ai.server");
-    const isPdf = data.mimeType === "application/pdf";
+    let fileName = data.fileName ?? "timetable";
+    let mimeType = data.mimeType ?? "application/pdf";
+    let dataUrl = data.dataUrl;
+    let text = data.text;
+    if (data.url) {
+      const page = await readLink(data.url);
+      if (page.kind === "pdf") {
+        fileName = page.fileName;
+        mimeType = "application/pdf";
+        dataUrl = page.dataUrl;
+      } else text = page.text;
+    }
+    const mock = data.kind === "mock";
+    const instructions = mock
+      ? `You read UK school mock (practice) exam timetables for GCSE students, which vary a lot in layout: web pages, printed sheets, spreadsheets and lists. Extract every mock exam sitting with its subject and calendar date. Return each date strictly as yyyy-MM-dd. Mocks usually run between November and March. If the year is not shown, use the current school year (September to July) based on today's date, ${data.today ?? "unknown"}. Use the paper field for the paper name or number when shown, otherwise an empty string. Ignore rooms, times, seat numbers, other year groups' exams if clearly marked, and general instructions. Return an empty list if there are no recognisable exam dates.`
+      : "You read UK school GCSE exam timetables, which vary in layout. Extract every exam sitting with its subject and calendar date. Return each date strictly as yyyy-MM-dd. If the year is not printed, infer it from the exam season (summer GCSE exams run May–June). Use the paper field for the paper name or number when shown, otherwise an empty string. Ignore rooms, times, seat numbers and general instructions. Return an empty list if there are no recognisable exam dates.";
+    const isPdf = mimeType === "application/pdf";
+    const source: Array<
+      | { type: "input_text"; text: string }
+      | { type: "input_image"; image_url: string }
+      | { type: "input_file"; filename: string; file_data: string }
+    > = [];
+    if (text) source.push({ type: "input_text", text: `Timetable:\n${text}` });
+    if (dataUrl) {
+      source.push(
+        isPdf
+          ? { type: "input_file", filename: fileName, file_data: dataUrl }
+          : { type: "input_image", image_url: dataUrl },
+      );
+    }
     try {
       const result = await askForJson<{
         exams: Array<{ subject: string; date: string; paper: string }>;
       }>({
-        instructions:
-          "You read UK school GCSE exam timetables, which vary in layout. Extract every exam sitting with its subject and calendar date. Return each date strictly as yyyy-MM-dd. If the year is not printed, infer it from the exam season (summer GCSE exams run May–June). Use the paper field for the paper name or number when shown, otherwise an empty string. Ignore rooms, times, seat numbers and general instructions. Return an empty list if there are no recognisable exam dates.",
+        instructions,
         schemaName: "exam_dates",
         schema: {
           type: "object",
@@ -213,7 +322,7 @@ export const extractExamDates = createServerFn({ method: "POST" })
               {
                 type: "input_text",
                 text: [
-                  "Extract every exam sitting from this exam timetable, reading tables and images carefully.",
+                  `Extract every ${mock ? "mock exam" : "exam"} sitting from this timetable, reading tables and images carefully.`,
                   data.subjects.length
                     ? `The student is sitting these subjects — match names to this list wherever you can: ${data.subjects.join("; ")}.`
                     : "",
@@ -221,16 +330,14 @@ export const extractExamDates = createServerFn({ method: "POST" })
                   .filter(Boolean)
                   .join("\n"),
               },
-              isPdf
-                ? { type: "input_file", filename: data.fileName, file_data: data.dataUrl }
-                : { type: "input_image", image_url: data.dataUrl },
+              ...source,
             ],
           },
         ],
       });
       const exams = result.exams
         .filter((exam) => /^\d{4}-\d{2}-\d{2}$/.test(exam.date))
-        .slice(0, 60);
+        .slice(0, 80);
       return { exams };
     } catch (error) {
       if (error instanceof AiError) throw new Error(error.message);

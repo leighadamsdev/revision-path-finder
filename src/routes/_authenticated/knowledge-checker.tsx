@@ -282,6 +282,10 @@ function KnowledgeCheckerPage() {
       event.preventDefault();
       const el = event.currentTarget;
       const pos = el.selectionStart ?? el.value.length;
+      // insertText fires the box's normal change event and leaves the caret sitting after the new
+      // bullet, so fast typing can't scramble the text the way a state round-trip can.
+      el.setSelectionRange(pos, pos);
+      if (document.execCommand("insertText", false, "\n• ")) return;
       const next = `${el.value.slice(0, pos)}\n• ${el.value.slice(pos)}`;
       patchRow(id, { [field]: next });
       const caret = pos + 3;

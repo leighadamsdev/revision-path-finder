@@ -53,15 +53,6 @@ export function averageConfidence(values: Array<number | null | undefined>): num
   return Math.round(mean * 10) / 10;
 }
 
-/** Likert labels for the 1–5 scale. */
-export const LIKERT: Record<number, string> = {
-  1: "Not confident at all",
-  2: "Slightly confident",
-  3: "Somewhat confident",
-  4: "Fairly confident",
-  5: "Very confident",
-};
-
 export type Band = "red" | "amber" | "green" | "unrated";
 
 export function confidenceBand(value: number | null | undefined): Band {

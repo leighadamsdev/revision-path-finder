@@ -30,14 +30,14 @@ export function MasteryStrip({
           const confidence = averageConfidence(ratings.length ? ratings : [subject.confidence]);
           const band = confidenceBand(confidence == null ? null : Math.round(confidence));
           const tone = confidenceTone(confidence == null ? null : Math.round(confidence));
-          const confidenceLabel = band === "red" ? "Low confidence" : band === "amber" ? "Building confidence" : band === "green" ? "High confidence" : "Not rated";
+          const confidenceLabel = band === "red" ? "Red" : band === "amber" ? "Amber" : band === "green" ? "Green" : "Not rated";
           const r = 14;
           const c = 2 * Math.PI * r;
           return (
             <div
               key={subject.id}
               className="flex min-w-[168px] items-center gap-2.5 rounded-[8px] bg-card px-3 py-2 ring-1 ring-border/60"
-              title={`${subject.name}: ${score}% mastery · ${confidenceLabel}${confidence == null ? "" : ` (${confidence}/5)`}`}
+              title={`${subject.name}: ${score}% mastery · ${confidenceLabel} confidence`}
             >
               <svg viewBox="0 0 36 36" className="size-9 shrink-0 -rotate-90" aria-hidden="true">
                 <circle cx="18" cy="18" r={r} className="fill-none stroke-border" strokeWidth="4" />

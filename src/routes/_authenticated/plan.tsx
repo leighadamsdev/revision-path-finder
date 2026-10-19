@@ -307,7 +307,7 @@ function TimetablePage() {
               </p>
               {needsWork.length === 0 ? (
                 <p className="text-[13px] font-medium text-muted-foreground">
-                  Nothing rated 1 or 2 — time is shared evenly.
+                  Nothing rated red — time is shared evenly.
                 </p>
               ) : (
                 <ul className="space-y-1.5">
@@ -323,7 +323,7 @@ function TimetablePage() {
                         <span
                           className={`ml-auto text-[11px] font-extrabold ${confidenceTone(subject.rating).text}`}
                         >
-                          {subject.rating}/5 · {(subject.rating ?? 0) <= 2 ? "Red" : (subject.rating ?? 0) < 5 ? "Amber" : "Green"}
+                          {(subject.rating ?? 0) <= 2 ? "Red" : (subject.rating ?? 0) < 5 ? "Amber" : "Green"}
                         </span>
                       </li>
                     );

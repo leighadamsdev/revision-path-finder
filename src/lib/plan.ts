@@ -3,7 +3,7 @@ import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { generateTopics } from "@/lib/revision.functions";
 import { catalogueSubject } from "@/lib/gcse-subjects";
-import { subjectUnits } from "@/lib/gcse-topics";
+import { defaultUnits } from "@/lib/gcse-topics";
 import { examDateColumns, examDateList } from "@/lib/exam-dates";
 import { syncExamsFromColumns } from "@/lib/exams";
 import { fetchSubtopics } from "@/lib/leitner";
@@ -646,7 +646,7 @@ async function buildTopics(draft: PlanDraft, slots: Slot[]) {
     const subject = subjects.find((s) => s.id === subjectId);
     if (!subject || count === 0) continue;
 
-    const documentTopics = subjectUnits(subject.name).flatMap((unit) =>
+    const documentTopics = defaultUnits(subject.name).flatMap((unit) =>
       unit.elements.map((element) =>
         element.detail ? `${element.label}: ${element.detail}` : element.label,
       ),
@@ -849,7 +849,7 @@ export async function regeneratePlanSessions(
   // Subjects newly added to the plan need a topic pool of their own.
   for (const subject of settings.subjects) {
     if (topicsBySubject[subject.subjectId]?.length) continue;
-    const units = subjectUnits(subject.name).flatMap((unit) =>
+    const units = defaultUnits(subject.name).flatMap((unit) =>
       unit.elements.map((element) =>
         element.detail ? `${element.label}: ${element.detail}` : element.label,
       ),

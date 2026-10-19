@@ -41,6 +41,12 @@ export const GCSE_SUBJECTS: CatalogueSubject[] = [
   { name: "Sociology", colorKey: "hist", group: "Humanities" },
 
   // Languages
+  { name: "French", colorKey: "lit", tiered: true, group: "Languages" },
+  { name: "German", colorKey: "lit", tiered: true, group: "Languages" },
+  { name: "Spanish", colorKey: "lit", tiered: true, group: "Languages" },
+  { name: "Italian", colorKey: "lit", tiered: true, group: "Languages" },
+  { name: "Latin", colorKey: "lit", group: "Languages" },
+  { name: "Classical Greek", colorKey: "lit", group: "Languages" },
   { name: "Ancient Languages", colorKey: "lit", group: "Languages" },
   {
     name: "Modern Foreign Languages (MFL)",
@@ -52,6 +58,7 @@ export const GCSE_SUBJECTS: CatalogueSubject[] = [
   // Business & technology
   { name: "Business", colorKey: "biz", group: "Business & technology" },
   { name: "Economics", colorKey: "biz", group: "Business & technology" },
+  { name: "Computer Science", colorKey: "biz", group: "Business & technology" },
   { name: "Design & Technology", colorKey: "biz", group: "Business & technology" },
   { name: "Electronics", colorKey: "biz", group: "Business & technology" },
   { name: "Engineering", colorKey: "biz", group: "Business & technology" },

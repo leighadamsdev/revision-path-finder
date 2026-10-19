@@ -3,6 +3,8 @@
  * Content Revision Checklists. Each subject has units; each unit has
  * elements a student can tick individually or all at once.
  */
+import { specUnits } from "./spec-topics";
+
 export type TopicElement = { label: string; detail: string };
 export type SubjectUnit = { unit: string; elements: TopicElement[] };
 
@@ -3036,6 +3038,12 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
 
 export function subjectUnits(subjectName: string): SubjectUnit[] {
   return SUBJECT_TOPICS[subjectName] ?? [];
+}
+
+/** The pre-populated list to use by default: the exam-board list, else the DfE content list. */
+export function defaultUnits(subjectName: string): SubjectUnit[] {
+  const spec = specUnits(subjectName);
+  return spec.length ? spec : subjectUnits(subjectName);
 }
 
 export function subjectElementCount(subjectName: string): number {

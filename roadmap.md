@@ -60,3 +60,4 @@
 - [x] Inline-editable topic lists with sub-topics and ratings in step 2; write-back to Topic Library
 - [x] Step 3 include/exclude subjects and topics; left-out topics saved for later
 - [x] Knowledge Checker sub-points
+- [x] Align the Knowledge Checker page colours with the site palette (navy structure, orange actions, light grey canvas)

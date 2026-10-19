@@ -22,7 +22,7 @@ export function MultiSubjectPicker({
 }: {
   existing: LibSubject[];
   onDone: () => void;
-  onCancel?: () => void;
+  onCancel?: (() => void) | undefined;
 }) {
   const [picks, setPicks] = useState<Pick[]>([]);
   const [search, setSearch] = useState("");

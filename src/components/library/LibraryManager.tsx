@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, FileImage, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, FileImage, ListChecks, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,8 @@ import {
 import { ImportPanel } from "./ImportPanel";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, catalogueSubject, isTiered } from "@/lib/gcse-subjects";
 import { TopicDraftEditor } from "./TopicDraftEditor";
+import { ReadyListDialog } from "./ReadyListDialog";
+import { readyListFor } from "@/lib/spec-topics";
 
 export const libField =
   "w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring";
@@ -92,6 +94,7 @@ export function SubjectFields({
 export function LibraryManager({ subjects, refresh, showTopics = true, mode = "all" }: { subjects: LibSubject[]; refresh: () => void; showTopics?: boolean; mode?: "all" | "subjects" | "topics" }) {
   const [importFor, setImportFor] = useState<LibSubject | null>(null);
   const [manualFor, setManualFor] = useState<LibSubject | null>(null);
+  const [readyFor, setReadyFor] = useState<LibSubject | null>(null);
   const [editSubject, setEditSubject] = useState<LibSubject | null>(null);
   const [editTopic, setEditTopic] = useState<LibTopic | null>(null);
   const [removeTopic, setRemoveTopic] = useState<{ topic: LibTopic; sessions: number } | null>(null);
@@ -127,7 +130,12 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
               </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {mode !== "subjects" ? <Button size="sm" onClick={() => setImportFor(s)}><Upload /> Import Topics from a Contents Page</Button> : null}
+              {mode !== "subjects" && readyListFor(s.name).units.length ? (
+                <Button size="sm" onClick={() => setReadyFor(s)}>
+                  <ListChecks /> {readyListFor(s.name).kind === "spec" ? "Choose from Exam Board List" : "Choose from Ready-made List"}
+                </Button>
+              ) : null}
+              {mode !== "subjects" ? <Button size="sm" variant={readyListFor(s.name).units.length ? "outline" : "default"} onClick={() => setImportFor(s)}><Upload /> Import from a Contents Page or Photo</Button> : null}
               {mode !== "subjects" ? <Button size="sm" variant="outline" onClick={() => setManualFor(s)}><Plus /> Add Topic Manually</Button> : null}
               {mode !== "topics" ? <Button size="sm" variant="outline" onClick={() => setEditSubject(s)}><Pencil /> Edit Subject</Button> : null}
               {mode !== "topics" ? <Button
@@ -169,6 +177,8 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
       {importFor ? (
         <ImportPanel open onOpenChange={(v) => !v && setImportFor(null)} subjectId={importFor.id} subjectName={importFor.name} existingCount={importFor.topics.length} onSaved={refresh} />
       ) : null}
+
+      <ReadyListDialog subject={readyFor} onClose={() => setReadyFor(null)} onSaved={refresh} />
 
       <ManualTopicDialog subject={manualFor} onClose={() => setManualFor(null)} onSaved={refresh} />
 

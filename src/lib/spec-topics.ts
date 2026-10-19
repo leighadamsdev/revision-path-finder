@@ -5,7 +5,7 @@
  * and the default topic list wherever the app needs one.
  * Generated from the RevPlan GCSE topic lists; edit the lists there and regenerate.
  */
-import type { SubjectUnit } from "./gcse-topics";
+import { subjectUnits, type SubjectUnit } from "./gcse-topics";
 
 export type SpecTopicList = { source: string; units: SubjectUnit[] };
 
@@ -7995,4 +7995,19 @@ export function specUnits(subjectName: string): SubjectUnit[] {
 /** Which specification the subject's list follows, e.g. "Based on AQA GCSE Biology (8461)…". */
 export function specSource(subjectName: string): string {
   return find(subjectName)?.source ?? "";
+}
+
+/** The ready-made list for a subject: the exam-board list if there is one, else the DfE list. */
+export function readyListFor(subjectName: string): {
+  kind: "spec" | "dfe";
+  source: string;
+  units: SubjectUnit[];
+} {
+  const spec = specUnits(subjectName);
+  if (spec.length) return { kind: "spec", source: specSource(subjectName), units: spec };
+  return {
+    kind: "dfe",
+    source: "Based on the DfE GCSE subject content.",
+    units: subjectUnits(subjectName),
+  };
 }

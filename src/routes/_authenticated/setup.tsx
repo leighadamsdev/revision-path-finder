@@ -109,7 +109,7 @@ function readCheckerHandoff(): CheckerHandoff | null {
     if (!subject || !topic) return null;
     let gaps = 0;
     for (const row of d.rows as Array<{ gaps?: unknown }>) {
-      if (typeof row?.gaps === "string") gaps += row.gaps.split("\n").filter((line) => line.trim()).length;
+      if (typeof row?.gaps === "string") gaps += row.gaps.split("\n").filter((line) => line.replace(/^[•\s]+/, "").trim()).length;
     }
     return gaps > 0 ? { subject, topic, gaps } : null;
   } catch {

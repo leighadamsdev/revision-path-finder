@@ -416,7 +416,7 @@ function KnowledgeCheckerPage() {
           </div>
         </header>
 
-        <section ref={sheetRef} className={`mt-7 rounded-[8px] border border-structure bg-card shadow-sm print:hidden ${fullScreen ? "fixed inset-0 z-50 mt-0 overflow-y-auto rounded-none" : "overflow-hidden"}`}>
+        <section ref={sheetRef} className={`mt-7 rounded-[8px] border border-structure bg-card shadow-[0_20px_60px_-25px] shadow-structure/35 print:hidden ${fullScreen ? "fixed inset-0 z-50 mt-0 overflow-y-auto rounded-none" : "overflow-hidden"}`}>
           <div className="flex flex-col gap-4 bg-structure p-5 text-structure-foreground sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-extrabold uppercase text-primary">rev.plan · active recall</p>
@@ -564,7 +564,7 @@ function KnowledgeCheckerPage() {
                   </label>
                   <label className={cn("text-xs font-extrabold uppercase text-foreground", mode === "recall" && "opacity-45")}>
                     <span className="flex items-center gap-1.5"><Highlighter className="size-4" /> Gaps and corrections</span>
-                    <Textarea value={row.gaps} onChange={(event) => patchRow(row.id, { gaps: event.target.value })} disabled={mode === "recall"} placeholder={mode === "recall" ? "Open your notes when the brain dump is finished" : "One missed fact or keyword per line…"} className="mt-3 min-h-36 resize-y border-primary/50 bg-accent text-sm font-semibold normal-case leading-relaxed text-foreground disabled:opacity-70" />
+                    <Textarea value={row.gaps} onChange={(event) => patchRow(row.id, { gaps: event.target.value })} disabled={mode === "recall"} placeholder={mode === "recall" ? "Open your notes when the brain dump is finished" : "One missed fact or keyword per line…"} className="mt-3 min-h-36 resize-y border-l-4 border-primary bg-accent text-sm font-semibold normal-case leading-relaxed text-foreground disabled:opacity-70" />
                   </label>
                 </div>
               </article>
@@ -681,7 +681,7 @@ function FlashcardPanel({ flashcards }: { flashcards: Flashcard[] }) {
           <p className="text-xs font-extrabold uppercase text-muted-foreground">Flashcards from gaps</p>
           <h2 className="mt-1 text-2xl font-extrabold text-foreground">Key terms and definitions</h2>
         </div>
-        <span className="inline-flex self-start rounded-full bg-primary px-3 py-1.5 text-xs font-extrabold text-foreground">
+        <span className="inline-flex self-start rounded-full bg-primary px-3 py-1.5 text-xs font-extrabold text-primary-foreground">
           {flashcards.length} {flashcards.length === 1 ? "card" : "cards"}
         </span>
       </div>

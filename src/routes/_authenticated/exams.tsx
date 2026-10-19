@@ -134,7 +134,7 @@ function ExamCalendarPage() {
             <CalendarDays className="mx-auto size-6 text-muted-foreground" aria-hidden="true" />
             <p className="mt-3 text-sm font-extrabold tracking-tight">No exam dates yet</p>
             <p className="mx-auto mt-1 max-w-[42ch] text-[13px] font-medium text-muted-foreground">
-              Add up to three exam dates for each subject and they'll show up here.
+              Choose each subject's exam board and your summer 2027 exams are added from the official timetable.
             </p>
           </div>
         ) : (

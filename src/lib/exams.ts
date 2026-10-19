@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { examDateColumns, MAX_EXAM_DATES } from "@/lib/exam-dates";
+import { examLabel, planningDates, type TimetableExam } from "@/lib/exam-timetable";
 
 export type ExamKind = "mock" | "final" | "untagged";
 
@@ -28,6 +29,9 @@ export type OfficialExam = {
 };
 
 export { MAX_EXAM_DATES };
+
+/** Papers a subject can have on the exam timetable (AQA Combined Science has six). */
+export const MAX_PAPERS = 8;
 
 export async function fetchExams(planId: string): Promise<Exam[]> {
   const { data, error } = await supabase
@@ -83,12 +87,12 @@ async function syncColumns(planId: string, subjectId: string) {
   const dates = (data ?? []).map((row) => row.exam_date as string);
   await supabase
     .from("plan_subjects")
-    .update(examDateColumns(dates.slice(0, MAX_EXAM_DATES)))
+    .update(examDateColumns(planningDates(dates)))
     .eq("plan_id", planId)
     .eq("subject_id", subjectId);
 }
 
-/** Replaces one subject's exams (up to three papers) and their topic scope. */
+/** Replaces one subject's exams (up to MAX_PAPERS papers) and their topic scope. */
 export async function saveSubjectExams(planId: string, subjectId: string, exams: ExamInput[]) {
   const { data: current } = await supabase
     .from("exams")
@@ -102,7 +106,7 @@ export async function saveSubjectExams(planId: string, subjectId: string, exams:
     if (error) throw error;
   }
 
-  for (const exam of exams.slice(0, MAX_EXAM_DATES)) {
+  for (const exam of exams.slice(0, MAX_PAPERS)) {
     if (!exam.exam_date) continue;
     const row = {
       plan_id: planId,
@@ -145,7 +149,7 @@ export async function syncExamsFromColumns(planId: string) {
       .from("plan_subjects")
       .select("subject_id, exam_date, exam_date_2, exam_date_3")
       .eq("plan_id", planId),
-    supabase.from("exams").select("id, subject_id, exam_date").eq("plan_id", planId),
+    supabase.from("exams").select("id, subject_id, exam_date, kind, verified").eq("plan_id", planId),
   ]);
   const existing = exams ?? [];
   const inserts: Array<{ plan_id: string; subject_id: string; paper_no: number; exam_date: string }> = [];
@@ -158,9 +162,48 @@ export async function syncExamsFromColumns(planId: string) {
       else inserts.push({ plan_id: planId, subject_id: row.subject_id, paper_no: i + 1, exam_date: date });
     });
   }
+  // Confirmed final papers (e.g. added from the official timetable) stay while their subject
+  // still has dates: the plan only keeps three dates, but a subject can have more papers.
+  const withDates = new Set(
+    (subjects ?? [])
+      .filter((row) => row.exam_date || row.exam_date_2 || row.exam_date_3)
+      .map((row) => row.subject_id),
+  );
+  for (const e of existing) {
+    if (e.kind === "final" && e.verified && withDates.has(e.subject_id)) keepIds.add(e.id);
+  }
   const remove = existing.filter((e) => !keepIds.has(e.id)).map((e) => e.id);
   if (remove.length) await supabase.from("exams").delete().in("id", remove);
   if (inserts.length) await supabase.from("exams").insert(inserts);
+}
+
+/** Official timetable papers as confirmed final exams, ready for saveSubjectExams. */
+export function timetableExamInputs(subjectId: string, exams: TimetableExam[]): ExamInput[] {
+  return exams.slice(0, MAX_PAPERS).map((exam, i) => ({
+    subject_id: subjectId,
+    paper_no: i + 1,
+    kind: "final" as ExamKind,
+    label: examLabel(exam),
+    exam_date: exam.date,
+    official_exam_id: null,
+    verified: true,
+    all_topics: true,
+    topic_ids: [],
+  }));
+}
+
+/**
+ * Puts a subject's official timetable papers into a plan as confirmed finals. Mocks the
+ * student added stay; any earlier finals and undated/untagged entries are replaced.
+ */
+export async function applyTimetableExams(planId: string, subjectId: string, exams: TimetableExam[]) {
+  if (!exams.length) return;
+  const mocks = (await fetchExams(planId)).filter((e) => e.subject_id === subjectId && e.kind === "mock");
+  const finals = timetableExamInputs(subjectId, exams);
+  const list: ExamInput[] = [...mocks, ...finals]
+    .sort((a, b) => a.exam_date.localeCompare(b.exam_date))
+    .map((e, i) => ({ ...e, paper_no: i + 1 }));
+  await saveSubjectExams(planId, subjectId, list);
 }
 
 export function examKindLabel(kind: ExamKind) {

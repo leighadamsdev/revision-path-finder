@@ -67,15 +67,33 @@ type CheckerDraft = { subject: string; topic: string; date: string; rows: Checke
 type Flashcard = { id: string; term: string; definition: string; source: string };
 
 const STORAGE_KEY = "revplan.knowledgeChecker";
+
+/** Every brain-dump and gap box opens with this so the first line is already a bullet point. */
+const BULLET = "• ";
+
+/** A line counts only when it holds something beyond the bullet marker itself. */
+function isRealLine(line: string) {
+  return line.replace(/^[•\s]+/, "").trim().length > 0;
+}
+
+function hasPoints(value: string) {
+  return value.split("\n").some(isRealLine);
+}
+
+/** Keeps a box from ever going blank — a lone bullet is still worth showing. */
+function withBullet(value: string) {
+  return hasPoints(value) ? value : BULLET;
+}
+
 const EMPTY_ROWS: CheckerRow[] = [1, 2, 3].map((number) => ({
   id: `starter-${number}`,
   component: "",
-  recall: "",
-  gaps: "",
+  recall: BULLET,
+  gaps: BULLET,
 }));
 
 function countPoints(value: string) {
-  return value.split("\n").filter((line) => line.trim().length > 0).length;
+  return value.split("\n").filter(isRealLine).length;
 }
 
 function formatClock(seconds: number) {
@@ -106,7 +124,7 @@ function buildFlashcards(rows: CheckerRow[]) {
     row.gaps
       .split("\n")
       .map((line) => line.trim())
-      .filter(Boolean)
+      .filter(isRealLine)
       .map((line, index) => splitGapIntoFlashcard(line, row, index)),
   );
 }
@@ -179,7 +197,7 @@ function KnowledgeCheckerPage() {
       ...c,
       subject: libSubject.name,
       topic: title,
-      rows: topics.flatMap((t) => t.items.map((i) => ({ id: `${t.id}-${i.id}`, component: i.title, recall: "", gaps: "" }))),
+      rows: topics.flatMap((t) => t.items.map((i) => ({ id: `${t.id}-${i.id}`, component: i.title, recall: BULLET, gaps: BULLET }))),
     }));
     document.getElementById("checker-sheet-start")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -207,7 +225,12 @@ function KnowledgeCheckerPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as CheckerDraft;
-        if (Array.isArray(parsed.rows) && parsed.rows.length > 0) setDraft(parsed);
+        if (Array.isArray(parsed.rows) && parsed.rows.length > 0) {
+          setDraft({
+            ...parsed,
+            rows: parsed.rows.map((row) => ({ ...row, recall: withBullet(row.recall), gaps: withBullet(row.gaps) })),
+          });
+        }
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
@@ -259,6 +282,10 @@ function KnowledgeCheckerPage() {
       event.preventDefault();
       const el = event.currentTarget;
       const pos = el.selectionStart ?? el.value.length;
+      // insertText fires the box's normal change event and leaves the caret sitting after the new
+      // bullet, so fast typing can't scramble the text the way a state round-trip can.
+      el.setSelectionRange(pos, pos);
+      if (document.execCommand("insertText", false, "\n• ")) return;
       const next = `${el.value.slice(0, pos)}\n• ${el.value.slice(pos)}`;
       patchRow(id, { [field]: next });
       const caret = pos + 3;
@@ -269,7 +296,7 @@ function KnowledgeCheckerPage() {
   function addRow() {
     setDraft((current) => ({
       ...current,
-      rows: [...current.rows, { id: `row-${Date.now()}`, component: "", recall: "", gaps: "" }],
+      rows: [...current.rows, { id: `row-${Date.now()}`, component: "", recall: BULLET, gaps: BULLET }],
     }));
   }
 
@@ -279,7 +306,7 @@ function KnowledgeCheckerPage() {
       if (i < 0) return current;
       const parent = current.rows[i]!.component.split(" › ")[0]!.trim();
       const rows = [...current.rows];
-      rows.splice(i + 1, 0, { id: `row-${Date.now()}`, component: parent ? `${parent} › ` : "", recall: "", gaps: "" });
+      rows.splice(i + 1, 0, { id: `row-${Date.now()}`, component: parent ? `${parent} › ` : "", recall: BULLET, gaps: BULLET });
       return { ...current, rows };
     });
   }
@@ -573,11 +600,11 @@ function KnowledgeCheckerPage() {
                 </div>
                 <div className="grid gap-3 p-4 sm:grid-cols-2">
                   <label className="text-xs font-extrabold uppercase text-muted-foreground">What I already know
-                    <Textarea value={row.recall} onChange={(event) => patchRow(row.id, { recall: event.target.value })} onKeyDown={bulletOnEnter(row.id, "recall")} placeholder="One recalled point per line…" className="mt-3 min-h-36 resize-y bg-card text-sm font-semibold normal-case leading-relaxed text-foreground" />
+                    <Textarea value={row.recall} onChange={(event) => patchRow(row.id, { recall: event.target.value })} onKeyDown={bulletOnEnter(row.id, "recall")} onBlur={(event) => { if (!event.target.value.trim()) patchRow(row.id, { recall: BULLET }); }} placeholder="One recalled point per line…" className="mt-3 min-h-36 resize-y bg-card text-sm font-semibold normal-case leading-relaxed text-foreground" />
                   </label>
                   <label className={cn("text-xs font-extrabold uppercase text-foreground", mode === "recall" && "opacity-45")}>
                     <span className="flex items-center gap-1.5"><Highlighter className="size-4" /> Gaps and corrections</span>
-                    <Textarea value={row.gaps} onChange={(event) => patchRow(row.id, { gaps: event.target.value })} onKeyDown={bulletOnEnter(row.id, "gaps")} disabled={mode === "recall"} placeholder={mode === "recall" ? "Open your notes when the brain dump is finished" : "One missed fact or keyword per line…"} className="mt-3 min-h-36 resize-y border-l-4 border-primary bg-accent text-sm font-semibold normal-case leading-relaxed text-foreground disabled:opacity-70" />
+                    <Textarea value={row.gaps} onChange={(event) => patchRow(row.id, { gaps: event.target.value })} onKeyDown={bulletOnEnter(row.id, "gaps")} onBlur={(event) => { if (!event.target.value.trim()) patchRow(row.id, { gaps: BULLET }); }} disabled={mode === "recall"} placeholder={mode === "recall" ? "Open your notes when the brain dump is finished" : "One missed fact or keyword per line…"} className="mt-3 min-h-36 resize-y border-l-4 border-primary bg-accent text-sm font-semibold normal-case leading-relaxed text-foreground disabled:opacity-70" />
                   </label>
                 </div>
               </article>
@@ -628,7 +655,7 @@ function KnowledgeCheckerPage() {
           topic={draft.topic}
           components={draft.rows.map((r) => r.component)}
           onLoad={({ subject, topic, components }) => {
-            setDraft((c) => ({ ...c, subject, topic, rows: components.map((component, i) => ({ id: `row-${Date.now()}-${i}`, component, recall: "", gaps: "" })) }));
+            setDraft((c) => ({ ...c, subject, topic, rows: components.map((component, i) => ({ id: `row-${Date.now()}-${i}`, component, recall: BULLET, gaps: BULLET })) }));
             setMode("recall");
           }}
         />
@@ -674,8 +701,8 @@ function PrintableChecker({ draft }: { draft: CheckerDraft }) {
                 <strong>{index + 1}. </strong>
                 {row.component.trim() || ""}
               </td>
-              <td>{row.recall.trim() || ""}</td>
-              <td>{row.gaps.trim() || ""}</td>
+              <td>{hasPoints(row.recall) ? row.recall : ""}</td>
+              <td>{hasPoints(row.gaps) ? row.gaps : ""}</td>
             </tr>
           ))}
         </tbody>

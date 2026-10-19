@@ -67,15 +67,33 @@ type CheckerDraft = { subject: string; topic: string; date: string; rows: Checke
 type Flashcard = { id: string; term: string; definition: string; source: string };
 
 const STORAGE_KEY = "revplan.knowledgeChecker";
+
+/** Every brain-dump and gap box opens with this so the first line is already a bullet point. */
+const BULLET = "• ";
+
+/** A line counts only when it holds something beyond the bullet marker itself. */
+function isRealLine(line: string) {
+  return line.replace(/^[•\s]+/, "").trim().length > 0;
+}
+
+function hasPoints(value: string) {
+  return value.split("\n").some(isRealLine);
+}
+
+/** Keeps a box from ever going blank — a lone bullet is still worth showing. */
+function withBullet(value: string) {
+  return hasPoints(value) ? value : BULLET;
+}
+
 const EMPTY_ROWS: CheckerRow[] = [1, 2, 3].map((number) => ({
   id: `starter-${number}`,
   component: "",
-  recall: "",
-  gaps: "",
+  recall: BULLET,
+  gaps: BULLET,
 }));
 
 function countPoints(value: string) {
-  return value.split("\n").filter((line) => line.trim().length > 0).length;
+  return value.split("\n").filter(isRealLine).length;
 }
 
 function formatClock(seconds: number) {
@@ -106,7 +124,7 @@ function buildFlashcards(rows: CheckerRow[]) {
     row.gaps
       .split("\n")
       .map((line) => line.trim())
-      .filter(Boolean)
+      .filter(isRealLine)
       .map((line, index) => splitGapIntoFlashcard(line, row, index)),
   );
 }
@@ -179,7 +197,7 @@ function KnowledgeCheckerPage() {
       ...c,
       subject: libSubject.name,
       topic: title,
-      rows: topics.flatMap((t) => t.items.map((i) => ({ id: `${t.id}-${i.id}`, component: i.title, recall: "", gaps: "" }))),
+      rows: topics.flatMap((t) => t.items.map((i) => ({ id: `${t.id}-${i.id}`, component: i.title, recall: BULLET, gaps: BULLET }))),
     }));
     document.getElementById("checker-sheet-start")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -207,7 +225,12 @@ function KnowledgeCheckerPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as CheckerDraft;
-        if (Array.isArray(parsed.rows) && parsed.rows.length > 0) setDraft(parsed);
+        if (Array.isArray(parsed.rows) && parsed.rows.length > 0) {
+          setDraft({
+            ...parsed,
+            rows: parsed.rows.map((row) => ({ ...row, recall: withBullet(row.recall), gaps: withBullet(row.gaps) })),
+          });
+        }
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
@@ -269,7 +292,7 @@ function KnowledgeCheckerPage() {
   function addRow() {
     setDraft((current) => ({
       ...current,
-      rows: [...current.rows, { id: `row-${Date.now()}`, component: "", recall: "", gaps: "" }],
+      rows: [...current.rows, { id: `row-${Date.now()}`, component: "", recall: BULLET, gaps: BULLET }],
     }));
   }
 
@@ -279,7 +302,7 @@ function KnowledgeCheckerPage() {
       if (i < 0) return current;
       const parent = current.rows[i]!.component.split(" › ")[0]!.trim();
       const rows = [...current.rows];
-      rows.splice(i + 1, 0, { id: `row-${Date.now()}`, component: parent ? `${parent} › ` : "", recall: "", gaps: "" });
+      rows.splice(i + 1, 0, { id: `row-${Date.now()}`, component: parent ? `${parent} › ` : "", recall: BULLET, gaps: BULLET });
       return { ...current, rows };
     });
   }

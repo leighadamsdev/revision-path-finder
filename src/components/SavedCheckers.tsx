@@ -1,7 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FolderOpen, Save, Trash2 } from "lucide-react";
+import { Eraser, FolderOpen, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -13,11 +24,14 @@ export function SavedCheckers({
   topic,
   components,
   onLoad,
+  onSaved,
 }: {
   subject: string;
   topic: string;
   components: string[];
   onLoad: (c: { subject: string; topic: string; components: string[] }) => void;
+  /** Runs once a save lands, so the page can be cleared ready for the next checker. */
+  onSaved: () => void;
 }) {
   const [items, setItems] = useState<Saved[]>([]);
   const [busy, setBusy] = useState(false);
@@ -48,7 +62,19 @@ export function SavedCheckers({
       : await supabase.from("knowledge_checkers").insert({ subject: subject.trim(), topic: topic.trim(), rows });
     setBusy(false);
     if (error) return void toast.error("Couldn't save — try again.");
-    toast.success(existing ? "Saved checker updated." : "Saved to your checker library.");
+    toast.success(existing ? "Saved checker updated. Blank sheet ready." : "Saved to your checker library. Blank sheet ready.");
+    void refresh();
+    onSaved();
+  }
+
+  /** Empties the whole library — the recovery option when a checker was saved or named wrong. */
+  async function clearAll() {
+    if (!items.length) return;
+    setBusy(true);
+    const { error } = await supabase.from("knowledge_checkers").delete().in("id", items.map((i) => i.id));
+    setBusy(false);
+    if (error) return void toast.error("Couldn't clear the library — try again.");
+    toast.success(`Cleared ${items.length} saved ${items.length === 1 ? "checker" : "checkers"}.`);
     void refresh();
   }
 
@@ -58,9 +84,30 @@ export function SavedCheckers({
         <div>
           <p className="text-xs font-extrabold uppercase text-muted-foreground">My checker library</p>
           <h2 className="mt-1 text-2xl font-extrabold">Saved Knowledge Checkers</h2>
-          <p className="mt-1 text-sm font-semibold text-muted-foreground">Save the key components once, then open a fresh copy whenever you revise that topic again.</p>
+          <p className="mt-1 text-sm font-semibold text-muted-foreground">Save the key components once, then open a fresh copy whenever you revise that topic again. Saving clears the sheet ready for your next one.</p>
         </div>
-        <Button type="button" disabled={busy} onClick={() => void save()}><Save /> Save this checker</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" disabled={busy} onClick={() => void save()}><Save /> Save this checker</Button>
+          {groups.length > 0 ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="outline" disabled={busy} className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"><Eraser /> Clear all saved</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear every saved checker?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This deletes all {items.length} saved {items.length === 1 ? "checker" : "checkers"} from your library. The sheet you are working on stays as it is.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Keep my library</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => void clearAll()}>Yes, clear all</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : null}
+        </div>
       </div>
       {groups.length === 0 ? (
         <p className="mt-4 text-sm font-semibold text-muted-foreground">Nothing saved yet.</p>

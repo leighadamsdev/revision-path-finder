@@ -31,12 +31,12 @@
   --color-conf-high: oklch(0.5479 0.132 150.35);
   --color-exam-imminent: oklch(0.55 0.24 27);
 
-  /* Revision Knowledge Checker — sampled from the uploaded worksheet */
-  --color-checker-ink: oklch(0.29991 0.04473 219.1);
-  --color-checker-mint: oklch(0.83288 0.07141 180.15);
-  --color-checker-paper: oklch(0.98387 0.00252 228.78);
-  --color-checker-line: oklch(0.92876 0.01262 255.51);
-  --color-checker-highlight: oklch(0.9451 0.1243 101.54);
+  /* Legacy checker tokens — mapped onto the navy (#14133e) & orange (#fe9a00) palette */
+  --color-checker-ink: #14133e;
+  --color-checker-mint: #fe9a00;
+  --color-checker-paper: #f3f4f6;
+  --color-checker-line: #e2e4ea;
+  --color-checker-highlight: #ffd699;
 }
 
 @theme inline {

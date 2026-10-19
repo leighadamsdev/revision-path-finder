@@ -394,7 +394,7 @@ function KnowledgeCheckerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-checker-paper font-sans text-checker-ink">
+    <div className="min-h-screen bg-background font-sans text-foreground">
       <PublicHeader />
       <main className="knowledge-checker-print mx-auto max-w-6xl px-4 pb-20 pt-8 sm:px-6">
         <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end print:hidden">
@@ -416,29 +416,29 @@ function KnowledgeCheckerPage() {
           </div>
         </header>
 
-        <section ref={sheetRef} className={`mt-7 rounded-[8px] border border-checker-ink bg-card shadow-sm print:hidden ${fullScreen ? "fixed inset-0 z-50 mt-0 overflow-y-auto rounded-none" : "overflow-hidden"}`}>
-          <div className="flex flex-col gap-4 bg-checker-ink p-5 text-checker-paper sm:flex-row sm:items-center sm:justify-between">
+        <section ref={sheetRef} className={`mt-7 rounded-[8px] border border-structure bg-card shadow-sm print:hidden ${fullScreen ? "fixed inset-0 z-50 mt-0 overflow-y-auto rounded-none" : "overflow-hidden"}`}>
+          <div className="flex flex-col gap-4 bg-structure p-5 text-structure-foreground sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-extrabold uppercase text-checker-mint">rev.plan · active recall</p>
+              <p className="text-xs font-extrabold uppercase text-primary">rev.plan · active recall</p>
               <p className="mt-1 text-lg font-extrabold">Closed book first. Be honest with the gaps.</p>
             </div>
-            <div className="flex items-center gap-2 rounded-[8px] border border-checker-mint/35 px-3 py-2">
-              <Clock3 className="size-4 text-checker-mint" />
+            <div className="flex items-center gap-2 rounded-[8px] border border-primary/60 px-3 py-2">
+              <Clock3 className="size-4 text-primary" />
               <span className="min-w-[62px] text-center font-extrabold tabular-nums">{formatClock(remaining)}</span>
-              <Button type="button" size="icon" variant="ghost" aria-label={running ? "Pause timer" : "Start timer"} onClick={() => setRunning((value) => !value)} className="text-checker-mint hover:bg-checker-mint/10 hover:text-checker-mint">
+              <Button type="button" size="icon" variant="ghost" aria-label={running ? "Pause timer" : "Start timer"} onClick={() => setRunning((value) => !value)} className="text-primary hover:bg-primary/10 hover:text-primary">
                 {running ? <Pause /> : <Play />}
               </Button>
-              <Button type="button" size="icon" variant="ghost" aria-label="Reset timer" onClick={() => { setRemaining(30 * 60); setRunning(false); }} className="text-checker-paper/70 hover:bg-checker-mint/10 hover:text-checker-paper">
+              <Button type="button" size="icon" variant="ghost" aria-label="Reset timer" onClick={() => { setRemaining(30 * 60); setRunning(false); }} className="text-structure-foreground/70 hover:bg-primary/10 hover:text-structure-foreground">
                 <RotateCcw />
               </Button>
             </div>
-            <FocusSound className="text-checker-paper" />
+            <FocusSound className="text-structure-foreground" />
             <Button type="button" variant="secondary" onClick={toggleFullScreen}>
               {fullScreen ? "Exit full screen" : "Do it in the app (full screen)"}
             </Button>
           </div>
 
-          <div className="space-y-4 border-b border-checker-line bg-card p-5 print:hidden">
+          <div className="space-y-4 border-b border-border bg-card p-5 print:hidden">
             <label className="block max-w-md text-xs font-extrabold uppercase text-muted-foreground">
               1. Choose a subject
               <select
@@ -527,30 +527,30 @@ function KnowledgeCheckerPage() {
           </div>
 
           <div id="checker-sheet-start" />
-          <div className="grid gap-4 border-b border-checker-line bg-checker-paper p-5 sm:grid-cols-[1fr_1.4fr_0.7fr]">
+          <div className="grid gap-4 border-b border-border bg-background p-5 sm:grid-cols-[1fr_1.4fr_0.7fr]">
             <label className="text-xs font-extrabold uppercase text-muted-foreground">Subject
-              <Input value={draft.subject} onChange={(event) => setDraft((current) => ({ ...current, subject: event.target.value }))} placeholder="e.g. Biology" className="mt-2 h-11 bg-card text-sm font-bold normal-case text-checker-ink" />
+              <Input value={draft.subject} onChange={(event) => setDraft((current) => ({ ...current, subject: event.target.value }))} placeholder="e.g. Biology" className="mt-2 h-11 bg-card text-sm font-bold normal-case text-foreground" />
             </label>
             <label className="text-xs font-extrabold uppercase text-muted-foreground">Topic title
-              <Input value={draft.topic} onChange={(event) => setDraft((current) => ({ ...current, topic: event.target.value }))} placeholder="e.g. Enzymes" className="mt-2 h-11 bg-card text-sm font-bold normal-case text-checker-ink" />
+              <Input value={draft.topic} onChange={(event) => setDraft((current) => ({ ...current, topic: event.target.value }))} placeholder="e.g. Enzymes" className="mt-2 h-11 bg-card text-sm font-bold normal-case text-foreground" />
             </label>
             <label className="text-xs font-extrabold uppercase text-muted-foreground">Date
-              <Input type="date" value={draft.date} onChange={(event) => setDraft((current) => ({ ...current, date: event.target.value }))} className="mt-2 h-11 bg-card text-sm font-bold normal-case text-checker-ink" />
+              <Input type="date" value={draft.date} onChange={(event) => setDraft((current) => ({ ...current, date: event.target.value }))} className="mt-2 h-11 bg-card text-sm font-bold normal-case text-foreground" />
             </label>
           </div>
 
-          <div className="flex flex-col justify-between gap-3 border-b border-checker-line px-5 py-4 sm:flex-row sm:items-center print:hidden">
-            <div className="inline-flex self-start rounded-[8px] border border-checker-line bg-checker-paper p-1">
-              <Button type="button" size="sm" variant="ghost" onClick={() => setMode("recall")} className={cn("rounded-[6px]", mode === "recall" && "bg-checker-ink text-checker-paper hover:bg-checker-ink hover:text-checker-paper")}><EyeOff /> 1. Closed book</Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => setMode("check")} className={cn("rounded-[6px]", mode === "check" && "bg-checker-mint text-checker-ink hover:bg-checker-mint hover:text-checker-ink")}><BookOpen /> 2. Check gaps</Button>
+          <div className="flex flex-col justify-between gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center print:hidden">
+            <div className="inline-flex self-start rounded-[8px] border border-border bg-background p-1">
+              <Button type="button" size="sm" variant="ghost" onClick={() => setMode("recall")} className={cn("rounded-[6px]", mode === "recall" && "bg-structure text-structure-foreground hover:bg-structure hover:text-structure-foreground")}><EyeOff /> 1. Closed book</Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setMode("check")} className={cn("rounded-[6px]", mode === "check" && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground")}><BookOpen /> 2. Check gaps</Button>
             </div>
             <p className="text-xs font-bold text-muted-foreground">Your work saves automatically on this device.</p>
           </div>
 
-          <div className="divide-y divide-checker-line">
+          <div className="divide-y divide-border">
             {draft.rows.map((row, index) => (
               <article key={row.id} className="grid md:grid-cols-[0.7fr_1.3fr]">
-                <div className="border-b border-checker-line bg-checker-paper p-4 md:border-b-0 md:border-r">
+                <div className="border-b border-border bg-background p-4 md:border-b-0 md:border-r">
                   <div className="flex items-center justify-between gap-2">
                     <label htmlFor={`component-${row.id}`} className="text-xs font-extrabold uppercase text-muted-foreground">Key component {index + 1}</label>
                     {draft.rows.length > 1 ? <Button type="button" size="icon" variant="ghost" aria-label={`Remove component ${index + 1}`} onClick={() => removeRow(row.id)} className="size-8 text-muted-foreground print:hidden"><Trash2 /></Button> : null}
@@ -560,23 +560,23 @@ function KnowledgeCheckerPage() {
                 </div>
                 <div className="grid gap-3 p-4 sm:grid-cols-2">
                   <label className="text-xs font-extrabold uppercase text-muted-foreground">What I already know
-                    <Textarea value={row.recall} onChange={(event) => patchRow(row.id, { recall: event.target.value })} placeholder="One recalled point per line…" className="mt-3 min-h-36 resize-y bg-card text-sm font-semibold normal-case leading-relaxed text-checker-ink" />
+                    <Textarea value={row.recall} onChange={(event) => patchRow(row.id, { recall: event.target.value })} placeholder="One recalled point per line…" className="mt-3 min-h-36 resize-y bg-card text-sm font-semibold normal-case leading-relaxed text-foreground" />
                   </label>
-                  <label className={cn("text-xs font-extrabold uppercase text-checker-ink", mode === "recall" && "opacity-45")}>
+                  <label className={cn("text-xs font-extrabold uppercase text-foreground", mode === "recall" && "opacity-45")}>
                     <span className="flex items-center gap-1.5"><Highlighter className="size-4" /> Gaps and corrections</span>
-                    <Textarea value={row.gaps} onChange={(event) => patchRow(row.id, { gaps: event.target.value })} disabled={mode === "recall"} placeholder={mode === "recall" ? "Open your notes when the brain dump is finished" : "One missed fact or keyword per line…"} className="mt-3 min-h-36 resize-y border-checker-highlight bg-checker-highlight/45 text-sm font-semibold normal-case leading-relaxed text-checker-ink disabled:opacity-70" />
+                    <Textarea value={row.gaps} onChange={(event) => patchRow(row.id, { gaps: event.target.value })} disabled={mode === "recall"} placeholder={mode === "recall" ? "Open your notes when the brain dump is finished" : "One missed fact or keyword per line…"} className="mt-3 min-h-36 resize-y border-primary/50 bg-accent text-sm font-semibold normal-case leading-relaxed text-foreground disabled:opacity-70" />
                   </label>
                 </div>
               </article>
             ))}
           </div>
 
-          <div className="border-t border-checker-line p-4 print:hidden">
+          <div className="border-t border-border p-4 print:hidden">
             <Button type="button" variant="outline" onClick={addRow}><Plus /> Add component</Button>
           </div>
-          <div className={cn("flex flex-col justify-between gap-3 border-t border-checker-line px-5 py-4 text-sm font-extrabold sm:flex-row sm:items-center", totals.gaps > 0 ? "bg-checker-highlight/45" : "bg-checker-paper")}>
+          <div className={cn("flex flex-col justify-between gap-3 border-t border-border px-5 py-4 text-sm font-extrabold sm:flex-row sm:items-center", totals.gaps > 0 ? "bg-accent" : "bg-background")}>
             <span>{totals.secure} secure {totals.secure === 1 ? "item" : "items"} · {totals.gaps} highlighted {totals.gaps === 1 ? "gap" : "gaps"}</span>
-            <span className={cn("inline-flex self-start rounded-full px-3 py-1.5 text-xs", totals.gaps > 0 ? "bg-destructive text-destructive-foreground" : "bg-checker-mint text-checker-ink")}>
+            <span className={cn("inline-flex self-start rounded-full px-3 py-1.5 text-xs", totals.gaps > 0 ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground")}>
               {totals.gaps > 0 ? "Priority: Target highlighted gaps next" : mode === "recall" ? "Finish recall, then check" : "No gaps recorded yet"}
             </span>
           </div>
@@ -619,8 +619,8 @@ function KnowledgeCheckerPage() {
             setMode("recall");
           }}
         />
-        <section className="mt-8 rounded-[8px] bg-checker-ink p-6 text-checker-paper print:hidden sm:flex sm:items-center sm:justify-between sm:gap-6">
-          <div><h2 className="text-xl font-extrabold">Use these gaps to build your plan</h2><p className="mt-1 text-sm font-semibold text-checker-paper/70">When you reach the topic step, rev.plan will offer to mark these gaps red so they get more revision time.</p></div>
+        <section className="mt-8 rounded-[8px] bg-structure p-6 text-structure-foreground print:hidden sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div><h2 className="text-xl font-extrabold">Use these gaps to build your plan</h2><p className="mt-1 text-sm font-semibold text-structure-foreground/70">When you reach the topic step, rev.plan will offer to mark these gaps red so they get more revision time.</p></div>
           <Button asChild className="mt-4 shrink-0 sm:mt-0">
             {user ? (plan ? <Link to="/edit-plan">Update my plan</Link> : <Link to="/setup">Create your revision plan</Link>) : <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}>Create your revision plan</Link>}
           </Button>
@@ -675,27 +675,27 @@ function FlashcardPanel({ flashcards }: { flashcards: Flashcard[] }) {
   if (flashcards.length === 0) return null;
 
   return (
-    <section className="mt-5 rounded-[8px] border border-checker-line bg-card p-5 shadow-sm print:hidden">
+    <section className="mt-5 rounded-[8px] border border-border bg-card p-5 shadow-sm print:hidden">
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs font-extrabold uppercase text-muted-foreground">Flashcards from gaps</p>
-          <h2 className="mt-1 text-2xl font-extrabold text-checker-ink">Key terms and definitions</h2>
+          <h2 className="mt-1 text-2xl font-extrabold text-foreground">Key terms and definitions</h2>
         </div>
-        <span className="inline-flex self-start rounded-full bg-checker-mint px-3 py-1.5 text-xs font-extrabold text-checker-ink">
+        <span className="inline-flex self-start rounded-full bg-primary px-3 py-1.5 text-xs font-extrabold text-foreground">
           {flashcards.length} {flashcards.length === 1 ? "card" : "cards"}
         </span>
       </div>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         {flashcards.map((card, index) => (
-          <article key={card.id} className="overflow-hidden rounded-[8px] border border-checker-line bg-checker-paper">
-            <div className="border-b border-checker-line bg-checker-ink px-4 py-3 text-checker-paper">
-              <p className="text-xs font-extrabold uppercase text-checker-mint">Card {index + 1} · Front</p>
+          <article key={card.id} className="overflow-hidden rounded-[8px] border border-border bg-background">
+            <div className="border-b border-border bg-structure px-4 py-3 text-structure-foreground">
+              <p className="text-xs font-extrabold uppercase text-primary">Card {index + 1} · Front</p>
               <p className="mt-1 text-lg font-extrabold">{card.term}</p>
             </div>
             <div className="px-4 py-3">
               <p className="text-xs font-extrabold uppercase text-muted-foreground">Back</p>
-              <p className="mt-1 whitespace-pre-wrap text-sm font-semibold leading-relaxed text-checker-ink">{card.definition}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm font-semibold leading-relaxed text-foreground">{card.definition}</p>
             </div>
           </article>
         ))}

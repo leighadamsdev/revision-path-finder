@@ -53,7 +53,7 @@ export function SavedCheckers({
   }
 
   return (
-    <section className="mt-8 rounded-[8px] border border-checker-line bg-card p-5 shadow-sm print:hidden">
+    <section className="mt-8 rounded-[8px] border border-border bg-card p-5 shadow-sm print:hidden">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs font-extrabold uppercase text-muted-foreground">My checker library</p>
@@ -71,7 +71,7 @@ export function SavedCheckers({
               <h3 className="text-sm font-extrabold uppercase text-muted-foreground">{name}</h3>
               <ul className="mt-2 space-y-2">
                 {list.map((c) => (
-                  <li key={c.id} className="flex items-center gap-2 rounded-[8px] bg-checker-paper px-3 py-2 ring-1 ring-checker-line">
+                  <li key={c.id} className="flex items-center gap-2 rounded-[8px] bg-background px-3 py-2 ring-1 ring-border">
                     <span className="min-w-0 flex-1 text-sm font-bold">{c.topic} <span className="font-semibold text-muted-foreground">· {c.rows.length} components</span></span>
                     <Button type="button" size="sm" variant="outline" onClick={() => { onLoad({ subject: c.subject, topic: c.topic, components: c.rows }); window.scrollTo({ top: 0, behavior: "smooth" }); toast.success("Fresh copy opened."); }}><FolderOpen /> Open</Button>
                     <Button type="button" size="icon" variant="ghost" aria-label={`Delete ${c.topic}`} onClick={async () => { if (!window.confirm(`Delete saved checker “${c.topic}”?`)) return; await supabase.from("knowledge_checkers").delete().eq("id", c.id); void refresh(); }}><Trash2 /></Button>

@@ -253,6 +253,19 @@ function KnowledgeCheckerPage() {
     }));
   }
 
+  function bulletOnEnter(id: string, field: "recall" | "gaps") {
+    return (event: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key !== "Enter" || event.shiftKey) return;
+      event.preventDefault();
+      const el = event.currentTarget;
+      const pos = el.selectionStart ?? el.value.length;
+      const next = `${el.value.slice(0, pos)}\n• ${el.value.slice(pos)}`;
+      patchRow(id, { [field]: next });
+      const caret = pos + 3;
+      window.setTimeout(() => el.setSelectionRange(caret, caret), 0);
+    };
+  }
+
   function addRow() {
     setDraft((current) => ({
       ...current,

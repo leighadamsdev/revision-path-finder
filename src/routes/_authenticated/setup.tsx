@@ -23,6 +23,7 @@ import {
 import { SESSION_LENGTHS, WEEK_DAYS } from "@/lib/subjects";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered, type Tier } from "@/lib/gcse-subjects";
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
+import { specSource, specUnits } from "@/lib/spec-topics";
 import { extractTopicsFromDocument } from "@/lib/revision.functions";
 import { DatePicker } from "@/components/DatePicker";
 import { ExamDatesField } from "@/components/ExamDatesField";
@@ -83,7 +84,12 @@ const FIRST_STAGE = [
   { step: 7, label: "Review" },
 ] as const;
 
-type TopicSource = "dfe" | "manual" | "upload" | "library" | "edited";
+type TopicSource = "spec" | "dfe" | "manual" | "upload" | "library" | "edited";
+
+/** New subjects start on the exam-board list when there is one, otherwise the DfE list. */
+function defaultSource(subjectName: string): TopicSource {
+  return specUnits(subjectName).length ? "spec" : "dfe";
+}
 
 function lengthLabel(n: number) {
   return n < 60 ? `${n} min` : n === 60 ? "1 hr" : `${n / 60} hr`;
@@ -425,7 +431,7 @@ function SetupPage() {
 
   /** The final topic list for a subject, whatever source the student chose. */
   function topicsFor(subjectName: string): string[] {
-    const mode = source[subjectName] ?? "dfe";
+    const mode = source[subjectName] ?? defaultSource(subjectName);
     if (mode === "manual") return manualLines(manualText[subjectName]);
     if (mode === "edited") return chosen[subjectName] ?? [];
     const topics = chosen[subjectName] ?? [];
@@ -521,8 +527,8 @@ function SetupPage() {
     if (!saveToLibrary) return;
     try {
       for (const pick of list) {
-        const mode = source[pick.name] ?? "dfe";
-        if (mode === "dfe" || mode === "library") continue;
+        const mode = source[pick.name] ?? defaultSource(pick.name);
+        if (mode === "dfe" || mode === "spec" || mode === "library") continue;
         const topics = topicsFor(pick.name);
         if (!topics.length) continue;
         const lib = library.subjects.find((x) => x.name.trim().toLowerCase() === pick.name.trim().toLowerCase());
@@ -1012,8 +1018,9 @@ function SetupPage() {
 
               <div className="mt-4 space-y-2">
                 {picks.map((pick) => {
-                  const mode = source[pick.name] ?? "dfe";
-                  const units = subjectUnits(pick.name);
+                  const mode = source[pick.name] ?? defaultSource(pick.name);
+                  const hasSpec = specUnits(pick.name).length > 0;
+                  const units = mode === "spec" ? specUnits(pick.name) : subjectUnits(pick.name);
                   const ticked = chosen[pick.name] ?? [];
                   const open = openSubject === pick.name;
                   const options =
@@ -1048,10 +1055,11 @@ function SetupPage() {
                           <div className="flex flex-wrap gap-1.5">
                             {(
                               [
+                                ...(hasSpec ? [["spec", "Exam board list"] as const] : []),
                                 ["library", "My Topic Library"],
                                 ["dfe", "DfE content list"],
                                 ["manual", "Type my own"],
-                                ["upload", "Upload a document"],
+                                ["upload", "Upload a list or photo"],
                                 ...(mode === "edited" ? [["edited", "My edited list"] as const] : []),
                               ] as const
                             ).map(([key, label]) => (
@@ -1068,6 +1076,12 @@ function SetupPage() {
                               </button>
                             ))}
                           </div>
+
+                          {mode === "spec" ? (
+                            <p className="mt-3 text-[12px] font-medium text-muted-foreground">
+                              {specSource(pick.name)} Tick the topics you study, then rate each one below.
+                            </p>
+                          ) : null}
 
                           {mode === "manual" ? (
                             <textarea
@@ -1095,7 +1109,7 @@ function SetupPage() {
                                 <Upload className="size-6 text-primary" />
                                 <span className="text-sm font-extrabold">Upload your topic list</span>
                                 <span className="text-[12px] font-medium text-muted-foreground">
-                                  A screenshot or photo of your revision guide's contents page, or a topic list from school. PDF, JPG or PNG — you can choose several pages at once.
+                                  A topic list from school, a scan, or a photo of your revision guide's contents page. PDF, JPG or PNG — you can choose several pages at once.
                                 </span>
                                 <input
                                   type="file"
@@ -1132,7 +1146,7 @@ function SetupPage() {
                                 {ticked.length === options.length ? "Clear all" : "Select all"}
                               </button>
 
-                              {mode === "dfe" ? (
+                              {mode === "dfe" || mode === "spec" ? (
                                 <div className="mt-3 space-y-3">
                                   {units.map((unit) => (
                                     <div key={unit.unit}>

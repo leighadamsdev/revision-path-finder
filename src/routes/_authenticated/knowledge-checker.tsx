@@ -21,7 +21,7 @@ import { SavedCheckers } from "@/components/SavedCheckers";
 import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
 import { FocusSound } from "@/components/FocusSound";
-import { subjectUnits } from "@/lib/gcse-topics";
+import { defaultUnits } from "@/lib/gcse-topics";
 import { useLibrary } from "@/hooks/useLibrary";
 import {
   AlertDialog,
@@ -116,7 +116,7 @@ function KnowledgeCheckerPage() {
   const { user } = useAuth();
   const { plan } = useActivePlan();
   const planSubjectsQuery = usePlanSubjects(plan?.id);
-  /** Library subjects plus any plan subject not yet in the library; DfE content fills gaps. */
+  /** Library subjects plus any plan subject not yet in the library; the ready-made topic lists fill gaps. */
   const subjectOptions = useMemo(() => {
     const list = library.subjects.map((s) => ({
       id: s.id,
@@ -398,7 +398,7 @@ function KnowledgeCheckerPage() {
               <label className="text-xs font-extrabold uppercase text-muted-foreground">From my library: subject
                 <select value={libSubjectId} onChange={(e) => { setLibSubjectId(e.target.value); setLibTopicId(""); const s = subjectOptions.find((x) => x.id === e.target.value); if (s) setDraft((c) => ({ ...c, subject: s.name })); }} className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border">
                   <option value="">Choose…</option>
-                  {subjectOptions.map((s) => <option key={s.id} value={s.id}>{s.name}{s.fromLibrary ? "" : s.topics.length ? " (DfE content)" : " (no content yet)"}</option>)}
+                  {subjectOptions.map((s) => <option key={s.id} value={s.id}>{s.name}{s.fromLibrary ? "" : s.topics.length ? " (ready-made list)" : " (no content yet)"}</option>)}
                 </select>
               </label>
               <label className="text-xs font-extrabold uppercase text-muted-foreground">Topic
@@ -414,9 +414,9 @@ function KnowledgeCheckerPage() {
             {libSubject && !libSubject.fromLibrary ? (
               <div className="border-b border-checker-line bg-secondary px-5 py-3 text-sm font-semibold">
                 {libSubject.topics.length
-                  ? `You haven't added your own content for ${libSubject.name} yet, so the DfE content list is shown. `
+                  ? `You haven't added your own content for ${libSubject.name} yet, so the ready-made topic list is shown. `
                   : `There's no content for ${libSubject.name} yet. `}
-                You can <Link to="/topics" className="font-extrabold underline">upload a contents page or topic list</Link>, use the DfE content, or type the topic and components in below.
+                You can <Link to="/topics" className="font-extrabold underline">upload a contents page or topic list</Link>, use the ready-made list, or type the topic and components in below.
               </div>
             ) : null}
             </>
@@ -599,7 +599,7 @@ function FlashcardPanel({ flashcards }: { flashcards: Flashcard[] }) {
   );
 }
 function dfeTopics(name: string) {
-  return subjectUnits(name).map((u, i) => ({
+  return defaultUnits(name).map((u, i) => ({
     id: `dfe:${name}:${i}`,
     title: u.unit,
     items: u.elements.map((e, j) => ({ id: `dfe:${name}:${i}:${j}`, title: e.label })),

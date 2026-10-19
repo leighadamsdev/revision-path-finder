@@ -573,11 +573,11 @@ function KnowledgeCheckerPage() {
                 </div>
                 <div className="grid gap-3 p-4 sm:grid-cols-2">
                   <label className="text-xs font-extrabold uppercase text-muted-foreground">What I already know
-                    <Textarea value={row.recall} onChange={(event) => patchRow(row.id, { recall: event.target.value })} placeholder="One recalled point per line…" className="mt-3 min-h-36 resize-y bg-card text-sm font-semibold normal-case leading-relaxed text-foreground" />
+                    <Textarea value={row.recall} onChange={(event) => patchRow(row.id, { recall: event.target.value })} onKeyDown={bulletOnEnter(row.id, "recall")} placeholder="One recalled point per line…" className="mt-3 min-h-36 resize-y bg-card text-sm font-semibold normal-case leading-relaxed text-foreground" />
                   </label>
                   <label className={cn("text-xs font-extrabold uppercase text-foreground", mode === "recall" && "opacity-45")}>
                     <span className="flex items-center gap-1.5"><Highlighter className="size-4" /> Gaps and corrections</span>
-                    <Textarea value={row.gaps} onChange={(event) => patchRow(row.id, { gaps: event.target.value })} disabled={mode === "recall"} placeholder={mode === "recall" ? "Open your notes when the brain dump is finished" : "One missed fact or keyword per line…"} className="mt-3 min-h-36 resize-y border-l-4 border-primary bg-accent text-sm font-semibold normal-case leading-relaxed text-foreground disabled:opacity-70" />
+                    <Textarea value={row.gaps} onChange={(event) => patchRow(row.id, { gaps: event.target.value })} onKeyDown={bulletOnEnter(row.id, "gaps")} disabled={mode === "recall"} placeholder={mode === "recall" ? "Open your notes when the brain dump is finished" : "One missed fact or keyword per line…"} className="mt-3 min-h-36 resize-y border-l-4 border-primary bg-accent text-sm font-semibold normal-case leading-relaxed text-foreground disabled:opacity-70" />
                   </label>
                 </div>
               </article>

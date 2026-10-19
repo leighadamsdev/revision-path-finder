@@ -1039,7 +1039,7 @@ function SetupPage() {
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
                 Open a subject, pick where its topics come from, then rate how well you know each
-                one. Low ratings get more revision time. This step is optional — skip it and we'll
+                one. Red and amber ratings get more revision time. This step is optional — skip it and we'll
                 fill in the topics for you.
               </p>
               <label className="mt-3 flex items-center gap-2 text-[12px] font-bold">
@@ -1513,7 +1513,7 @@ function SetupPage() {
                   <Row
                     key={p.name}
                     label={`${p.name}${p.tier ? ` (${p.tier})` : ""}`}
-                    value={`${confidences[p.name] == null ? "Confidence not set" : (confidences[p.name] ?? 0) <= 2 ? "Low confidence" : (confidences[p.name] ?? 0) <= 4 ? "Medium confidence" : "High confidence"} · ${(examDates[p.name] ?? []).filter(Boolean).length ? `${(examDates[p.name] ?? []).filter(Boolean).length} exam date(s)` : "No exam date yet"}`}
+                    value={`${confidences[p.name] == null ? "Confidence not set" : (confidences[p.name] ?? 0) <= 2 ? "Red confidence" : (confidences[p.name] ?? 0) <= 4 ? "Amber confidence" : "Green confidence"} · ${(examDates[p.name] ?? []).filter(Boolean).length ? `${(examDates[p.name] ?? []).filter(Boolean).length} exam date(s)` : "No exam date yet"}`}
                   />
                 ))}
                 <Row label="Study days" value={studyDays.length ? studyDays.join(", ") : "None"} />

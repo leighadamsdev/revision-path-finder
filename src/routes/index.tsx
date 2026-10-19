@@ -47,7 +47,7 @@ const POINTS = [
   },
   {
     title: "Honest confidence ratings",
-    body: "Rate each topic 1–5 and jot down gaps. Low-rated topics can come back around before the exams.",
+    body: "Rate each topic red, amber or green and jot down gaps. Red topics can come back around before the exams.",
     dot: "bg-hist",
   },
 ];

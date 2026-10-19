@@ -1,7 +1,7 @@
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { confidenceTone } from "@/lib/confidence";
 
-/** A 1–5 rating for every topic a student has chosen. */
+/** A Red / Amber / Green rating for every topic a student has chosen. */
 export function TopicConfidenceList({
   topics,
   ratings,
@@ -25,7 +25,7 @@ export function TopicConfidenceList({
           >
             <span className="min-w-0 flex-1 text-[12px] font-bold leading-relaxed">{topic}</span>
             <span className={`text-[11px] font-extrabold ${tone.text}`}>
-              {value ? `${value}/5 · ${value <= 2 ? "Red" : value <= 4 ? "Amber" : "Green"}` : "Not rated"}
+              {value ? (value <= 2 ? "Red" : value <= 4 ? "Amber" : "Green") : "Not rated"}
             </span>
             <ConfidencePicker
               value={value}

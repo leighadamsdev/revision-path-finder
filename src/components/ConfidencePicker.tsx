@@ -1,6 +1,12 @@
-import { confidenceTone, LIKERT } from "@/lib/confidence";
+import { confidenceBand, confidenceTone } from "@/lib/confidence";
 
-/** A calm 1–5 Likert confidence control (1 = not confident at all, 5 = very confident). 1–2 red, 3–4 amber, 5 green. */
+const OPTIONS = [
+  { label: "Red", value: 1, hint: "I don't know this yet — it needs the most revision" },
+  { label: "Amber", value: 3, hint: "I know some of this" },
+  { label: "Green", value: 5, hint: "I know this well" },
+] as const;
+
+/** A calm Red / Amber / Green confidence control. Red needs the most revision time, green the least. Click the same colour again to clear it. */
 export function ConfidencePicker({
   value,
   onChange,
@@ -15,25 +21,28 @@ export function ConfidencePicker({
   label?: string;
   size?: "sm" | "md";
 }) {
-  const tone = confidenceTone(value);
-  const dot = size === "sm" ? "size-5" : "size-6";
+  const band = confidenceBand(value);
+  const pad = size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]";
   return (
-    <div className="flex items-center gap-1.5">
-      {[1, 2, 3, 4, 5].map((step) => {
-        const on = (value ?? 0) >= step;
-        const stepTone = confidenceTone(step);
+    <div className="flex flex-wrap items-center gap-1" role="radiogroup" aria-label={label}>
+      {OPTIONS.map((opt) => {
+        const on = band === opt.label.toLowerCase();
+        const tone = confidenceTone(opt.value);
         return (
           <button
-            key={step}
+            key={opt.label}
             type="button"
-            aria-label={`${label} ${step} of 5 — ${LIKERT[step]}`}
-            title={`${step} — ${LIKERT[step]}`}
-            aria-pressed={on}
-            onClick={() => onChange(value === step ? null : step)}
-            className={`${dot} rounded-full transition-colors ${
-              on ? `${tone.fill} ring-2 ${tone.ring}` : `ring-2 ${stepTone.ring}`
+            role="radio"
+            aria-checked={on}
+            title={opt.hint}
+            onClick={() => onChange(on ? null : opt.value)}
+            className={`inline-flex shrink-0 items-center gap-1 rounded-full font-extrabold transition-colors ${pad} ${
+              on ? tone.tag : "ring-1 ring-border text-muted-foreground hover:text-foreground"
             }`}
-          />
+          >
+            <span className={`size-2 rounded-full ${tone.fill}`} />
+            {opt.label}
+          </button>
         );
       })}
     </div>

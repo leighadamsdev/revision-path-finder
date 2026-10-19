@@ -16,12 +16,14 @@ import {
 } from "lucide-react";
 
 import { PublicHeader } from "@/components/PublicHeader";
-import { ItemMultiSelect } from "@/components/ItemMultiSelect";
 import { SavedCheckers } from "@/components/SavedCheckers";
 import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
 import { FocusSound } from "@/components/FocusSound";
-import { defaultUnits } from "@/lib/gcse-topics";
+import { subjectUnits } from "@/lib/gcse-topics";
+import { GCSE_SUBJECTS } from "@/lib/gcse-subjects";
+import { specUnits } from "@/lib/spec-topics";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useLibrary } from "@/hooks/useLibrary";
 import {
   AlertDialog,
@@ -112,31 +114,75 @@ function buildFlashcards(rows: CheckerRow[]) {
 function KnowledgeCheckerPage() {
   const library = useLibrary();
   const [libSubjectId, setLibSubjectId] = useState("");
-  const [libTopicId, setLibTopicId] = useState("");
   const { user } = useAuth();
   const { plan } = useActivePlan();
   const planSubjectsQuery = usePlanSubjects(plan?.id);
-  /** Library subjects plus any plan subject not yet in the library; the ready-made topic lists fill gaps. */
+  /**
+   * Every subject the student can check: their own (library and plan) first, then the rest of the
+   * GCSE catalogue. Topics come from their Topic Library when they've added some, otherwise the DfE list.
+   */
   const subjectOptions = useMemo(() => {
-    const list = library.subjects.map((s) => ({
-      id: s.id,
-      name: s.name,
-      topics: s.topics.length
-        ? s.topics.map((t) => ({ id: t.id, title: t.title, items: t.items.map((i) => ({ id: i.id, title: i.title })) }))
-        : dfeTopics(s.name),
-      fromLibrary: s.topics.length > 0,
-    }));
+    const list: CheckerSubject[] = library.subjects.map((s) =>
+      s.topics.length
+        ? {
+            id: s.id,
+            name: s.name,
+            mine: true,
+            source: "library",
+            topics: s.topics.map((t) => ({ id: t.id, title: t.title, items: t.items.map((i) => ({ id: i.id, title: i.title })) })),
+          }
+        : { id: s.id, name: s.name, mine: true, ...fallbackTopics(s.name) },
+    );
     const seen = new Set(list.map((s) => s.name.trim().toLowerCase()));
     for (const ps of planSubjectsQuery.data ?? []) {
       const name = (ps as unknown as { name?: string; subject?: { name: string } }).name ?? (ps as unknown as { subject?: { name: string } }).subject?.name;
       if (!name || seen.has(name.trim().toLowerCase())) continue;
       seen.add(name.trim().toLowerCase());
-      list.push({ id: `plan:${name}`, name, topics: dfeTopics(name), fromLibrary: false });
+      list.push({ id: `plan:${name}`, name, mine: true, ...fallbackTopics(name) });
+    }
+    for (const c of GCSE_SUBJECTS) {
+      if (seen.has(c.name.toLowerCase())) continue;
+      list.push({ id: `cat:${c.name}`, name: c.name, mine: false, ...fallbackTopics(c.name) });
     }
     return list;
   }, [library.subjects, planSubjectsQuery.data]);
   const libSubject = subjectOptions.find((s) => s.id === libSubjectId);
-  const libTopic = libSubject?.topics.find((t) => t.id === libTopicId);
+  const [tickedItems, setTickedItems] = useState<Set<string>>(new Set());
+  const itemKey = (topicId: string, itemId: string) => `${topicId}|||${itemId}`;
+  const allItemKeys = (libSubject?.topics ?? []).flatMap((t) => t.items.map((i) => itemKey(t.id, i.id)));
+  function setItems(keys: string[], on: boolean) {
+    setTickedItems((prev) => {
+      const next = new Set(prev);
+      for (const k of keys) {
+        if (on) next.add(k);
+        else next.delete(k);
+      }
+      return next;
+    });
+  }
+  function chooseSubject(id: string) {
+    setLibSubjectId(id);
+    setTickedItems(new Set());
+    const s = subjectOptions.find((x) => x.id === id);
+    if (s) setDraft((c) => ({ ...c, subject: s.name }));
+  }
+  /** Turns the ticked items into the checker's rows, in list order. */
+  function applyTicked() {
+    if (!libSubject) return;
+    const topics = libSubject.topics
+      .map((t) => ({ ...t, items: t.items.filter((i) => tickedItems.has(itemKey(t.id, i.id))) }))
+      .filter((t) => t.items.length);
+    if (!topics.length) return;
+    const joined = topics.map((t) => t.title).join(", ");
+    const title = topics.length === 1 ? topics[0]!.title : joined.length <= 60 ? joined : `${topics.length} topics`;
+    setDraft((c) => ({
+      ...c,
+      subject: libSubject.name,
+      topic: title,
+      rows: topics.flatMap((t) => t.items.map((i) => ({ id: `${t.id}-${i.id}`, component: i.title, recall: "", gaps: "" }))),
+    }));
+    document.getElementById("checker-sheet-start")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   const sheetRef = useRef<HTMLElement | null>(null);
   const [fullScreen, setFullScreen] = useState(false);
   useEffect(() => {
@@ -392,36 +438,95 @@ function KnowledgeCheckerPage() {
             </Button>
           </div>
 
-          {subjectOptions.length ? (
-            <>
-            <div className="grid gap-3 border-b border-checker-line bg-card p-5 sm:grid-cols-3">
-              <label className="text-xs font-extrabold uppercase text-muted-foreground">From my library: subject
-                <select value={libSubjectId} onChange={(e) => { setLibSubjectId(e.target.value); setLibTopicId(""); const s = subjectOptions.find((x) => x.id === e.target.value); if (s) setDraft((c) => ({ ...c, subject: s.name })); }} className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border">
-                  <option value="">Choose…</option>
-                  {subjectOptions.map((s) => <option key={s.id} value={s.id}>{s.name}{s.fromLibrary ? "" : s.topics.length ? " (ready-made list)" : " (no content yet)"}</option>)}
-                </select>
-              </label>
-              <label className="text-xs font-extrabold uppercase text-muted-foreground">Topic
-                <select value={libTopicId} disabled={!libSubject} onChange={(e) => { setLibTopicId(e.target.value); const t = libSubject?.topics.find((x) => x.id === e.target.value); if (t) setDraft((c) => ({ ...c, topic: t.title, rows: t.items.length ? t.items.map((i) => ({ id: i.id, component: i.title, recall: "", gaps: "" })) : c.rows })); }} className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border">
-                  <option value="">Choose…</option>
-                  {libSubject?.topics.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                </select>
-              </label>
-              <div className="text-xs font-extrabold uppercase text-muted-foreground">Content items
-                <ItemMultiSelect items={libTopic?.items ?? []} disabled={!libTopic || !libTopic.items.length} onAdd={(sel) => setDraft((c) => ({ ...c, rows: sel.map((i) => ({ id: i.id, component: i.title, recall: "", gaps: "" })) }))} />
-              </div>
-            </div>
-            {libSubject && !libSubject.fromLibrary ? (
-              <div className="border-b border-checker-line bg-secondary px-5 py-3 text-sm font-semibold">
-                {libSubject.topics.length
-                  ? `You haven't added your own content for ${libSubject.name} yet, so the ready-made topic list is shown. `
-                  : `There's no content for ${libSubject.name} yet. `}
-                You can <Link to="/topics" className="font-extrabold underline">upload a contents page or topic list</Link>, use the ready-made list, or type the topic and components in below.
+          <div className="space-y-4 border-b border-checker-line bg-card p-5 print:hidden">
+            <label className="block max-w-md text-xs font-extrabold uppercase text-muted-foreground">
+              1. Choose a subject
+              <select
+                value={libSubjectId}
+                onChange={(e) => chooseSubject(e.target.value)}
+                className="mt-2 h-11 w-full rounded-md bg-card px-2 text-sm font-bold normal-case ring-1 ring-border"
+              >
+                <option value="">Choose a subject…</option>
+                {subjectOptions.some((s) => s.mine) ? (
+                  <optgroup label="My subjects">
+                    {subjectOptions.filter((s) => s.mine).map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </optgroup>
+                ) : null}
+                <optgroup label="All GCSE subjects">
+                  {subjectOptions.filter((s) => !s.mine).map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </optgroup>
+              </select>
+            </label>
+
+            {libSubject ? (
+              <div>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <p className="text-xs font-extrabold uppercase text-muted-foreground">2. Tick the topics to check</p>
+                  <p className="text-[12px] font-semibold text-muted-foreground">
+                    {libSubject.source === "library"
+                      ? "From your Topic Library."
+                      : libSubject.source === "dfe"
+                        ? "You haven't added your own topics for this subject, so the DfE list is shown."
+                        : libSubject.source === "spec"
+                          ? "There's no DfE list for this subject, so the exam-board list is shown."
+                          : "There's no topic list for this subject yet."}{" "}
+                    {libSubject.source !== "library" ? (
+                      <Link to="/topics" className="font-extrabold underline">Add your own topics</Link>
+                    ) : null}
+                  </p>
+                </div>
+                {libSubject.topics.length ? (
+                  <>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <Button type="button" size="sm" variant="outline" onClick={() => setItems(allItemKeys, !(allItemKeys.length > 0 && allItemKeys.every((k) => tickedItems.has(k))))}>
+                        {allItemKeys.length > 0 && allItemKeys.every((k) => tickedItems.has(k)) ? "Clear all" : "Select all"}
+                      </Button>
+                      <span className="text-[12px] font-bold text-muted-foreground">{tickedItems.size} ticked</span>
+                    </div>
+                    <div className="mt-2 max-h-[26rem] space-y-3 overflow-y-auto rounded-md p-3 ring-1 ring-border">
+                      {libSubject.topics.map((topic) => {
+                        const keys = topic.items.map((i) => itemKey(topic.id, i.id));
+                        const on = keys.length > 0 && keys.every((k) => tickedItems.has(k));
+                        const some = keys.some((k) => tickedItems.has(k));
+                        return (
+                          <div key={topic.id}>
+                            <label className="flex cursor-pointer items-start gap-2 text-sm font-extrabold">
+                              <Checkbox className="mt-0.5" checked={on ? true : some ? "indeterminate" : false} onCheckedChange={() => setItems(keys, !on)} />
+                              {topic.title}
+                            </label>
+                            <div className="mt-1 space-y-0.5 pl-6">
+                              {topic.items.map((i) => {
+                                const k = itemKey(topic.id, i.id);
+                                return (
+                                  <label key={k} className="flex cursor-pointer items-start gap-2 rounded px-1 py-1 text-sm font-medium hover:bg-muted">
+                                    <Checkbox className="mt-0.5" checked={tickedItems.has(k)} onCheckedChange={() => setItems([k], !tickedItems.has(k))} />
+                                    {i.title}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <Button type="button" className="mt-3" disabled={tickedItems.size === 0} onClick={applyTicked}>
+                      Make my checker ({tickedItems.size} {tickedItems.size === 1 ? "item" : "items"})
+                    </Button>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm font-semibold">
+                    <Link to="/topics" className="font-extrabold underline">Upload a contents page or topic list</Link>, or type the topic and components in below.
+                  </p>
+                )}
               </div>
             ) : null}
-            </>
-          ) : null}
+          </div>
 
+          <div id="checker-sheet-start" />
           <div className="grid gap-4 border-b border-checker-line bg-checker-paper p-5 sm:grid-cols-[1fr_1.4fr_0.7fr]">
             <label className="text-xs font-extrabold uppercase text-muted-foreground">Subject
               <Input value={draft.subject} onChange={(event) => setDraft((current) => ({ ...current, subject: event.target.value }))} placeholder="e.g. Biology" className="mt-2 h-11 bg-card text-sm font-bold normal-case text-checker-ink" />
@@ -598,10 +703,20 @@ function FlashcardPanel({ flashcards }: { flashcards: Flashcard[] }) {
     </section>
   );
 }
-function dfeTopics(name: string) {
-  return defaultUnits(name).map((u, i) => ({
-    id: `dfe:${name}:${i}`,
-    title: u.unit,
-    items: u.elements.map((e, j) => ({ id: `dfe:${name}:${i}:${j}`, title: e.label })),
-  }));
+type CheckerTopic = { id: string; title: string; items: { id: string; title: string }[] };
+type CheckerSubject = { id: string; name: string; mine: boolean; source: "library" | "dfe" | "spec" | "none"; topics: CheckerTopic[] };
+
+/** Topics for a subject with nothing in the Topic Library: the DfE list, else the exam-board list. */
+function fallbackTopics(name: string): Pick<CheckerSubject, "source" | "topics"> {
+  const dfe = subjectUnits(name);
+  const units = dfe.length ? dfe : specUnits(name);
+  const source = dfe.length ? "dfe" : units.length ? "spec" : "none";
+  return {
+    source,
+    topics: units.map((u, i) => ({
+      id: `${source}:${name}:${i}`,
+      title: u.unit,
+      items: u.elements.map((e, j) => ({ id: `${source}:${name}:${i}:${j}`, title: e.label })),
+    })),
+  };
 }

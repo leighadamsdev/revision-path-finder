@@ -654,6 +654,10 @@ function KnowledgeCheckerPage() {
           subject={draft.subject}
           topic={draft.topic}
           components={draft.rows.map((r) => r.component)}
+          onSaved={() => {
+            resetChecker();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
           onLoad={({ subject, topic, components }) => {
             setDraft((c) => ({ ...c, subject, topic, rows: components.map((component, i) => ({ id: `row-${Date.now()}-${i}`, component, recall: BULLET, gaps: BULLET })) }));
             setMode("recall");

@@ -17,6 +17,7 @@ import {
 import { averageConfidence } from "@/lib/confidence";
 import type { PlanSubject, PlanTopic } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
+import { useTopicRatings } from "@/hooks/useTopicRatings";
 
 /**
  * Topic list with Red/Amber/Green bands and an optional subtopic layer.
@@ -36,6 +37,7 @@ export function TopicsConfidencePanel({
   cards: Flashcard[];
 }) {
   const queryClient = useQueryClient();
+  const saved = useTopicRatings();
   const [open, setOpen] = useState<string | null>(null);
   const [newSub, setNewSub] = useState<Record<string, string>>({});
 
@@ -116,7 +118,13 @@ export function TopicsConfidencePanel({
                                   size="sm"
                                   value={topic.confidence}
                                   label={`${topic.topic} confidence`}
-                                  onChange={(v) => void run(() => rateTopic(topic.id, v))}
+                                  onChange={(v) =>
+                                    void run(async () => {
+                                      await rateTopic(topic.id, v);
+                                      // Mirror onto "Rate my topics" (this plan is already updated).
+                                      await saved.rate(subject.name, topic.topic, v, { updatePlans: false }).catch(() => undefined);
+                                    })
+                                  }
                                 />
                               </>
                             )}

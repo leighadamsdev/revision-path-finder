@@ -24,7 +24,7 @@ import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
 import { topicText } from "@/lib/library";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
-import { LikertLegend } from "@/components/BandChip";
+import { BandLegend } from "@/components/BandChip";
 import { GCSE_SUBJECTS } from "@/lib/gcse-subjects";
 import { specUnits } from "@/lib/spec-topics";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -683,7 +683,7 @@ function KnowledgeCheckerPage() {
               <Link to="/rate-topics" className="font-extrabold underline">Rate my topics</Link> and your revision plan.
             </p>
             <div className="mt-2">
-              <LikertLegend />
+              <BandLegend />
             </div>
             <ul className="mt-3 divide-y divide-border/60">
               {rateTargets.items.map((item) => (

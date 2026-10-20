@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
-import { LikertLegend } from "@/components/BandChip";
+import { BandLegend } from "@/components/BandChip";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
@@ -118,7 +118,7 @@ function RateTopicsPage() {
           plan, and your ratings carry into any plan you make.
         </p>
         <div className="mt-2">
-          <LikertLegend />
+          <BandLegend />
         </div>
         {ratingsAreLocalOnly() ? (
           <p className="mt-2 rounded-[8px] bg-secondary px-3 py-2 text-[12px] font-semibold">

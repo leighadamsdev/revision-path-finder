@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { BandChip, LikertLegend } from "@/components/BandChip";
+import { BandChip, BandLegend } from "@/components/BandChip";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import {
   addSubtopic,
@@ -67,10 +67,10 @@ export function TopicsConfidencePanel({
       <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
         <p className="text-sm font-extrabold tracking-tight">Topics and confidence</p>
         <div className="mt-1">
-          <LikertLegend />
+          <BandLegend />
         </div>
         <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-          Anything rated 1–4 becomes a flashcard. Split a topic into subtopics to rate the parts
+          Anything red or amber becomes a flashcard. Split a topic into subtopics to rate the parts
           separately.
         </p>
         <div className="mt-4 space-y-2">

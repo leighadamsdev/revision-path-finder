@@ -28,6 +28,9 @@ import { extractTopicsFromDocument } from "@/lib/revision.functions";
 import { DatePicker } from "@/components/DatePicker";
 import { ExamDatesField } from "@/components/ExamDatesField";
 import { ExamDateUpload } from "@/components/ExamDateUpload";
+import { ExamBoardTimetable } from "@/components/ExamBoardTimetable";
+import { planningDates, timetableBoard, timetableExams, timetableVariants } from "@/lib/exam-timetable";
+import { applyTimetableExams } from "@/lib/exams";
 import { HolidayPlanner } from "@/components/HolidayPlanner";
 import { IntensityField } from "@/components/IntensityField";
 import { TopicConfidenceList } from "@/components/TopicConfidenceList";
@@ -169,6 +172,9 @@ function SetupPage() {
   const [customName, setCustomName] = useState("");
   /** Up to three optional exam dates per subject name. */
   const [examDates, setExamDates] = useState<Record<string, string[]>>({});
+  /** Exam board and specification per subject name; known boards fill exam dates from the timetable. */
+  const [boards, setBoards] = useState<Record<string, string>>({});
+  const [variants, setVariants] = useState<Record<string, string>>({});
 
   /** Optional 1–5 confidence per subject name — only used when no topics are chosen. */
   const [confidences, setConfidences] = useState<Record<string, number | null>>({});
@@ -281,6 +287,8 @@ function SetupPage() {
       if (d.manualText) setManualText(d.manualText);
       if (d.uploaded) setUploaded(d.uploaded);
       if (d.examDates) setExamDates(d.examDates);
+      if (d.boards) setBoards(d.boards);
+      if (d.variants) setVariants(d.variants);
       if (d.confidences) setConfidences(d.confidences);
       if (d.topicRatings) setTopicRatings(d.topicRatings);
       if (d.priorities) setPriorities(d.priorities);
@@ -305,14 +313,14 @@ function SetupPage() {
 
   useEffect(() => {
     if (!user || !restored || fromId) return;
-    const d = { picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step };
+    const d = { picks, chosen, source, manualText, uploaded, examDates, boards, variants, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step };
     window.localStorage.setItem(DRAFT_KEY + user.id, JSON.stringify(d));
     // Also save to the student's account (debounced) so it resumes on any device.
     const t = setTimeout(() => {
       void supabase.from("setup_drafts").upsert({ user_id: user.id, data: d as never, updated_at: new Date().toISOString() });
     }, 1200);
     return () => clearTimeout(t);
-  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step]);
+  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, boards, variants, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step]);
 
   const studyDays = useMemo(
     () => WEEK_DAYS.filter((d) => dayConfigs[d]).map((d) => d as string),
@@ -335,6 +343,17 @@ function SetupPage() {
     },
   });
   const past = pastSubjects.data ?? {};
+
+  // Use the exam board saved in My Subjects, so exams appear without asking again.
+  useEffect(() => {
+    for (const pick of picks) {
+      if (boards[pick.name] !== undefined) continue;
+      const lib = library.subjects.find((s) => s.name.trim().toLowerCase() === pick.name.trim().toLowerCase());
+      const known = timetableBoard(lib?.exam_board);
+      if (known) applyBoard(pick.name, known, timetableVariants(pick.name, known)[0] ?? "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picks, library.subjects]);
 
   /** The student's own subjects first, then the rest of the GCSE catalogue. */
   const myNames = useMemo(() => {
@@ -399,6 +418,20 @@ function SetupPage() {
       if (before?.examDates.length) setExamDates((d) => (d[subjectName]?.length ? d : { ...d, [subjectName]: before.examDates }));
       return [...prev, { name: subjectName, tier: before?.tier ?? null }];
     });
+  }
+
+  /** The official papers for a subject, if its board's timetable lists them. */
+  function officialExams(subjectName: string) {
+    const tier = picks.find((p) => p.name === subjectName)?.tier ?? null;
+    return timetableExams(subjectName, timetableBoard(boards[subjectName]), tier, variants[subjectName] ?? "");
+  }
+
+  function applyBoard(subjectName: string, board: string, variant: string) {
+    setBoards((prev) => ({ ...prev, [subjectName]: board }));
+    setVariants((prev) => ({ ...prev, [subjectName]: variant }));
+    const tier = picks.find((p) => p.name === subjectName)?.tier ?? null;
+    const exams = timetableExams(subjectName, timetableBoard(board), tier, variant);
+    if (exams.length) setExamDates((prev) => ({ ...prev, [subjectName]: planningDates(exams.map((e) => e.date)) }));
   }
 
   function setTier(subjectName: string, tier: Tier) {
@@ -605,7 +638,10 @@ function SetupPage() {
         const id = await resolveSubjectId(pick.name, user.id, subjects);
         subjectIds.push(id);
         tiers[id] = pick.tier;
-        examDateMap[id] = [...new Set((examDates[pick.name] ?? []).filter(Boolean))].sort();
+        const official = officialExams(pick.name);
+        examDateMap[id] = official.length
+          ? planningDates(official.map((e) => e.date))
+          : [...new Set((examDates[pick.name] ?? []).filter(Boolean))].sort();
         // Quick plans are subject-level; personalised plans drop excluded topics.
         const all = kind === "quick" ? [] : topicsFor(pick.name);
         // Personalised plans keep the student's reviewed order (saved as topic position).
@@ -643,6 +679,7 @@ function SetupPage() {
         }));
         const cleanHolidays = holidays.filter((h) => h.start && h.end);
         await savePlanSubjects(fromId, subjectIds.map((id) => ({ subjectId: id, tier: tiers[id] ?? null, examDates: examDateMap[id] ?? [], confidence: confidenceMap[id] ?? null })));
+        for (const [i, pick] of planPicks.entries()) await applyTimetableExams(fromId, subjectIds[i]!, officialExams(pick.name));
         const topicRows = subjectIds.flatMap((id) => (chosenTopics[id] ?? []).map((topic) => ({ subjectId: id, topic, confidence: topicConfidence[id]?.[topic] ?? null, isPriority: (priorityTopics[id] ?? []).includes(topic) })));
         await savePlanTopics(fromId, topicRows);
         await updatePlanSettings(fromId, { name: trimmedName, startDate, weeks, days: daySettings, intensity, holidays: cleanHolidays });
@@ -689,6 +726,7 @@ function SetupPage() {
         holidays: holidays.filter((holiday) => holiday.start && holiday.end),
       });
 
+      for (const [i, pick] of planPicks.entries()) await applyTimetableExams(planId, subjectIds[i]!, officialExams(pick.name));
       await saveExcludedTopics(planId, leftOut);
       await writeBackToLibrary(planPicks);
       window.localStorage.setItem("revisionpath.activePlan", planId);
@@ -956,7 +994,7 @@ function SetupPage() {
           {step === 4 ? (
             <>
               <p className="text-lg font-extrabold">When are your exams?</p>
-              <p className="mt-1 text-[13px] font-medium text-muted-foreground">Exam dates are optional. Add them now or come back later; closer exams get more attention.</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">Choose each subject's exam board and we'll add your summer 2027 exams from the official timetable. Otherwise add dates yourself, or come back later; closer exams get more attention.</p>
               <div className="mt-4">
                 <ExamDateUpload subjects={picks.map((p) => p.name)} onApply={(dates) => setExamDates((prev) => {
                   const next = { ...prev };
@@ -968,7 +1006,18 @@ function SetupPage() {
                 {picks.map((pick) => (
                   <div key={pick.name} className="rounded-[12px] bg-background px-3 py-3 ring-1 ring-border">
                     <p className="mb-2 text-sm font-bold">{pick.name}</p>
-                    <ExamDatesField dates={examDates[pick.name] ?? []} onChange={(dates) => setExamDates((prev) => ({ ...prev, [pick.name]: dates }))} label="Not sure yet" />
+                    <ExamBoardTimetable
+                      subject={pick.name}
+                      tier={pick.tier}
+                      board={boards[pick.name] ?? ""}
+                      variant={variants[pick.name] ?? ""}
+                      onChange={(board, variant) => applyBoard(pick.name, board, variant)}
+                    />
+                    {officialExams(pick.name).length ? null : (
+                      <div className="mt-2">
+                        <ExamDatesField dates={examDates[pick.name] ?? []} onChange={(dates) => setExamDates((prev) => ({ ...prev, [pick.name]: dates }))} label="Not sure yet" />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -997,7 +1046,7 @@ function SetupPage() {
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
                 Open a subject, pick where its topics come from, then rate how well you know each
-                one. Low ratings get more revision time. This step is optional — skip it and we'll
+                one. Red and amber ratings get more revision time. This step is optional — skip it and we'll
                 fill in the topics for you.
               </p>
               <label className="mt-3 flex items-center gap-2 text-[12px] font-bold">
@@ -1473,7 +1522,7 @@ function SetupPage() {
                   <Row
                     key={p.name}
                     label={`${p.name}${p.tier ? ` (${p.tier})` : ""}`}
-                    value={`${confidences[p.name] == null ? "Confidence not set" : (confidences[p.name] ?? 0) <= 2 ? "Low confidence" : (confidences[p.name] ?? 0) <= 4 ? "Medium confidence" : "High confidence"} · ${(examDates[p.name] ?? []).filter(Boolean).length ? `${(examDates[p.name] ?? []).filter(Boolean).length} exam date(s)` : "No exam date yet"}`}
+                    value={`${confidences[p.name] == null ? "Confidence not set" : (confidences[p.name] ?? 0) <= 2 ? "Red confidence" : (confidences[p.name] ?? 0) <= 4 ? "Amber confidence" : "Green confidence"} · ${(examDates[p.name] ?? []).filter(Boolean).length ? `${(examDates[p.name] ?? []).filter(Boolean).length} exam date(s)` : "No exam date yet"}`}
                   />
                 ))}
                 <Row label="Study days" value={studyDays.length ? studyDays.join(", ") : "None"} />

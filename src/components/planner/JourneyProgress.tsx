@@ -64,16 +64,16 @@ export function JourneyProgress({
   );
 }
 
-/** Low / Medium / High mapped onto the existing 1–5 scale. */
+/** Red / Amber / Green mapped onto the existing 1–5 scale. */
 export const LEVELS = [
-  { label: "Low", value: 2, hint: "I find this subject hard", cls: "bg-conf-low text-background" },
-  { label: "Medium", value: 3, hint: "I'm OK with some of it", cls: "bg-conf-mid text-foreground" },
-  { label: "High", value: 5, hint: "I feel confident", cls: "bg-conf-high text-background" },
+  { label: "Red", value: 2, hint: "I find this subject hard", cls: "bg-conf-low text-background" },
+  { label: "Amber", value: 3, hint: "I'm OK with some of it", cls: "bg-conf-mid text-foreground" },
+  { label: "Green", value: 5, hint: "I feel confident", cls: "bg-conf-high text-background" },
 ] as const;
 
 export function levelOf(value: number | null | undefined) {
   if (value == null) return null;
-  return value <= 2 ? "Low" : value <= 4 ? "Medium" : "High";
+  return value <= 2 ? "Red" : value <= 4 ? "Amber" : "Green";
 }
 
 export function SubjectConfidence({

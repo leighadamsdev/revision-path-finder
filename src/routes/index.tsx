@@ -27,11 +27,26 @@ export const Route = createFileRoute("/")({
 });
 
 const HOW_STEPS = [
-  "Tell rev.plan the subjects and tiers you are studying, lock in how many weeks you have until exam day and how many times a week you want to study and for how long",
-  "Upload a topic list or take a photo of your revision book contents page and let rev.plan create your knowledge checkers for you, subject by subject",
-  "Use your bespoke knowledge checker to work out what you know and what you don't, before you create your revision plan or any flashcards",
-  "Focus on what you don't know to build a list of the topics you need to commit to long term memory, adding in your confidence level",
-  "Let rev.plan build you a week-by-week, session by session plan, linked to exam dates. You can add in extra sessions during the holidays and ramp things and prioritise subjects up closer to the day",
+  {
+    title: "Pick your subjects",
+    body: "Tick every subject you take and choose your tier and exam board.",
+  },
+  {
+    title: "Get your exam dates",
+    body: "Your summer exams are added from the official timetable. Add mocks from your school's website, a printed sheet or a downloaded list.",
+  },
+  {
+    title: "Choose your topics",
+    body: "Use a ready-made exam board list, upload a photo of your revision guide, or type your own.",
+  },
+  {
+    title: "Check what you know",
+    body: "Use the Knowledge Checker, then rate each topic red, amber or green.",
+  },
+  {
+    title: "Get your plan",
+    body: "A week-by-week timetable that puts your red topics first and adds more sessions as exams get closer, including holidays.",
+  },
 ];
 
 const POINTS = [
@@ -47,7 +62,7 @@ const POINTS = [
   },
   {
     title: "Honest confidence ratings",
-    body: "Rate each topic 1–5 and jot down gaps. Low-rated topics can come back around before the exams.",
+    body: "Rate each topic red, amber or green and jot down gaps. Red topics can come back around before the exams.",
     dot: "bg-hist",
   },
 ];
@@ -62,7 +77,8 @@ function Landing() {
           GCSE REVISION PLANNER AND KNOWLEDGE CHECKER
         </p>
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          A bespoke revision timetable, built around exactly what you need to focus on and the time you have
+          A bespoke revision timetable, built around exactly what you need to focus on and the time
+          you have
         </h1>
         <div className="relative mt-8 w-full">
           <div
@@ -71,15 +87,20 @@ function Landing() {
           />
           <ol className="space-y-6">
             {HOW_STEPS.map((step, i) => (
-              <li key={step} className="relative flex items-start">
+              <li key={step.title} className="relative flex items-start">
                 <div className="z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-[8px] bg-primary text-lg font-extrabold text-primary-foreground shadow-lg sm:flex">
                   {String(i + 1).padStart(2, "0")}
                 </div>
-                <div className={`w-full rounded-[8px] bg-structure p-5 text-lg font-medium leading-relaxed text-structure-foreground shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:ml-8 sm:p-6 ${i === HOW_STEPS.length - 1 ? "ring-2 ring-primary" : ""}`}>
+                <div
+                  className={`w-full rounded-[8px] bg-structure p-5 text-lg font-medium leading-relaxed text-structure-foreground shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:ml-8 sm:p-6 ${i === HOW_STEPS.length - 1 ? "ring-2 ring-primary" : ""}`}
+                >
                   <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-[8px] bg-primary text-sm font-extrabold text-primary-foreground shadow-md sm:hidden">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  {step}
+                  <h2 className="text-xl font-extrabold tracking-tight">{step.title}</h2>
+                  <p className="mt-1 text-base font-medium leading-relaxed opacity-90">
+                    {step.body}
+                  </p>
                 </div>
               </li>
             ))}
@@ -100,7 +121,10 @@ function Landing() {
             Free · your plan stays private to you
           </span>
         </div>
-        <Link to="/revision-guide" className="mt-3 inline-flex text-[13px] font-bold text-muted-foreground underline underline-offset-4">
+        <Link
+          to="/revision-guide"
+          className="mt-3 inline-flex text-[13px] font-bold text-muted-foreground underline underline-offset-4"
+        >
           {"\n"}
         </Link>
 
@@ -309,20 +333,29 @@ function CheckerMockup() {
         <div className="grid gap-2 border-b border-border bg-background px-4 py-3 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground sm:grid-cols-[1fr_1.4fr_0.7fr]">
           <span>
             Subject
-            <span className="mt-1 block text-[13px] font-bold normal-case tracking-normal text-foreground">Biology</span>
+            <span className="mt-1 block text-[13px] font-bold normal-case tracking-normal text-foreground">
+              Biology
+            </span>
           </span>
           <span>
             Topic title
-            <span className="mt-1 block text-[13px] font-bold normal-case tracking-normal text-foreground">Enzymes</span>
+            <span className="mt-1 block text-[13px] font-bold normal-case tracking-normal text-foreground">
+              Enzymes
+            </span>
           </span>
           <span>
             Date
-            <span className="mt-1 block text-[13px] font-bold normal-case tracking-normal text-foreground">24 Sep</span>
+            <span className="mt-1 block text-[13px] font-bold normal-case tracking-normal text-foreground">
+              24 Sep
+            </span>
           </span>
         </div>
 
         {CHECKER_ROWS.map((row, index) => (
-          <div key={row.component} className="grid border-b border-border md:grid-cols-[0.7fr_1.3fr]">
+          <div
+            key={row.component}
+            className="grid border-b border-border md:grid-cols-[0.7fr_1.3fr]"
+          >
             <div className="border-b border-border bg-background p-4 md:border-b-0 md:border-r">
               <p className="text-[11px] font-extrabold uppercase text-muted-foreground">
                 Key component {index + 1}
@@ -336,7 +369,10 @@ function CheckerMockup() {
                 </p>
                 <ul className="mt-2 space-y-1.5">
                   {row.recall.map((line) => (
-                    <li key={line} className="text-[12.5px] font-semibold leading-relaxed text-foreground">
+                    <li
+                      key={line}
+                      className="text-[12.5px] font-semibold leading-relaxed text-foreground"
+                    >
                       {line}
                     </li>
                   ))}
@@ -349,7 +385,10 @@ function CheckerMockup() {
                 <div className="mt-2 rounded-[6px] border-l-4 border-primary bg-accent p-2.5">
                   <ul className="space-y-1.5">
                     {row.gaps.map((line) => (
-                      <li key={line} className="text-[12.5px] font-semibold leading-relaxed text-foreground">
+                      <li
+                        key={line}
+                        className="text-[12.5px] font-semibold leading-relaxed text-foreground"
+                      >
                         {line}
                       </li>
                     ))}
@@ -391,10 +430,15 @@ const QUICK_ACTIONS = [
 function QuickLinks() {
   return (
     <section className="mt-10" aria-labelledby="quick-links-heading">
-      <h2 id="quick-links-heading" className="text-xl font-extrabold tracking-tight">You can do the following for free</h2>
+      <h2 id="quick-links-heading" className="text-xl font-extrabold tracking-tight">
+        You can do the following for free
+      </h2>
       <ol className="mt-4 space-y-3">
         {QUICK_ACTIONS.map((q, i) => (
-          <li key={q.to} className="flex items-center gap-3 rounded-[8px] border-l-4 border-primary bg-card p-4 shadow-sm ring-1 ring-border transition-colors hover:bg-accent/40">
+          <li
+            key={q.to}
+            className="flex items-center gap-3 rounded-[8px] border-l-4 border-primary bg-card p-4 shadow-sm ring-1 ring-border transition-colors hover:bg-accent/40"
+          >
             <span className="flex size-7 shrink-0 items-center justify-center rounded-[6px] bg-primary text-[13px] font-extrabold text-primary-foreground">
               {i + 1}
             </span>
@@ -402,7 +446,12 @@ function QuickLinks() {
               <p className="text-[14px] font-extrabold">{q.title}</p>
               <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">{q.body}</p>
             </div>
-            <Link to={q.to} className="shrink-0 rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground">Go</Link>
+            <Link
+              to={q.to}
+              className="shrink-0 rounded-full bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground"
+            >
+              Go
+            </Link>
           </li>
         ))}
         <li className="flex items-center gap-3 rounded-[8px] border-l-4 border-primary bg-card p-4 shadow-sm ring-1 ring-border transition-colors hover:bg-accent/40">
@@ -411,11 +460,23 @@ function QuickLinks() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[14px] font-extrabold">Find more help</p>
-            <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">Test yourself with past papers and find subject specific revision sites</p>
+            <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">
+              Test yourself with past papers and find subject specific revision sites
+            </p>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-            <Link to="/papers" className="rounded-full bg-primary px-4 py-2 text-center text-[13px] font-bold text-primary-foreground">Past papers</Link>
-            <Link to="/sites" className="rounded-full bg-primary px-4 py-2 text-center text-[13px] font-bold text-primary-foreground">Revision links</Link>
+            <Link
+              to="/papers"
+              className="rounded-full bg-primary px-4 py-2 text-center text-[13px] font-bold text-primary-foreground"
+            >
+              Past papers
+            </Link>
+            <Link
+              to="/sites"
+              className="rounded-full bg-primary px-4 py-2 text-center text-[13px] font-bold text-primary-foreground"
+            >
+              Revision links
+            </Link>
           </div>
         </li>
       </ol>

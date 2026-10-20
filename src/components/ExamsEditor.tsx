@@ -7,7 +7,17 @@ import { toast } from "sonner";
 import { DatePicker } from "@/components/DatePicker";
 import { Button } from "@/components/ui/button";
 import { useExams, useOfficialExams, usePlanTopics } from "@/hooks/useActivePlan";
-import { MAX_EXAM_DATES, saveSubjectExams, type ExamInput, type ExamKind } from "@/lib/exams";
+import {
+  MAX_PAPERS,
+  saveSubjectExams,
+  timetableExamInputs,
+  type ExamInput,
+  type ExamKind,
+} from "@/lib/exams";
+import { ExamBoardTimetable } from "@/components/ExamBoardTimetable";
+import { MockExamImport } from "@/components/MockExamImport";
+import { useLibrary } from "@/hooks/useLibrary";
+import { timetableBoard, timetableExams, timetableVariants } from "@/lib/exam-timetable";
 import { syncFlashcards } from "@/lib/leitner";
 import type { PlanSubject } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
@@ -29,27 +39,71 @@ const blank = (paper_no: number): ExamInput => ({
  * official list; if the paper isn't listed yet it can be typed, marked unverified.
  * Each exam ticks which of the plan's topics it covers.
  */
-export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subjects: PlanSubject[]; onDone?: () => void }) {
+export function ExamsEditor({
+  planId,
+  subjects,
+  onDone,
+}: {
+  planId: string;
+  subjects: PlanSubject[];
+  onDone?: () => void;
+}) {
   const queryClient = useQueryClient();
   const examsQuery = useExams(planId);
   const official = useOfficialExams().data ?? [];
   const topics = usePlanTopics(planId).data ?? [];
   const [draft, setDraft] = useState<Record<string, ExamInput[]>>({});
+  const library = useLibrary();
+  /** Exam board and specification per subject id, starting from the board saved in My Subjects. */
+  const [boards, setBoards] = useState<Record<string, { board: string; variant: string }>>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const exams = examsQuery.data ?? [];
+    const nextBoards: Record<string, { board: string; variant: string }> = {};
     setDraft(
       Object.fromEntries(
-        subjects.map((s) => [
-          s.id,
-          exams
+        subjects.map((s) => {
+          const saved = exams
             .filter((e) => e.subject_id === s.id)
-            .map((e) => ({ ...e, kind: e.kind === "untagged" ? ("mock" as ExamKind) : e.kind })),
-        ]),
+            .map((e) => ({ ...e, kind: e.kind === "untagged" ? ("mock" as ExamKind) : e.kind }));
+          const lib = library.subjects.find(
+            (l) => l.name.trim().toLowerCase() === s.name.trim().toLowerCase(),
+          );
+          const board = timetableBoard(lib?.exam_board);
+          if (board)
+            nextBoards[s.id] = { board, variant: timetableVariants(s.name, board)[0] ?? "" };
+          // A subject with no exams yet gets its official papers straight away.
+          const official = board && !saved.length ? timetableExams(s.name, board, s.tier) : [];
+          return [s.id, saved.length ? saved : timetableExamInputs(s.id, official)];
+        }),
       ),
     );
-  }, [examsQuery.data, subjects]);
+    setBoards((prev) => ({ ...nextBoards, ...prev }));
+  }, [examsQuery.data, subjects, library.subjects]);
+
+  /** Swaps a subject's final papers for the chosen board's timetable; mocks stay. */
+  function chooseBoard(
+    subjectId: string,
+    subjectName: string,
+    tier: string | null,
+    board: string,
+    variant: string,
+  ) {
+    setBoards((prev) => ({ ...prev, [subjectId]: { board, variant } }));
+    const official = timetableExams(subjectName, timetableBoard(board), tier, variant);
+    if (!official.length) return;
+    setDraft((prev) => {
+      const mocks = (prev[subjectId] ?? []).filter((e) => e.kind === "mock" && e.exam_date);
+      const finals = timetableExamInputs(subjectId, official);
+      return {
+        ...prev,
+        [subjectId]: [...mocks, ...finals]
+          .sort((a, b) => a.exam_date.localeCompare(b.exam_date))
+          .slice(0, MAX_PAPERS),
+      };
+    });
+  }
 
   function update(subjectId: string, index: number, patch: Partial<ExamInput>) {
     setDraft((prev) => ({
@@ -58,11 +112,51 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
     }));
   }
 
+  /** Adds mocks read from the school's timetable; they're kept once the student saves. */
+  function addMocks(mocks: Array<{ subjectId: string; date: string; label: string }>) {
+    let added = 0;
+    let full = 0;
+    const next = { ...draft };
+    for (const m of mocks) {
+      const list = [...(next[m.subjectId] ?? [])];
+      if (list.some((e) => e.kind === "mock" && e.exam_date === m.date)) continue;
+      if (list.length >= MAX_PAPERS) {
+        full++;
+        continue;
+      }
+      list.push({
+        ...blank(list.length + 1),
+        subject_id: m.subjectId,
+        kind: "mock",
+        label: m.label,
+        exam_date: m.date,
+        verified: true,
+      });
+      list.sort((a, b) => (a.exam_date || "9999").localeCompare(b.exam_date || "9999"));
+      next[m.subjectId] = list;
+      added++;
+    }
+    setDraft(next);
+    if (added)
+      toast.success(
+        `Added ${added} mock exam${added === 1 ? "" : "s"}. Press "Save exams" to keep them.`,
+      );
+    else if (!full) toast.message("Those mock exams are already on your list.");
+    if (full)
+      toast.error(
+        `${full} couldn't be added because that subject already has ${MAX_PAPERS} exams.`,
+      );
+  }
+
   async function save() {
     setSaving(true);
     try {
       for (const subject of subjects) {
-        const list = (draft[subject.id] ?? []).map((e, i) => ({ ...e, subject_id: subject.id, paper_no: i + 1 }));
+        const list = (draft[subject.id] ?? []).map((e, i) => ({
+          ...e,
+          subject_id: subject.id,
+          paper_no: i + 1,
+        }));
         await saveSubjectExams(planId, subject.id, list);
       }
       await syncFlashcards(planId).catch(() => undefined);
@@ -84,9 +178,16 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
     <div className="mt-5 rounded-[16px] bg-card p-4 ring-1 ring-border sm:p-5">
       <p className="text-sm font-extrabold tracking-tight">Your exams</p>
       <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-        Up to three papers per subject. Mocks: type the date your school gave you. Finals: pick the
-        official paper. Tick the topics each exam covers.
+        Choose an exam board to add that subject's summer 2027 papers from the official timetable.
+        Add mocks from your school's timetable below, or type them in. Tick the topics each exam
+        covers.
       </p>
+      <div className="mt-3">
+        <MockExamImport
+          subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+          onAdd={addMocks}
+        />
+      </div>
       <div className="mt-4 space-y-5">
         {subjects.map((subject) => {
           const list = draft[subject.id] ?? [];
@@ -99,11 +200,28 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
                 <span className={`size-2 rounded-full ${style.dot}`} />
                 {subject.name}
               </p>
+              <div className="mt-2">
+                <ExamBoardTimetable
+                  subject={subject.name}
+                  tier={subject.tier}
+                  board={boards[subject.id]?.board ?? ""}
+                  variant={boards[subject.id]?.variant ?? ""}
+                  onChange={(board, variant) =>
+                    chooseBoard(subject.id, subject.name, subject.tier, board, variant)
+                  }
+                  showPapers={false}
+                />
+              </div>
               <div className="mt-3 space-y-3">
                 {list.map((exam, index) => (
-                  <div key={exam.id ?? `new-${index}`} className="rounded-[10px] bg-card p-3 ring-1 ring-border">
+                  <div
+                    key={exam.id ?? `new-${index}`}
+                    className="rounded-[10px] bg-card p-3 ring-1 ring-border"
+                  >
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[11px] font-bold text-muted-foreground">Paper {index + 1}</span>
+                      <span className="text-[11px] font-bold text-muted-foreground">
+                        Paper {index + 1}
+                      </span>
                       <div className="inline-flex rounded-full bg-background p-0.5 ring-1 ring-border">
                         {(["mock", "final"] as const).map((kind) => (
                           <button
@@ -117,7 +235,9 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
                               })
                             }
                             className={`rounded-full px-3 py-1 text-[11px] font-extrabold ${
-                              exam.kind === kind ? "bg-structure text-structure-foreground" : "text-muted-foreground"
+                              exam.kind === kind
+                                ? "bg-structure text-structure-foreground"
+                                : "text-muted-foreground"
                             }`}
                           >
                             {kind === "mock" ? "Mock" : "Final"}
@@ -127,7 +247,10 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
                       <button
                         type="button"
                         onClick={() =>
-                          setDraft((prev) => ({ ...prev, [subject.id]: list.filter((_, i) => i !== index) }))
+                          setDraft((prev) => ({
+                            ...prev,
+                            [subject.id]: list.filter((_, i) => i !== index),
+                          }))
                         }
                         className="ml-auto text-muted-foreground hover:text-foreground"
                         aria-label="Remove this exam"
@@ -137,7 +260,17 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
                     </div>
 
                     <div className="mt-2">
-                      {exam.kind === "final" ? (
+                      {exam.kind === "final" &&
+                      exam.verified &&
+                      !exam.official_exam_id &&
+                      exam.label ? (
+                        <p className="text-[13px] font-semibold">
+                          {format(parseISO(exam.exam_date), "EEE d MMM yyyy")} · {exam.label}
+                          <span className="ml-1 text-[11px] font-bold text-muted-foreground">
+                            Official timetable
+                          </span>
+                        </p>
+                      ) : exam.kind === "final" ? (
                         <div className="space-y-2">
                           <select
                             value={exam.official_exam_id ?? (exam.exam_date ? "custom" : "")}
@@ -152,7 +285,11 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
                                   verified: true,
                                 });
                               } else {
-                                update(subject.id, index, { official_exam_id: null, verified: false, label: "" });
+                                update(subject.id, index, {
+                                  official_exam_id: null,
+                                  verified: false,
+                                  label: "",
+                                });
                               }
                             }}
                             className="w-full rounded-[8px] bg-background px-3 py-2 text-[13px] font-semibold ring-1 ring-border focus:outline-none"
@@ -162,7 +299,8 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
                               <option key={p.id} value={p.id}>
                                 {p.paper}
                                 {p.exam_board ? ` · ${p.exam_board}` : ""}
-                                {p.tier ? ` · ${p.tier}` : ""} — {format(parseISO(p.exam_date), "EEE d MMM yyyy")}
+                                {p.tier ? ` · ${p.tier}` : ""} —{" "}
+                                {format(parseISO(p.exam_date), "EEE d MMM yyyy")}
                               </option>
                             ))}
                             <option value="custom">My paper isn't listed</option>
@@ -183,11 +321,16 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
                           ) : null}
                         </div>
                       ) : (
-                        <DatePicker
-                          value={exam.exam_date}
-                          onChange={(v) => update(subject.id, index, { exam_date: v })}
-                          label="Mock date"
-                        />
+                        <div className="space-y-1">
+                          {exam.label && exam.label !== "Mock" ? (
+                            <p className="text-[12px] font-bold">{exam.label}</p>
+                          ) : null}
+                          <DatePicker
+                            value={exam.exam_date}
+                            onChange={(v) => update(subject.id, index, { exam_date: v })}
+                            label="Mock date"
+                          />
+                        </div>
                       )}
                     </div>
 
@@ -209,7 +352,10 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
                         {!exam.all_topics ? (
                           <div className="mt-2 max-h-56 space-y-1 overflow-y-auto pr-1">
                             {subjectTopics.map((t) => (
-                              <label key={t.id} className="flex items-start gap-2 text-[12px] font-medium">
+                              <label
+                                key={t.id}
+                                className="flex items-start gap-2 text-[12px] font-medium"
+                              >
                                 <input
                                   type="checkbox"
                                   className="mt-0.5"
@@ -231,11 +377,14 @@ export function ExamsEditor({ planId, subjects, onDone }: { planId: string; subj
                     ) : null}
                   </div>
                 ))}
-                {list.length < MAX_EXAM_DATES ? (
+                {list.length < MAX_PAPERS ? (
                   <button
                     type="button"
                     onClick={() =>
-                      setDraft((prev) => ({ ...prev, [subject.id]: [...list, blank(list.length + 1)] }))
+                      setDraft((prev) => ({
+                        ...prev,
+                        [subject.id]: [...list, blank(list.length + 1)],
+                      }))
                     }
                     className="inline-flex items-center gap-1 text-[12px] font-extrabold text-muted-foreground hover:text-foreground"
                   >

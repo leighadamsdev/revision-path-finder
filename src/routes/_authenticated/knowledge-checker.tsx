@@ -592,18 +592,6 @@ function KnowledgeCheckerPage() {
           </div>
 
           <div id="checker-sheet-start" />
-          <div className="grid gap-4 border-b border-border bg-background p-5 sm:grid-cols-[1fr_1.4fr_0.7fr]">
-            <label className="text-xs font-extrabold uppercase text-muted-foreground">Subject
-              <Input value={draft.subject} onChange={(event) => setDraft((current) => ({ ...current, subject: event.target.value }))} placeholder="e.g. Biology" className="mt-2 h-11 bg-card text-sm font-bold normal-case text-foreground" />
-            </label>
-            <label className="text-xs font-extrabold uppercase text-muted-foreground">Topic title
-              <Input value={draft.topic} onChange={(event) => setDraft((current) => ({ ...current, topic: event.target.value }))} placeholder="e.g. Enzymes" className="mt-2 h-11 bg-card text-sm font-bold normal-case text-foreground" />
-            </label>
-            <label className="text-xs font-extrabold uppercase text-muted-foreground">Date
-              <Input type="date" value={draft.date} onChange={(event) => setDraft((current) => ({ ...current, date: event.target.value }))} className="mt-2 h-11 bg-card text-sm font-bold normal-case text-foreground" />
-            </label>
-          </div>
-
           <div className="flex flex-col justify-between gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center print:hidden">
             <div className="inline-flex self-start rounded-[8px] border border-border bg-background p-1">
               <Button type="button" size="sm" variant="ghost" onClick={() => setMode("recall")} className={cn("rounded-[6px]", mode === "recall" && "bg-structure text-structure-foreground hover:bg-structure hover:text-structure-foreground")}><EyeOff /> 1. Closed book</Button>

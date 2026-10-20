@@ -37,6 +37,7 @@ import { TopicConfidenceList } from "@/components/TopicConfidenceList";
 import { AppShell } from "@/components/AppShell";
 import { useActivePlan } from "@/hooks/useActivePlan";
 import { useLibrary } from "@/hooks/useLibrary";
+import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { topicText as libraryTopicText, addSubject as addLibrarySubject, saveTopics as saveLibraryTopics, newKey } from "@/lib/library";
 import { EditableTopicList, SUB_SEP, isSub, subLabel } from "@/components/planner/EditableTopicList";
 import { fetchExcludedTopics, saveExcludedTopics } from "@/lib/plan";
@@ -178,6 +179,12 @@ function SetupPage() {
   /** Optional 1–5 confidence per subject name — only used when no topics are chosen. */
   const [confidences, setConfidences] = useState<Record<string, number | null>>({});
   /** Optional 1–5 confidence per topic, keyed by subject name then topic. */
+  /** Ratings saved on "Rate my topics"; ones given here take priority. */
+  const savedRatings = useTopicRatings();
+  const ratingsFor = (subjectName: string): Record<string, number | null> => ({
+    ...(savedRatings.ratings[subjectName] ?? {}),
+    ...(topicRatings[subjectName] ?? {}),
+  });
   const [topicRatings, setTopicRatings] = useState<Record<string, Record<string, number | null>>>(
     {},
   );
@@ -646,12 +653,12 @@ function SetupPage() {
           ? all.filter((t) => !excluded.includes(`${pick.name}|||${t}`)).sort((a, b) => rank(a) - rank(b))
           : all;
         if (kind === "personalised") {
-          for (const t of all) if (excluded.includes(`${pick.name}|||${t}`)) leftOut.push({ subjectId: id, topic: t, confidence: topicRatings[pick.name]?.[t] ?? null });
+          for (const t of all) if (excluded.includes(`${pick.name}|||${t}`)) leftOut.push({ subjectId: id, topic: t, confidence: ratingsFor(pick.name)[t] ?? null });
         }
         confidenceMap[id] = confidences[pick.name] ?? null;
         if (topics.length) {
           chosenTopics[id] = topics;
-          const ratings = topicRatings[pick.name] ?? {};
+          const ratings = ratingsFor(pick.name);
           topicConfidence[id] = Object.fromEntries(
             topics.map((topic) => [topic, ratings[topic] ?? null]),
           );
@@ -762,7 +769,7 @@ function SetupPage() {
     for (const p of picks) {
       const days = daysToNextExam(examDates[p.name] ?? [], today);
       for (const topic of topicsFor(p.name)) {
-        const rating = topicRatings[p.name]?.[topic] ?? null;
+        const rating = ratingsFor(p.name)[topic] ?? null;
         const score = priorityScore(rating, days);
         const conf = rating == null ? "not rated" : rating <= 2 ? "low confidence" : rating <= 4 ? "partly understood" : "confident";
         out.push({
@@ -777,7 +784,7 @@ function SetupPage() {
     }
     return out.sort((a, b) => b.score - a.score);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [picks, examDates, topicRatings, chosen, source, manualText]);
+  }, [picks, examDates, topicRatings, savedRatings.ratings, chosen, source, manualText]);
 
   function openPriorities() {
     setCheckState(ranked.some((r) => r.rating != null) ? "done" : "skipped");
@@ -1249,7 +1256,7 @@ function SetupPage() {
                               <EditableTopicList
                                 subject={pick.name}
                                 topics={finalTopics}
-                                ratings={topicRatings[pick.name] ?? {}}
+                                ratings={ratingsFor(pick.name)}
                                 onChange={(next, rename) => {
                                   setSource((prev) => ({ ...prev, [pick.name]: "edited" }));
                                   setChosen((prev) => ({ ...prev, [pick.name]: next }));
@@ -1266,12 +1273,14 @@ function SetupPage() {
                                     });
                                   }
                                 }}
-                                onRate={(topic, value) =>
+                                onRate={(topic, value) => {
                                   setTopicRatings((prev) => ({
                                     ...prev,
                                     [pick.name]: { ...(prev[pick.name] ?? {}), [topic]: value },
-                                  }))
-                                }
+                                  }));
+                                  // Keep "Rate my topics" up to date; the plan gets the rating when it's built.
+                                  void savedRatings.rate(pick.name, topic, value, { updatePlans: false }).catch(() => undefined);
+                                }}
                               />
                             </div>
                           </div>

@@ -28,6 +28,7 @@ import { Route as AuthenticatedMyPlansRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
+import { Route as AuthenticatedRateTopicsRouteImport } from './routes/_authenticated/rate-topics'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedTopicsRouteImport } from './routes/_authenticated/topics'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
@@ -127,6 +128,11 @@ const AuthenticatedPrintPlanRoute = AuthenticatedPrintPlanRouteImport.update({
   path: '/print-plan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRateTopicsRoute = AuthenticatedRateTopicsRouteImport.update({
+  id: '/rate-topics',
+  path: '/rate-topics',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
   id: '/setup',
   path: '/setup',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
+  '/rate-topics': typeof AuthenticatedRateTopicsRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/topics': typeof AuthenticatedTopicsRoute
   '/share/$token': typeof ShareTokenRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
+  '/rate-topics': typeof AuthenticatedRateTopicsRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/topics': typeof AuthenticatedTopicsRoute
   '/share/$token': typeof ShareTokenRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
+  '/_authenticated/rate-topics': typeof AuthenticatedRateTopicsRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/topics': typeof AuthenticatedTopicsRoute
   '/share/$token': typeof ShareTokenRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/plan'
     | '/print-plan'
+    | '/rate-topics'
     | '/setup'
     | '/topics'
     | '/share/$token'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/plan'
     | '/print-plan'
+    | '/rate-topics'
     | '/setup'
     | '/topics'
     | '/share/$token'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
+    | '/_authenticated/rate-topics'
     | '/_authenticated/setup'
     | '/_authenticated/topics'
     | '/share/$token'
@@ -435,6 +447,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrintPlanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rate-topics': {
+      id: '/_authenticated/rate-topics'
+      path: '/rate-topics'
+      fullPath: '/rate-topics'
+      preLoaderRoute: typeof AuthenticatedRateTopicsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/setup': {
       id: '/_authenticated/setup'
       path: '/setup'
@@ -470,6 +489,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
+  AuthenticatedRateTopicsRoute: typeof AuthenticatedRateTopicsRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
   AuthenticatedTopicsRoute: typeof AuthenticatedTopicsRoute
 }
@@ -485,6 +505,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,
+  AuthenticatedRateTopicsRoute: AuthenticatedRateTopicsRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
   AuthenticatedTopicsRoute: AuthenticatedTopicsRoute,
 }

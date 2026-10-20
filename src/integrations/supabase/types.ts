@@ -1005,6 +1005,30 @@ export type Database = {
           },
         ]
       }
+      topic_ratings: {
+        Row: {
+          confidence: number
+          subject: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence: number
+          subject: string
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          subject?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

@@ -20,7 +20,11 @@ import { SavedCheckers } from "@/components/SavedCheckers";
 import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
 import { FocusSound } from "@/components/FocusSound";
-import { subjectUnits } from "@/lib/gcse-topics";
+import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
+import { topicText } from "@/lib/library";
+import { useTopicRatings } from "@/hooks/useTopicRatings";
+import { ConfidencePicker } from "@/components/ConfidencePicker";
+import { BandLegend } from "@/components/BandChip";
 import { GCSE_SUBJECTS } from "@/lib/gcse-subjects";
 import { specUnits } from "@/lib/spec-topics";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -184,6 +188,10 @@ function KnowledgeCheckerPage() {
     const s = subjectOptions.find((x) => x.id === id);
     if (s) setDraft((c) => ({ ...c, subject: s.name }));
   }
+  const topicRatings = useTopicRatings();
+  /** What the student rates after checking: whole Topic Library topics, or the list's lines. */
+  const [rateTargets, setRateTargets] = useState<{ subject: string; items: { key: string; label: string }[] } | null>(null);
+
   /** Turns the ticked items into the checker's rows, in list order. */
   function applyTicked() {
     if (!libSubject) return;
@@ -191,6 +199,23 @@ function KnowledgeCheckerPage() {
       .map((t) => ({ ...t, items: t.items.filter((i) => tickedItems.has(itemKey(t.id, i.id))) }))
       .filter((t) => t.items.length);
     if (!topics.length) return;
+    // Rate with the same wording plans use, so ratings carry into "Rate my topics" and plans.
+    const libTopics = library.subjects.find((s) => s.id === libSubject.id)?.topics ?? [];
+    setRateTargets({
+      subject: libSubject.name,
+      items:
+        libSubject.source === "library"
+          ? topics.flatMap((t) => {
+              const full = libTopics.find((lt) => lt.id === t.id);
+              return full ? [{ key: topicText(full), label: t.title }] : [];
+            })
+          : topics.flatMap((t) =>
+              t.items.map((i) => ({
+                key: libSubject.source === "dfe" ? detailedTopicText(libSubject.name, i.title) : i.title,
+                label: i.title,
+              })),
+            ),
+    });
     const joined = topics.map((t) => t.title).join(", ");
     const title = topics.length === 1 ? topics[0]!.title : joined.length <= 60 ? joined : `${topics.length} topics`;
     setDraft((c) => ({
@@ -648,6 +673,33 @@ function KnowledgeCheckerPage() {
             </AlertDialogContent>
           </AlertDialog>
         </div>
+
+        {rateTargets && rateTargets.items.length && draft.subject === rateTargets.subject ? (
+          <section className="mt-6 rounded-[8px] border border-checker-line bg-card p-5 print:hidden">
+            <p className="text-xs font-extrabold uppercase text-muted-foreground">3. Rate what you know</p>
+            <h2 className="mt-1 text-lg font-extrabold">How confident are you now?</h2>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">
+              After checking your gaps, rate each topic. Ratings are saved to{" "}
+              <Link to="/rate-topics" className="font-extrabold underline">Rate my topics</Link> and your revision plan.
+            </p>
+            <div className="mt-2">
+              <BandLegend />
+            </div>
+            <ul className="mt-3 divide-y divide-border/60">
+              {rateTargets.items.map((item) => (
+                <li key={item.key} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2">
+                  <span className="min-w-0 flex-1 text-sm font-bold">{item.label}</span>
+                  <ConfidencePicker
+                    size="sm"
+                    label={item.label}
+                    value={topicRatings.ratings[rateTargets.subject]?.[item.key] ?? null}
+                    onChange={(v) => void topicRatings.rate(rateTargets.subject, item.key, v).catch(() => undefined)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {showFlashcards ? <FlashcardPanel flashcards={flashcards} /> : null}
         <SavedCheckers

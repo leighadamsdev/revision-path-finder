@@ -12,6 +12,7 @@ import {
   Settings,
   Sparkles,
   ClipboardCheck,
+  Gauge,
   GraduationCap,
   Wrench,
   ChevronDown,
@@ -28,6 +29,7 @@ import { LogoOnDark } from "@/components/Logo";
 const MY_REVISION_TABS = [
   { to: "/library", label: "My Subjects", icon: BookOpen },
   { to: "/topics", label: "My Topics", icon: FolderOpen },
+  { to: "/rate-topics", label: "Rate my topics", icon: Gauge },
   { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
   { to: "/exams", label: "Exam timetable", icon: CalendarDays },
   { to: "/plan", label: "Revision Planner", icon: CalendarDays },

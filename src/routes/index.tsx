@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { LogoOnDark } from "@/components/Logo";
 import { PublicHeader } from "@/components/PublicHeader";
-import { NextBestAction } from "@/components/planner/NextBestAction";
+import { HomeSteps } from "@/components/HomeSteps";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,29 +25,6 @@ export const Route = createFileRoute("/")({
   }),
   component: Landing,
 });
-
-const HOW_STEPS = [
-  {
-    title: "Pick your subjects",
-    body: "Tick every subject you take and choose your tier and exam board.",
-  },
-  {
-    title: "Get your exam dates",
-    body: "Your summer exams are added from the official timetable. Add mocks from your school's website, a printed sheet or a downloaded list.",
-  },
-  {
-    title: "Choose your topics",
-    body: "Use a ready-made exam board list, upload a photo of your revision guide, or type your own.",
-  },
-  {
-    title: "Check what you know",
-    body: "Use the Knowledge Checker, then rate each topic red, amber or green.",
-  },
-  {
-    title: "Get your plan",
-    body: "A week-by-week timetable that puts your red topics first and adds more sessions as exams get closer, including holidays.",
-  },
-];
 
 const POINTS = [
   {
@@ -80,47 +57,7 @@ function Landing() {
           A bespoke revision timetable, built around exactly what you need to focus on and the time
           you have
         </h1>
-        <div className="relative mt-8 w-full">
-          <div
-            aria-hidden="true"
-            className="absolute bottom-6 left-[26px] top-6 hidden w-0.5 bg-primary sm:block"
-          />
-          <ol className="space-y-6">
-            {HOW_STEPS.map((step, i) => (
-              <li key={step.title} className="relative flex items-start">
-                <div className="z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-[8px] bg-primary text-lg font-extrabold text-primary-foreground shadow-lg sm:flex">
-                  {String(i + 1).padStart(2, "0")}
-                </div>
-                <div
-                  className={`w-full rounded-[8px] bg-structure p-5 text-lg font-medium leading-relaxed text-structure-foreground shadow-lg transition-transform duration-300 hover:-translate-y-1 sm:ml-8 sm:p-6 ${i === HOW_STEPS.length - 1 ? "ring-2 ring-primary" : ""}`}
-                >
-                  <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-[8px] bg-primary text-sm font-extrabold text-primary-foreground shadow-md sm:hidden">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <h2 className="text-xl font-extrabold tracking-tight">{step.title}</h2>
-                  <p className="mt-1 text-base font-medium leading-relaxed opacity-90">
-                    {step.body}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-        <div className="mt-8">
-          <NextBestAction />
-        </div>
-        <div className="mt-7 flex flex-wrap items-center gap-3">
-          <Link
-            to="/auth"
-            search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}
-            className="rounded-full bg-primary px-6 py-3 text-sm font-extrabold text-primary-foreground"
-          >
-            Create your plan
-          </Link>
-          <span className="text-[13px] font-semibold text-muted-foreground">
-            Free · your plan stays private to you
-          </span>
-        </div>
+        <HomeSteps />
         <Link
           to="/revision-guide"
           className="mt-3 inline-flex text-[13px] font-bold text-muted-foreground underline underline-offset-4"

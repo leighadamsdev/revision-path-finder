@@ -12,6 +12,7 @@ import {
   Settings,
   Sparkles,
   ClipboardCheck,
+  Bot,
   Gauge,
   GraduationCap,
   Wrench,
@@ -31,6 +32,7 @@ const MY_REVISION_TABS = [
   { to: "/topics", label: "My Topics", icon: FolderOpen },
   { to: "/rate-topics", label: "Rate my topics", icon: Gauge },
   { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
+  { to: "/ai-tutor", label: "Build my AI tutor", icon: Bot },
   { to: "/exams", label: "Exam timetable", icon: CalendarDays },
   { to: "/plan", label: "Revision Planner", icon: CalendarDays },
 ] as const;

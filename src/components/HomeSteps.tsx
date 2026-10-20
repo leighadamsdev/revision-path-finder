@@ -59,13 +59,6 @@ export function HomeSteps() {
       done: signedIn && hasSubjects,
     },
     {
-      title: "Get your exam dates",
-      body: "Your summer exams are added from the official timetable. Add mocks from your school's website, a printed sheet or a downloaded list.",
-      to: plan ? "/exams" : "/setup",
-      cta: plan ? "Check my exams" : "Add my exam dates",
-      done: signedIn && exams.length > 0,
-    },
-    {
       title: "Choose your topics",
       body: "Use a ready-made exam board list, upload a photo of your revision guide, or type your own.",
       to: "/topics",
@@ -78,6 +71,13 @@ export function HomeSteps() {
       to: "/knowledge-checker",
       cta: "Check what I know",
       done: signedIn && hasRatings,
+    },
+    {
+      title: "Get your exam dates",
+      body: "Your summer exams are added from the official timetable. Add mocks from your school's website, a printed sheet or a downloaded list.",
+      to: plan ? "/exams" : "/setup",
+      cta: plan ? "Check my exams" : "Add my exam dates",
+      done: signedIn && exams.length > 0,
     },
     {
       title: "Get your plan",

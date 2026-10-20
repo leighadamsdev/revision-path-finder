@@ -100,7 +100,8 @@ export function MultiSubjectPicker({
       <div>
         <p className="text-sm font-extrabold">Tick every subject you're taking</p>
         <p className="mt-0.5 text-[13px] font-medium text-muted-foreground">
-          Choose as many as you like, then add them all at once.
+          Choose as many as you like, then pick each one's exam board so your exam dates can be
+          added for you.
         </p>
       </div>
 
@@ -225,7 +226,7 @@ export function MultiSubjectPicker({
                 value={p.exam_board}
                 onChange={(e) => update(p.name, { exam_board: e.target.value })}
               >
-                <option value="">Exam board (optional)</option>
+                <option value="">Choose exam board…</option>
                 {BOARDS.map((b) => (
                   <option key={b} value={b}>
                     {b}

@@ -29,7 +29,7 @@ import { DatePicker } from "@/components/DatePicker";
 import { ExamDatesField } from "@/components/ExamDatesField";
 import { ExamDateUpload } from "@/components/ExamDateUpload";
 import { ExamBoardTimetable } from "@/components/ExamBoardTimetable";
-import { planningDates, timetableBoard, timetableExams, timetableVariants } from "@/lib/exam-timetable";
+import { planningDates, timetableBoard, timetableExams, timetableVariants, type TimetableBoard } from "@/lib/exam-timetable";
 import { applyTimetableExams } from "@/lib/exams";
 import { HolidayPlanner } from "@/components/HolidayPlanner";
 import { IntensityField } from "@/components/IntensityField";
@@ -38,7 +38,7 @@ import { AppShell } from "@/components/AppShell";
 import { useActivePlan } from "@/hooks/useActivePlan";
 import { useLibrary } from "@/hooks/useLibrary";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
-import { topicText as libraryTopicText, addSubject as addLibrarySubject, saveTopics as saveLibraryTopics, newKey } from "@/lib/library";
+import { topicText as libraryTopicText, addSubject as addLibrarySubject, updateSubject as updateLibrarySubject, saveTopics as saveLibraryTopics, newKey } from "@/lib/library";
 import { EditableTopicList, SUB_SEP, isSub, subLabel } from "@/components/planner/EditableTopicList";
 import { fetchExcludedTopics, saveExcludedTopics } from "@/lib/plan";
 
@@ -89,6 +89,16 @@ const FIRST_STAGE = [
 ] as const;
 
 type TopicSource = "spec" | "dfe" | "manual" | "upload" | "library" | "edited";
+
+const OTHER_BOARD = "Other board";
+/** Exam boards offered when picking a subject; the first three fill exam dates automatically. */
+const BOARD_CHOICES: Array<{ value: string; label: string }> = [
+  { value: "AQA", label: "AQA" },
+  { value: "Edexcel (Pearson)", label: "Edexcel" },
+  { value: "WJEC / Eduqas", label: "Eduqas" },
+  { value: "OCR", label: "OCR" },
+  { value: OTHER_BOARD, label: "Other" },
+];
 
 /** New subjects start on the exam-board list when there is one, otherwise the DfE list. */
 function defaultSource(subjectName: string): TopicSource {
@@ -351,6 +361,7 @@ function SetupPage() {
       const lib = library.subjects.find((s) => s.name.trim().toLowerCase() === pick.name.trim().toLowerCase());
       const known = timetableBoard(lib?.exam_board);
       if (known) applyBoard(pick.name, known, timetableVariants(pick.name, known)[0] ?? "");
+      else if (lib?.exam_board) setBoards((prev) => ({ ...prev, [pick.name]: lib.exam_board! }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picks, library.subjects]);
@@ -562,6 +573,27 @@ function SetupPage() {
     }
   }
 
+  /** Remembers each subject's exam board in My Subjects so the exam timetable can use it too. */
+  async function saveBoardsToLibrary(list: Pick[]) {
+    try {
+      // Read My Subjects afresh: saving topics may have just added some of these subjects.
+      const { data: current } = await supabase.from("library_subjects").select("id, name, exam_board");
+      for (const pick of list) {
+        const board = boards[pick.name];
+        if (!board) continue;
+        const lib = (current ?? []).find((x) => x.name.trim().toLowerCase() === pick.name.trim().toLowerCase());
+        if (lib) {
+          if (lib.exam_board !== board) await updateLibrarySubject(lib.id, { exam_board: board });
+        } else {
+          await addLibrarySubject({ name: pick.name, exam_board: board, qualification_level: pick.tier ? `GCSE ${pick.tier}` : "GCSE" });
+        }
+      }
+      await queryClient.invalidateQueries({ queryKey: ["library"] });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   /** Adds any new topics/sub-topics the student typed or edited to their Topic Library. */
   async function writeBackToLibrary(list: Pick[]) {
     if (!saveToLibrary) return;
@@ -581,7 +613,7 @@ function SetupPage() {
           if (isSub(t)) groups.get(parent)!.push(subLabel(t));
         }
         if (!groups.size) continue;
-        const subjectId = lib?.id ?? (await addLibrarySubject({ name: pick.name, qualification_level: pick.tier ? `GCSE ${pick.tier}` : "GCSE" }));
+        const subjectId = lib?.id ?? (await addLibrarySubject({ name: pick.name, exam_board: boards[pick.name] || null, qualification_level: pick.tier ? `GCSE ${pick.tier}` : "GCSE" }));
         await saveLibraryTopics(
           subjectId,
           [...groups].map(([title, items]) => ({ key: newKey(), title, items: items.map((i) => ({ key: newKey(), title: i, uncertain: false })) })),
@@ -686,6 +718,7 @@ function SetupPage() {
         await supabase.from("plans").update({ plan_type: kind }).eq("id", fromId);
         await saveExcludedTopics(fromId, leftOut);
         await writeBackToLibrary(planPicks);
+        await saveBoardsToLibrary(planPicks);
         await regeneratePlanSessions(fromId, {
           startDate, weeks, days: daySettings, intensity, holidays: cleanHolidays,
           subjects: planPicks.map((pick, i) => {
@@ -729,6 +762,7 @@ function SetupPage() {
       for (const [i, pick] of planPicks.entries()) await applyTimetableExams(planId, subjectIds[i]!, officialExams(pick.name));
       await saveExcludedTopics(planId, leftOut);
       await writeBackToLibrary(planPicks);
+      await saveBoardsToLibrary(planPicks);
       window.localStorage.setItem("revisionpath.activePlan", planId);
       if (!copying) {
         window.localStorage.removeItem(DRAFT_KEY + user.id);
@@ -867,8 +901,8 @@ function SetupPage() {
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
                 Your own subjects are listed first, then every other GCSE subject. Tick everything
-                you're sitting, and choose Foundation or Higher where it applies. You can change
-                these at any time.
+                you're sitting, then choose the exam board for each (and Foundation or Higher where
+                it applies) so we can add your exam dates for you. You can change these at any time.
               </p>
 
               <label className="mt-4 block">
@@ -941,6 +975,35 @@ function SetupPage() {
                                 ))}
                               </div>
                             ) : null}
+                            {isOn ? (
+                              <div className="flex flex-wrap items-center gap-1 px-2.5 pb-2 pl-10">
+                                <span className="mr-1 text-[11px] font-bold text-muted-foreground">
+                                  Exam board
+                                </span>
+                                {BOARD_CHOICES.map(({ value, label }) => {
+                                  const current = boards[subjectName] ?? "";
+                                  const on = value === OTHER_BOARD ? Boolean(current) && !timetableBoard(current) : timetableBoard(current) === value;
+                                  return (
+                                    <button
+                                      key={value}
+                                      type="button"
+                                      onClick={() =>
+                                        applyBoard(
+                                          subjectName,
+                                          on ? "" : value,
+                                          on || value === OTHER_BOARD ? "" : (timetableVariants(subjectName, value as TimetableBoard)[0] ?? ""),
+                                        )
+                                      }
+                                      className={`rounded-full px-3 py-1 text-[12px] font-bold ${
+                                        on ? "bg-structure text-structure-foreground" : "bg-card text-muted-foreground ring-1 ring-border"
+                                      }`}
+                                    >
+                                      {label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ) : null}
                           </div>
                         );
                       })}
@@ -982,6 +1045,11 @@ function SetupPage() {
                       <div key={pick.name} className="flex flex-wrap items-center gap-2 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border">
                         <span className="min-w-0 flex-1 text-sm font-bold">{pick.name}</span>
                         {isTiered(pick.name) && !pick.tier ? <span className="text-xs font-bold text-destructive">Choose a tier</span> : pick.tier ? <span className="text-xs font-bold text-muted-foreground">{pick.tier}</span> : null}
+                        {boards[pick.name] ? (
+                          <span className="text-xs font-bold text-muted-foreground">{boards[pick.name]}</span>
+                        ) : (
+                          <span className="text-xs font-bold text-muted-foreground/70">No exam board yet</span>
+                        )}
                         <button type="button" onClick={() => setPicks((prev) => prev.filter((p) => p.name !== pick.name))} className="text-xs font-bold text-muted-foreground underline">Remove</button>
                       </div>
                     ))}
@@ -994,7 +1062,7 @@ function SetupPage() {
           {step === 4 ? (
             <>
               <p className="text-lg font-extrabold">When are your exams?</p>
-              <p className="mt-1 text-[13px] font-medium text-muted-foreground">Choose each subject's exam board and we'll add your summer 2027 exams from the official timetable. Otherwise add dates yourself, or come back later; closer exams get more attention.</p>
+              <p className="mt-1 text-[13px] font-medium text-muted-foreground">Your summer 2027 exams are added from the official timetable for the exam boards you chose with your subjects. You can change a board here, or add dates yourself; closer exams get more attention.</p>
               <div className="mt-4">
                 <ExamDateUpload subjects={picks.map((p) => p.name)} onApply={(dates) => setExamDates((prev) => {
                   const next = { ...prev };

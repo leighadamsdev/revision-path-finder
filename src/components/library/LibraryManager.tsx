@@ -25,6 +25,7 @@ import { GCSE_SUBJECTS, SUBJECT_GROUPS, catalogueSubject, isTiered } from "@/lib
 import { TopicDraftEditor } from "./TopicDraftEditor";
 import { ReadyListDialog } from "./ReadyListDialog";
 import { readyListFor } from "@/lib/spec-topics";
+import { groupByDfeCategory } from "@/lib/dfe-categories";
 
 export const libField =
   "w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring";
@@ -153,7 +154,11 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
             {mode !== "subjects" && showTopics && isOpen ? (
               <ul className="mt-3 space-y-2">
                 {s.topics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No Topics yet.</li> : null}
-                {s.topics.map((t, i) => (
+                {(mode === "topics" ? groupByDfeCategory(s.name, s.topics) : [{ category: "", topics: s.topics }]).map((g) => (
+                  <li key={g.category || "all"} className="space-y-2">
+                    {g.category ? <p className="pt-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">{g.category}</p> : null}
+                    <ul className="space-y-2">
+                {g.topics.map((t) => { const i = s.topics.indexOf(t); return (
                   <li key={t.id} className="rounded-[12px] bg-background p-3 ring-1 ring-border">
                     <div className="flex items-center gap-1">
                       <span className="flex-1 text-[13px] font-extrabold">{t.title}</span>
@@ -165,6 +170,9 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                     </div>
                     <ul className="mt-1 list-disc pl-5 text-[12px] font-medium text-muted-foreground">
                       {t.items.map((it) => <li key={it.id}>{it.title}</li>)}
+                    </ul>
+                  </li>
+                ); })}
                     </ul>
                   </li>
                 ))}

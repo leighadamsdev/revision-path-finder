@@ -32,7 +32,7 @@ export function groupByDfeCategory<T extends { title: string; items: { title: st
     let best = -1;
     let bestScore = 0;
     unitWords.forEach((u, i) => {
-      if (units[i].unit.toLowerCase() === t.title.trim().toLowerCase()) { best = i; bestScore = Infinity; return; }
+      if (units[i]?.unit.toLowerCase() === t.title.trim().toLowerCase()) { best = i; bestScore = Infinity; return; }
       let score = 0;
       for (const w of tw) { if (u.title.has(w)) score += 3; else if (u.all.has(w)) score += 1; }
       if (score > bestScore) { bestScore = score; best = i; }

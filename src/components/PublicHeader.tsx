@@ -8,7 +8,9 @@ import { useAuth } from "@/hooks/useAuth";
 const MY_REVISION = [
   { to: "/library", label: "My Subjects" },
   { to: "/topics", label: "My Topics" },
+  { to: "/rate-topics", label: "Rate my topics" },
   { to: "/knowledge-checker", label: "Knowledge Checker" },
+  { to: "/ai-tutor", label: "Build my AI tutor" },
   { to: "/exams", label: "Exam timetable" },
   { to: "/plan", label: "Revision Planner" },
 ] as const;

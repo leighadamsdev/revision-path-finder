@@ -25,7 +25,9 @@ import {
   type AssistantValue,
   type Choice,
   type TutorForm,
+  type TutorTopic,
 } from "@/lib/tutor-prompt";
+import { takeTutorHandoff, tutorTier } from "@/lib/tutor-handoff";
 
 export const Route = createFileRoute("/ai-tutor")({
   head: () => ({
@@ -90,12 +92,25 @@ function AiTutorPage() {
   const [examDate, setExamDate] = useState("");
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [own, setOwn] = useState<string[]>([]);
+  /** Topics the student rated red, passed in from Rate my topics. */
+  const [rated, setRated] = useState<TutorTopic[]>([]);
   const [ownDraft, setOwnDraft] = useState("");
   const [style, setStyle] = useState<Style>(BLANK);
   const [assistant, setAssistant] = useState<AssistantValue>("chatgpt");
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => setStyle(loadStyle()), []);
+  useEffect(() => {
+    setStyle(loadStyle());
+    const h = takeTutorHandoff();
+    if (!h || !GCSE_SUBJECTS.some((s) => s.name === h.subject)) return;
+    chooseSubject(h.subject);
+    const b = h.board && BOARDS.includes(h.board) ? h.board : "";
+    const t = isTiered(h.subject) ? tutorTier(h.tier) : "Not tiered";
+    setBoard(b);
+    setTier(t);
+    setExamDate(nextExam(h.subject, b, t));
+    setRated(h.topics.filter((x) => x.text.trim()));
+  }, []);
   useEffect(() => {
     try {
       window.localStorage.setItem(SAVE_KEY, JSON.stringify(style));
@@ -119,6 +134,7 @@ function AiTutorPage() {
     setChosen(new Set());
     setStyle((s) => ({ ...s, questionTypes: defaultQuestionTypes(name) }));
     setOwn([]);
+    setRated([]);
     setBoard("");
     setTier(name && !isTiered(name) ? "Not tiered" : "");
     setExamDate("");
@@ -152,6 +168,7 @@ function AiTutorPage() {
     tier,
     examDate,
     topics: [
+      ...rated,
       ...topicOptions
         .filter((o) => chosen.has(o.key))
         .map((o) => ({ text: o.label, rating: null })),
@@ -296,6 +313,36 @@ function AiTutorPage() {
                   </p>
                 ) : (
                   <>
+                    {rated.length ? (
+                      <div className="mb-3 rounded-[10px] bg-conf-low/10 p-3 ring-1 ring-conf-low/30">
+                        <p className="text-[12px] font-extrabold">
+                          Your red topics ({rated.length})
+                        </p>
+                        <p className="text-[12px] font-medium text-muted-foreground">
+                          Your tutor will spend most of its time on these.
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {rated.map((r) => (
+                            <span
+                              key={r.text}
+                              className="inline-flex items-center gap-1 rounded-full bg-conf-low px-3 py-1 text-[12px] font-bold text-white"
+                            >
+                              {r.text}
+                              <button
+                                type="button"
+                                aria-label={`Remove ${r.text}`}
+                                onClick={() =>
+                                  setRated((prev) => prev.filter((x) => x.text !== r.text))
+                                }
+                                className="ml-1 opacity-80 hover:opacity-100"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                     {topicOptions.length ? (
                       <>
                         <div className="flex flex-wrap gap-1.5">
@@ -370,7 +417,7 @@ function AiTutorPage() {
                       </div>
                     ) : null}
                     <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
-                      {chosen.size + own.length} chosen
+                      {rated.length + chosen.size + own.length} chosen
                     </p>
                   </>
                 )}

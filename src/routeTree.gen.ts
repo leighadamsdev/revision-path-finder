@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AiTutorRouteImport } from './routes/ai-tutor'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PapersRouteImport } from './routes/papers'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -20,7 +21,6 @@ import { Route as RevisionToolsRouteImport } from './routes/revision-tools'
 import { Route as SitesRouteImport } from './routes/sites'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as AuthenticatedAiTutorRouteImport } from './routes/_authenticated/ai-tutor'
 import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
 import { Route as AuthenticatedKnowledgeCheckerRouteImport } from './routes/_authenticated/knowledge-checker'
@@ -41,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiTutorRoute = AiTutorRouteImport.update({
+  id: '/ai-tutor',
+  path: '/ai-tutor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -86,11 +91,6 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAiTutorRoute = AuthenticatedAiTutorRouteImport.update({
-  id: '/ai-tutor',
-  path: '/ai-tutor',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEditPlanRoute = AuthenticatedEditPlanRouteImport.update({
@@ -157,6 +157,7 @@ const ShareTokenRoute = ShareTokenRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-tutor': typeof AiTutorRoute
   '/auth': typeof AuthRoute
   '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -166,7 +167,6 @@ export interface FileRoutesByFullPath {
   '/sites': typeof SitesRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/ai-tutor': typeof AuthenticatedAiTutorRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
   '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
@@ -182,6 +182,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-tutor': typeof AiTutorRoute
   '/auth': typeof AuthRoute
   '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -191,7 +192,6 @@ export interface FileRoutesByTo {
   '/sites': typeof SitesRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/ai-tutor': typeof AuthenticatedAiTutorRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
   '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
@@ -209,6 +209,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/ai-tutor': typeof AiTutorRoute
   '/auth': typeof AuthRoute
   '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -218,7 +219,6 @@ export interface FileRoutesById {
   '/sites': typeof SitesRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
-  '/_authenticated/ai-tutor': typeof AuthenticatedAiTutorRoute
   '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
   '/_authenticated/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
@@ -236,6 +236,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai-tutor'
     | '/auth'
     | '/papers'
     | '/reset-password'
@@ -245,7 +246,6 @@ export interface FileRouteTypes {
     | '/sites'
     | '/account'
     | '/admin'
-    | '/ai-tutor'
     | '/edit-plan'
     | '/exams'
     | '/knowledge-checker'
@@ -261,6 +261,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ai-tutor'
     | '/auth'
     | '/papers'
     | '/reset-password'
@@ -270,7 +271,6 @@ export interface FileRouteTypes {
     | '/sites'
     | '/account'
     | '/admin'
-    | '/ai-tutor'
     | '/edit-plan'
     | '/exams'
     | '/knowledge-checker'
@@ -287,6 +287,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/ai-tutor'
     | '/auth'
     | '/papers'
     | '/reset-password'
@@ -296,7 +297,6 @@ export interface FileRouteTypes {
     | '/sites'
     | '/_authenticated/account'
     | '/_authenticated/admin'
-    | '/_authenticated/ai-tutor'
     | '/_authenticated/edit-plan'
     | '/_authenticated/exams'
     | '/_authenticated/knowledge-checker'
@@ -314,6 +314,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AiTutorRoute: typeof AiTutorRoute
   AuthRoute: typeof AuthRoute
   PapersRoute: typeof PapersRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -338,6 +339,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-tutor': {
+      id: '/ai-tutor'
+      path: '/ai-tutor'
+      fullPath: '/ai-tutor'
+      preLoaderRoute: typeof AiTutorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -401,13 +409,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ai-tutor': {
-      id: '/_authenticated/ai-tutor'
-      path: '/ai-tutor'
-      fullPath: '/ai-tutor'
-      preLoaderRoute: typeof AuthenticatedAiTutorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/edit-plan': {
@@ -500,7 +501,6 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
-  AuthenticatedAiTutorRoute: typeof AuthenticatedAiTutorRoute
   AuthenticatedEditPlanRoute: typeof AuthenticatedEditPlanRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
   AuthenticatedKnowledgeCheckerRoute: typeof AuthenticatedKnowledgeCheckerRoute
@@ -517,7 +517,6 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
-  AuthenticatedAiTutorRoute: AuthenticatedAiTutorRoute,
   AuthenticatedEditPlanRoute: AuthenticatedEditPlanRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,
   AuthenticatedKnowledgeCheckerRoute: AuthenticatedKnowledgeCheckerRoute,
@@ -537,6 +536,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AiTutorRoute: AiTutorRoute,
   AuthRoute: AuthRoute,
   PapersRoute: PapersRoute,
   ResetPasswordRoute: ResetPasswordRoute,

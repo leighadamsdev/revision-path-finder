@@ -10,7 +10,6 @@ const MY_REVISION = [
   { to: "/topics", label: "My Topics" },
   { to: "/rate-topics", label: "Rate my topics" },
   { to: "/knowledge-checker", label: "Knowledge Checker" },
-  { to: "/ai-tutor", label: "Build my AI tutor" },
   { to: "/exams", label: "Exam timetable" },
   { to: "/plan", label: "Revision Planner" },
 ] as const;
@@ -20,6 +19,7 @@ const FREE_RESOURCES = [
   { to: "/papers", label: "Past Papers" },
   { to: "/sites", label: "Revision Links" },
   { to: "/revision-tools", label: "Revision Tools" },
+  { to: "/ai-tutor", label: "Build my AI tutor" },
 ] as const;
 
 const GROUPS: { label: string; items: readonly { to: string; label: string }[] }[] = [

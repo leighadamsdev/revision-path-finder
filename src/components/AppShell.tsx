@@ -32,7 +32,6 @@ const MY_REVISION_TABS = [
   { to: "/topics", label: "My Topics", icon: FolderOpen },
   { to: "/rate-topics", label: "Rate my topics", icon: Gauge },
   { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
-  { to: "/ai-tutor", label: "Build my AI tutor", icon: Bot },
   { to: "/exams", label: "Exam timetable", icon: CalendarDays },
   { to: "/plan", label: "Revision Planner", icon: CalendarDays },
 ] as const;
@@ -42,6 +41,7 @@ const FREE_RESOURCE_TABS = [
   { to: "/papers", label: "Past Papers", icon: FileText },
   { to: "/sites", label: "Revision Links", icon: Sparkles },
   { to: "/revision-tools", label: "Revision Tools", icon: Wrench },
+  { to: "/ai-tutor", label: "Build my AI tutor", icon: Bot },
 ] as const;
 
 import type { LucideIcon } from "lucide-react";

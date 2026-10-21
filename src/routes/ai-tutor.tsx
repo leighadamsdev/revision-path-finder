@@ -16,11 +16,12 @@ import {
   DEFAULT_RULES,
   DIFFICULTIES,
   NEEDS,
-  QUESTION_TYPES,
   RESPONSE_LENGTHS,
   RULES,
   TONES,
   buildTutorPrompt,
+  defaultQuestionTypes,
+  questionTypesFor,
   type AssistantValue,
   type Choice,
   type TutorForm,
@@ -116,6 +117,7 @@ function AiTutorPage() {
   function chooseSubject(name: string) {
     setSubject(name);
     setChosen(new Set());
+    setStyle((s) => ({ ...s, questionTypes: defaultQuestionTypes(name) }));
     setOwn([]);
     setBoard("");
     setTier(name && !isTiered(name) ? "Not tiered" : "");
@@ -394,8 +396,8 @@ function AiTutorPage() {
                   onToggle={(v) => toggle("activities", v)}
                 />
                 <MultiGroup
-                  label="Types of question"
-                  options={QUESTION_TYPES}
+                  label={subject ? `Types of ${subject} exam question` : "Types of exam question"}
+                  options={questionTypesFor(subject)}
                   values={style.questionTypes}
                   onToggle={(v) => toggle("questionTypes", v)}
                 />

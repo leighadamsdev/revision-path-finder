@@ -148,17 +148,345 @@ export const ACTIVITIES: Choice[] = [
   },
 ];
 
-export const QUESTION_TYPES: Choice[] = [
-  { value: "mcq", label: "Multiple choice", prompt: "multiple choice" },
-  { value: "short", label: "Short answer", prompt: "short answer" },
-  { value: "long", label: "Extended / essay", prompt: "extended answers and essay plans" },
-  { value: "calc", label: "Calculations", prompt: "calculations with working shown" },
-  {
-    value: "data",
-    label: "Data and sources",
-    prompt: "questions using data, graphs, extracts or sources",
+/** Every kind of GCSE exam question the tutor can practise; each subject offers the ones it uses. */
+const Q: Record<string, Choice> = {
+  mcq: { value: "mcq", label: "Multiple choice", prompt: "multiple choice questions" },
+  short: {
+    value: "short",
+    label: "Short answer (1–4 marks)",
+    prompt: "short-answer questions worth 1–4 marks",
   },
-];
+  calc: { value: "calc", label: "Calculations", prompt: "calculations where I show my working" },
+  problem: {
+    value: "problem",
+    label: "Multi-step problems",
+    prompt: "multi-step and worded problem-solving questions",
+  },
+  proof: {
+    value: "proof",
+    label: '"Show that" and proof',
+    prompt: '"show that" and proof questions',
+  },
+  graphs: {
+    value: "graphs",
+    label: "Graphs and diagrams",
+    prompt: "questions where I draw or read graphs, diagrams and charts",
+  },
+  geometry: {
+    value: "geometry",
+    label: "Geometry and constructions",
+    prompt: "geometry, angle and construction questions",
+  },
+  practical: {
+    value: "practical",
+    label: "Required practicals",
+    prompt: "questions on the required practicals and method",
+  },
+  data: {
+    value: "data",
+    label: "Data and graph analysis",
+    prompt: "questions where I analyse data, tables and graphs",
+  },
+  six: {
+    value: "six",
+    label: "6-mark extended answers",
+    prompt: "6-mark extended-response questions",
+  },
+  explain: {
+    value: "explain",
+    label: '"Explain" questions',
+    prompt: '"explain" questions that need developed reasoning',
+  },
+  evaluate: {
+    value: "evaluate",
+    label: "Evaluate / how far do you agree",
+    prompt: 'evaluation and "how far do you agree" questions',
+  },
+  essay: {
+    value: "essay",
+    label: "Essay questions",
+    prompt: "essay questions with a plan and a clear argument",
+  },
+  sources: {
+    value: "sources",
+    label: "Sources",
+    prompt: "source questions on usefulness, content and provenance",
+  },
+  interpretations: {
+    value: "interpretations",
+    label: "Interpretations",
+    prompt: "questions comparing and evaluating historians' interpretations",
+  },
+  caseStudy: {
+    value: "caseStudy",
+    label: "Case studies",
+    prompt: "questions that use case studies and real examples",
+  },
+  maps: {
+    value: "maps",
+    label: "Maps and skills",
+    prompt: "map, photo and geographical skills questions",
+  },
+  fieldwork: {
+    value: "fieldwork",
+    label: "Fieldwork",
+    prompt: "fieldwork questions on methods, data and conclusions",
+  },
+  retrieval: {
+    value: "retrieval",
+    label: "Find information",
+    prompt: "questions where I find and list information from a text",
+  },
+  language: {
+    value: "language",
+    label: "Language analysis",
+    prompt: "questions analysing how writers use language",
+  },
+  structure: {
+    value: "structure",
+    label: "Structure analysis",
+    prompt: "questions analysing how writers structure a text",
+  },
+  compare: {
+    value: "compare",
+    label: "Comparing texts",
+    prompt: "questions comparing two texts or writers' viewpoints",
+  },
+  creative: {
+    value: "creative",
+    label: "Descriptive / narrative writing",
+    prompt: "descriptive and narrative writing tasks",
+  },
+  viewpoint: {
+    value: "viewpoint",
+    label: "Writing to argue or persuade",
+    prompt: "writing tasks to argue, persuade or give a viewpoint",
+  },
+  extract: {
+    value: "extract",
+    label: "Extract questions",
+    prompt: "extract-based questions that build out to the whole text",
+  },
+  wholeText: {
+    value: "wholeText",
+    label: "Whole-text essays",
+    prompt: "whole-text essay questions on character and theme",
+  },
+  poetryCompare: {
+    value: "poetryCompare",
+    label: "Poetry comparison",
+    prompt: "questions comparing poems from my anthology",
+  },
+  unseen: { value: "unseen", label: "Unseen poetry", prompt: "unseen poetry questions" },
+  listening: {
+    value: "listening",
+    label: "Listening",
+    prompt:
+      "listening-style questions (you write the transcript, I answer without reading it first)",
+  },
+  reading: {
+    value: "reading",
+    label: "Reading comprehension",
+    prompt: "reading comprehension questions in the target language",
+  },
+  toEnglish: {
+    value: "toEnglish",
+    label: "Translation into English",
+    prompt: "translation into English",
+  },
+  fromEnglish: {
+    value: "fromEnglish",
+    label: "Translation from English",
+    prompt: "translation from English into the target language",
+  },
+  writing: {
+    value: "writing",
+    label: "Writing tasks",
+    prompt: "short and extended writing tasks in the target language",
+  },
+  speaking: {
+    value: "speaking",
+    label: "Speaking practice",
+    prompt: "speaking practice: role plays, photo cards and conversation questions",
+  },
+  dictation: {
+    value: "dictation",
+    label: "Dictation",
+    prompt: "dictation-style spelling practice",
+  },
+  code: {
+    value: "code",
+    label: "Writing code / algorithms",
+    prompt: "questions where I write algorithms, pseudocode or code",
+  },
+  trace: {
+    value: "trace",
+    label: "Tracing code",
+    prompt: "questions where I trace code, complete trace tables and find errors",
+  },
+  binary: {
+    value: "binary",
+    label: "Binary and logic",
+    prompt: "binary, hexadecimal and logic gate questions",
+  },
+  design: {
+    value: "design",
+    label: "Design and sketching",
+    prompt: "design questions where I sketch and annotate ideas",
+  },
+  stats: {
+    value: "stats",
+    label: "Research methods and maths",
+    prompt: "research methods and maths skills questions",
+  },
+  appraising: {
+    value: "appraising",
+    label: "Listening and appraising",
+    prompt: "listening and appraising questions on musical features",
+  },
+  setWork: {
+    value: "setWork",
+    label: "Set works",
+    prompt: "questions on my set works or study pieces",
+  },
+  staging: {
+    value: "staging",
+    label: "Set text: performance and design",
+    prompt: "questions on how I'd perform or design scenes from my set text",
+  },
+  liveTheatre: {
+    value: "liveTheatre",
+    label: "Live theatre evaluation",
+    prompt: "live theatre analysis and evaluation questions",
+  },
+  productAnalysis: {
+    value: "productAnalysis",
+    label: "Analysing media products",
+    prompt: "questions analysing media products and close study products",
+  },
+  filmExtract: {
+    value: "filmExtract",
+    label: "Film extract analysis",
+    prompt: "questions analysing film extracts and film language",
+  },
+  marks12: {
+    value: "marks12",
+    label: "12-mark evaluation",
+    prompt: "12-mark evaluation questions that weigh up different views",
+  },
+  beliefs: {
+    value: "beliefs",
+    label: "Beliefs and teachings",
+    prompt: "questions on beliefs, teachings and sources of authority",
+  },
+  perfAnalysis: {
+    value: "perfAnalysis",
+    label: "Performance analysis",
+    prompt: "questions analysing performance, data and training",
+  },
+  latinTranslate: {
+    value: "latinTranslate",
+    label: "Translation",
+    prompt: "translation of passages into English",
+  },
+  comprehension: {
+    value: "comprehension",
+    label: "Comprehension and grammar",
+    prompt: "comprehension, grammar and derivation questions",
+  },
+  literature: {
+    value: "literature",
+    label: "Set literature",
+    prompt: "questions analysing my set literature texts",
+  },
+  artists: {
+    value: "artists",
+    label: "Analysing artists' work",
+    prompt: "analysing and responding to artists' and designers' work",
+  },
+  annotation: {
+    value: "annotation",
+    label: "Developing ideas",
+    prompt: "planning, annotating and developing ideas for my portfolio",
+  },
+};
+
+const SCIENCE = ["mcq", "short", "calc", "practical", "data", "six"];
+const HUMANITIES_ESSAY = ["short", "sources", "explain", "essay"];
+
+/** The question types each GCSE subject's exams actually use. */
+const SUBJECT_QUESTIONS: Record<string, string[]> = {
+  Mathematics: ["short", "calc", "problem", "proof", "graphs", "geometry"],
+  Statistics: ["short", "calc", "graphs", "data", "problem"],
+  "English Language": [
+    "retrieval",
+    "language",
+    "structure",
+    "evaluate",
+    "compare",
+    "creative",
+    "viewpoint",
+  ],
+  "English Literature": ["extract", "wholeText", "poetryCompare", "unseen"],
+  "Combined Science (Trilogy / Double Award)": SCIENCE,
+  Biology: SCIENCE,
+  Chemistry: SCIENCE,
+  Physics: SCIENCE,
+  Astronomy: ["mcq", "short", "calc", "data", "explain", "six"],
+  Geology: ["mcq", "short", "calc", "data", "maps", "six"],
+  Psychology: ["mcq", "short", "stats", "explain", "essay"],
+  History: ["short", "explain", "sources", "interpretations", "essay"],
+  "Ancient History": HUMANITIES_ESSAY,
+  "Classical Civilisation": ["short", "sources", "literature", "essay"],
+  Geography: ["mcq", "short", "maps", "data", "caseStudy", "fieldwork", "evaluate"],
+  "Religious Studies": ["mcq", "short", "beliefs", "explain", "marks12"],
+  "Citizenship Studies": ["mcq", "short", "sources", "caseStudy", "evaluate"],
+  Sociology: ["mcq", "short", "stats", "explain", "marks12"],
+  Business: ["mcq", "short", "calc", "caseStudy", "evaluate"],
+  Economics: ["mcq", "short", "calc", "graphs", "evaluate"],
+  "Computer Science": ["mcq", "short", "code", "trace", "binary", "explain"],
+  "Design & Technology": ["mcq", "short", "calc", "design", "explain"],
+  Electronics: ["short", "calc", "graphs", "design", "explain"],
+  Engineering: ["mcq", "short", "calc", "design", "explain"],
+  "Food Preparation and Nutrition": ["mcq", "short", "data", "explain", "evaluate"],
+  "Physical Education (Full Course)": ["mcq", "short", "data", "perfAnalysis", "explain"],
+  Dance: ["short", "setWork", "explain", "essay"],
+  Drama: ["mcq", "short", "staging", "liveTheatre"],
+  Music: ["appraising", "setWork", "short", "explain"],
+  "Media Studies": ["mcq", "short", "productAnalysis", "explain", "essay"],
+  "Film Studies": ["short", "filmExtract", "explain", "essay"],
+  "Art and Design": ["artists", "annotation"],
+  French: ["listening", "reading", "toEnglish", "fromEnglish", "writing", "speaking", "dictation"],
+  German: ["listening", "reading", "toEnglish", "fromEnglish", "writing", "speaking", "dictation"],
+  Spanish: ["listening", "reading", "toEnglish", "fromEnglish", "writing", "speaking", "dictation"],
+  Italian: ["listening", "reading", "toEnglish", "fromEnglish", "writing", "speaking", "dictation"],
+  "Modern Foreign Languages (MFL)": [
+    "listening",
+    "reading",
+    "toEnglish",
+    "fromEnglish",
+    "writing",
+    "speaking",
+  ],
+  Latin: ["latinTranslate", "comprehension", "literature"],
+  "Classical Greek": ["latinTranslate", "comprehension", "literature"],
+  "Ancient Languages": ["latinTranslate", "comprehension", "literature"],
+};
+
+const GENERAL = ["mcq", "short", "explain", "data", "evaluate"];
+
+/** Question types for a subject, in the order they're offered. */
+export function questionTypesFor(subject: string): Choice[] {
+  const keys = SUBJECT_QUESTIONS[subject] ?? GENERAL;
+  return keys.map((k) => Q[k]!).filter(Boolean);
+}
+
+/** Sensible starting picks for a subject: its first two or three types. */
+export function defaultQuestionTypes(subject: string): string[] {
+  return questionTypesFor(subject)
+    .slice(0, 3)
+    .map((c) => c.value);
+}
 
 export const DIFFICULTIES: Choice[] = [
   {
@@ -361,7 +689,7 @@ export function buildTutorPrompt(f: TutorForm, today = new Date()): string {
   if (tone) lines.push(`- ${tone.prompt}`);
   const acts = picks(ACTIVITIES, f.activities);
   if (acts.length) lines.push(`- In our sessions: ${acts.map((a) => a.prompt).join("; ")}.`);
-  const qs = picks(QUESTION_TYPES, f.questionTypes);
+  const qs = picks(questionTypesFor(f.subject), f.questionTypes);
   if (qs.length)
     lines.push(`- Use these kinds of questions: ${qs.map((q) => q.prompt).join(", ")}.`);
   const diff = pick(DIFFICULTIES, f.difficulty);

@@ -649,9 +649,11 @@ function ratingWord(r: number | null) {
 /** Turns the form into the tutor prompt, in plain British English. */
 export function buildTutorPrompt(f: TutorForm, today = new Date()): string {
   const lines: string[] = [];
-  const subject = f.subject || "my GCSE subject";
+  const subject = f.subject || "GCSE";
   lines.push(
-    `You are my personal GCSE ${subject} tutor. I'm a student in England preparing for my GCSE exams.`,
+    f.subject
+      ? `You are my personal GCSE ${subject} tutor. I'm a student in England preparing for my GCSE exams.`
+      : "You are my personal GCSE tutor. I'm a student in England preparing for my GCSE exams.",
   );
   lines.push("");
 
@@ -659,7 +661,7 @@ export function buildTutorPrompt(f: TutorForm, today = new Date()): string {
   const about: string[] = [];
   if (f.name.trim()) about.push(`Call me ${f.name.trim()}.`);
   about.push(
-    `Subject: GCSE ${subject}${f.board ? `, ${f.board} specification` : ""}${f.tier && f.tier !== "Not tiered" ? `, ${f.tier} tier` : ""}.`,
+    `Subject: ${f.subject ? `GCSE ${subject}` : "not chosen yet, so ask me which subject first"}${f.board ? `, ${f.board} specification` : ""}${f.tier && f.tier !== "Not tiered" ? `, ${f.tier} tier` : ""}.`,
   );
   if (f.targetGrade) about.push(`My target grade is ${f.targetGrade}.`);
   if (f.examDate) {

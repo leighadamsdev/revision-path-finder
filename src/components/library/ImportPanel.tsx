@@ -192,7 +192,7 @@ export function ImportPanel({
               <Button variant="outline" onClick={() => setStage("prepare")}>Back to image</Button>
               <Button variant="outline" onClick={() => { setImg(null); setRotation(0); setCrop(null); setStage("upload"); }}><Upload /> Add another page</Button>
               <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button onClick={() => setStage("choose")} disabled={!topics.length}>Continue</Button>
+              <Button onClick={() => { setSelected(new Set(topics.map((t) => t.key))); setStage("choose"); }} disabled={!topics.length}>Continue</Button>
             </div>
           </div>
         ) : null}

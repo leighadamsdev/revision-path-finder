@@ -325,12 +325,13 @@ function AiTutorPage() {
                           {rated.map((r) => (
                             <span
                               key={r.text}
+                              title={r.text}
                               className="inline-flex items-center gap-1 rounded-full bg-conf-low px-3 py-1 text-[12px] font-bold text-white"
                             >
-                              {r.text}
+                              {r.text.split(": ")[0]}
                               <button
                                 type="button"
-                                aria-label={`Remove ${r.text}`}
+                                aria-label={`Remove ${r.text.split(": ")[0]}`}
                                 onClick={() =>
                                   setRated((prev) => prev.filter((x) => x.text !== r.text))
                                 }

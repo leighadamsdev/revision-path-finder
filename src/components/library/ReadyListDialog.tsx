@@ -76,7 +76,7 @@ export function ReadyListDialog({
       await saveTopics(subject.id, topics, { type: "manual", path: null }, subject.topics.length);
       const items = topics.reduce((n, t) => n + t.items.length, 0);
       toast.success(
-        `Added ${topics.length} Topic${topics.length === 1 ? "" : "s"} with ${items} content items.`,
+        `Added ${topics.length} Topic${topics.length === 1 ? "" : "s"} with ${items} content item${items === 1 ? "" : "s"}.`,
       );
       onSaved();
       close();

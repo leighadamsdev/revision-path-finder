@@ -48,7 +48,7 @@ export function PublicHeader() {
         <div className="flex items-center justify-between gap-3">
           <Link
             to="/"
-            aria-label="rev.plan home"
+            aria-label="RevPlan home"
             className="inline-flex items-center rounded-[8px] bg-background px-3 py-2 shadow-sm ring-1 ring-border"
           >
             <Logo className="h-8 w-auto" />

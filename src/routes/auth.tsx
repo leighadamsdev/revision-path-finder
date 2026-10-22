@@ -20,15 +20,15 @@ export const Route = createFileRoute("/auth")({
   },
   head: () => ({
     meta: [
-      { title: "Sign in — rev.plan" },
+      { title: "Sign in — RevPlan" },
       {
         name: "description",
-        content: "Sign in or create your rev.plan account to build your GCSE revision plan.",
+        content: "Sign in or create your RevPlan account to build your GCSE revision plan.",
       },
-      { property: "og:title", content: "Sign in — rev.plan" },
+      { property: "og:title", content: "Sign in — RevPlan" },
       {
         property: "og:description",
-        content: "Sign in or create a rev.plan account to build your GCSE revision plan.",
+        content: "Sign in or create a RevPlan account to build your GCSE revision plan.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

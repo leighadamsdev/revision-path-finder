@@ -8,18 +8,19 @@ import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { REVISION_LINK_GROUPS } from "@/lib/revision-sites";
+import { defaultLinksFor } from "@/lib/revision-links-default";
 import { subjectStyle } from "@/lib/subjects";
 
 export const Route = createFileRoute("/sites")({
   head: () => ({
     meta: [
-      { title: "Revision links — rev.plan" },
+      { title: "Revision links — RevPlan" },
       {
         name: "description",
         content:
           "Free revision links and YouTube channels worth using, grouped across the full GCSE subject list.",
       },
-      { property: "og:title", content: "Revision links — rev.plan" },
+      { property: "og:title", content: "Revision links — RevPlan" },
       {
         property: "og:description",
         content: "Free revision links and channels for your GCSE subjects.",
@@ -61,7 +62,14 @@ function SitesPage() {
 
   function subjectDetails(subject: (typeof REVISION_LINK_GROUPS)[number]["subjects"][number]) {
     const style = subjectStyle(subject.colorKey);
-    const rows = (sites.data ?? []).filter((site) => site.subject_name === subject.name);
+    const added = (sites.data ?? []).filter((site) => site.subject_name === subject.name);
+    const addedUrls = new Set(added.map((site) => site.site_url.replace(/\/$/, "")));
+    const rows: SiteRow[] = [
+      ...added,
+      ...defaultLinksFor(subject.name)
+        .filter((link) => !addedUrls.has(link.site_url.replace(/\/$/, "")))
+        .map((link) => ({ id: `default:${link.site_url}`, subject_name: subject.name, ...link })),
+    ];
     return (
       <details key={subject.name} className="group rounded-[8px] bg-card ring-1 ring-border">
         <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3">

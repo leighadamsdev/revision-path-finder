@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/revision-guide")({
   head: () => ({
     meta: [
-      { title: "How to Revise Effectively (And Actually Remember It!) | rev.plan" },
+      { title: "How to Revise Effectively (And Actually Remember It!) | RevPlan" },
       {
         name: "description",
         content:
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/revision-guide")({
       },
       {
         property: "og:title",
-        content: "How to Revise Effectively (And Actually Remember It!) | rev.plan",
+        content: "How to Revise Effectively (And Actually Remember It!) | RevPlan",
       },
       {
         property: "og:description",

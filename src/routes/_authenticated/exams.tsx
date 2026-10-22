@@ -27,13 +27,13 @@ import { subjectStyle } from "@/lib/subjects";
 export const Route = createFileRoute("/_authenticated/exams")({
   head: () => ({
     meta: [
-      { title: "Exam timetable — rev.plan" },
+      { title: "Exam timetable — RevPlan" },
       {
         name: "description",
         content:
           "A month-by-month calendar of your GCSE exams: see which exam falls on which day and how long you have left.",
       },
-      { property: "og:title", content: "Exam timetable — rev.plan" },
+      { property: "og:title", content: "Exam timetable — RevPlan" },
       {
         property: "og:description",
         content: "See which exam is on which day, month by month.",
@@ -103,7 +103,7 @@ function ExamCalendarPage() {
       <AppShell>
         <div className="rounded-[8px] bg-card p-6 ring-1 ring-border">
           <h1 className="text-lg font-extrabold">Create your plan first</h1>
-          <p className="mt-2 text-[13px] font-medium text-muted-foreground">Create a plan first so rev.plan knows your subjects and exam dates.</p>
+          <p className="mt-2 text-[13px] font-medium text-muted-foreground">Create a plan first so RevPlan knows your subjects and exam dates.</p>
           <Button asChild className="mt-5"><Link to="/setup">Start setup</Link></Button>
         </div>
       </AppShell>

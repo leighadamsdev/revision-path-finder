@@ -15,9 +15,9 @@ import { deletePlan, type Plan } from "@/lib/plan";
 export const Route = createFileRoute("/_authenticated/my-plans")({
   head: () => ({
     meta: [
-      { title: "My plans — rev.plan" },
+      { title: "My plans — RevPlan" },
       { name: "description", content: "All your saved GCSE revision plans in one place — open, edit or delete them." },
-      { property: "og:title", content: "My plans — rev.plan" },
+      { property: "og:title", content: "My plans — RevPlan" },
       { property: "og:description", content: "Open, switch between, edit or delete your saved revision plans." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

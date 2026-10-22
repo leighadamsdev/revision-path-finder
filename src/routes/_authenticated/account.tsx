@@ -12,9 +12,9 @@ import { useAuth } from "@/hooks/useAuth";
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
     meta: [
-      { title: "Your account — rev.plan" },
+      { title: "Your account — RevPlan" },
       { name: "description", content: "Your school, parent email and weekly summary settings." },
-      { property: "og:title", content: "Your account — rev.plan" },
+      { property: "og:title", content: "Your account — RevPlan" },
       { property: "og:description", content: "Your school, parent email and weekly summary settings." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -48,13 +48,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/knowledge-checker")({
   head: () => ({
     meta: [
-      { title: "Online Revision Knowledge Checker | rev.plan" },
+      { title: "Online Revision Knowledge Checker | RevPlan" },
       {
         name: "description",
         content:
           "Complete a GCSE closed-book brain dump, highlight knowledge gaps, and identify what to revise next.",
       },
-      { property: "og:title", content: "Online Revision Knowledge Checker | rev.plan" },
+      { property: "og:title", content: "Online Revision Knowledge Checker | RevPlan" },
       {
         property: "og:description",
         content: "A free, fillable GCSE active-recall and knowledge-gap worksheet.",
@@ -423,7 +423,7 @@ function KnowledgeCheckerPage() {
             new Paragraph({
               alignment: AlignmentType.CENTER,
               spacing: { before: 240 },
-              children: [new TextRun({ text: "rev.plan · made from highlighted knowledge gaps", size: 18, color: "527078" })],
+              children: [new TextRun({ text: "RevPlan · made from highlighted knowledge gaps", size: 18, color: "527078" })],
             }),
           ],
         },
@@ -484,7 +484,7 @@ function KnowledgeCheckerPage() {
         <section ref={sheetRef} className={`mt-7 rounded-[8px] border border-structure bg-card shadow-[0_20px_60px_-25px] shadow-structure/35 print:hidden ${fullScreen ? "fixed inset-0 z-50 mt-0 overflow-y-auto rounded-none" : "overflow-hidden"}`}>
           <div className="flex flex-col gap-4 bg-structure p-5 text-structure-foreground sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-extrabold uppercase text-primary">rev.plan · active recall</p>
+              <p className="text-xs font-extrabold uppercase text-primary">RevPlan · active recall</p>
               <p className="mt-1 text-lg font-extrabold">Closed book first. Be honest with the gaps.</p>
             </div>
             <div className="flex items-center gap-2 rounded-[8px] border border-primary/60 px-3 py-2">
@@ -704,7 +704,7 @@ function KnowledgeCheckerPage() {
           }}
         />
         <section className="mt-8 rounded-[8px] bg-structure p-6 text-structure-foreground print:hidden sm:flex sm:items-center sm:justify-between sm:gap-6">
-          <div><h2 className="text-xl font-extrabold">Use these gaps to build your plan</h2><p className="mt-1 text-sm font-semibold text-structure-foreground/70">When you reach the topic step, rev.plan will offer to mark these gaps red so they get more revision time.</p></div>
+          <div><h2 className="text-xl font-extrabold">Use these gaps to build your plan</h2><p className="mt-1 text-sm font-semibold text-structure-foreground/70">When you reach the topic step, RevPlan will offer to mark these gaps red so they get more revision time.</p></div>
           <Button asChild className="mt-4 shrink-0 sm:mt-0">
             {user ? (plan ? <Link to="/edit-plan">Update my plan</Link> : <Link to="/setup">Create your revision plan</Link>) : <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}>Create your revision plan</Link>}
           </Button>

@@ -26,13 +26,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/revision-tools")({
   head: () => ({
     meta: [
-      { title: "Revision Tools for GCSE Focus | rev.plan" },
+      { title: "Revision Tools for GCSE Focus | RevPlan" },
       {
         name: "description",
         content:
           "Use a Pomodoro timer, lyric-free focus audio, and a distraction-blocking Focus Mode for productive GCSE revision sessions.",
       },
-      { property: "og:title", content: "Your Revision Toolkit | rev.plan" },
+      { property: "og:title", content: "Your Revision Toolkit | RevPlan" },
       {
         property: "og:description",
         content: "Practical, built-in tools to help GCSE students focus and block distractions.",

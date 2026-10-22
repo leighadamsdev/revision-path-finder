@@ -43,13 +43,13 @@ import { SESSION_LENGTHS, WEEK_DAYS, subjectStyle } from "@/lib/subjects";
 export const Route = createFileRoute("/_authenticated/edit-plan")({
   head: () => ({
     meta: [
-      { title: "Edit revision plan — rev.plan" },
+      { title: "Edit revision plan — RevPlan" },
       {
         name: "description",
         content:
           "Update your subjects, exam dates, confidence ratings, weeks and study days — then rebuild your timetable.",
       },
-      { property: "og:title", content: "Edit revision plan — rev.plan" },
+      { property: "og:title", content: "Edit revision plan — RevPlan" },
       {
         property: "og:description",
         content: "Change your plan settings and exam dates without losing your notes.",

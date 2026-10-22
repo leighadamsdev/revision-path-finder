@@ -13,12 +13,12 @@ export const Route = createFileRoute("/_authenticated/print-plan")({
   }),
   head: () => ({
     meta: [
-      { title: "Print revision week — rev.plan" },
+      { title: "Print revision week — RevPlan" },
       {
         name: "description",
         content: "A clean printable view of one week from your GCSE revision timetable.",
       },
-      { property: "og:title", content: "Print revision week — rev.plan" },
+      { property: "og:title", content: "Print revision week — RevPlan" },
       {
         property: "og:description",
         content: "A clean printable view of one GCSE revision week.",
@@ -88,7 +88,7 @@ function PrintablePlanPage() {
       <article className="print-plan-week">
         <header className="print-plan-heading">
           <div>
-            <p>rev.plan</p>
+            <p>RevPlan</p>
             <h1>{plan.name}</h1>
           </div>
           <strong>Week {week} of {plan.weeks}</strong>

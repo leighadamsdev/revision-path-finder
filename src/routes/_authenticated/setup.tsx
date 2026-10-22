@@ -49,13 +49,13 @@ import { daysToNextExam, priorityScore } from "@/lib/scheduling";
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({
     meta: [
-      { title: "Set up your plan — rev.plan" },
+      { title: "Set up your plan — RevPlan" },
       {
         name: "description",
         content:
           "Choose your GCSE subjects and tier, select topics, and set when and how often you can study.",
       },
-      { property: "og:title", content: "Set up your plan — rev.plan" },
+      { property: "og:title", content: "Set up your plan — RevPlan" },
       {
         property: "og:description",
         content: "Pick subjects and tiers, choose topics, and generate your dated revision timetable.",

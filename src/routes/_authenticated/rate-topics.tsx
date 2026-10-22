@@ -20,12 +20,12 @@ import { saveTutorHandoff } from "@/lib/tutor-handoff";
 export const Route = createFileRoute("/_authenticated/rate-topics")({
   head: () => ({
     meta: [
-      { title: "Rate my topics — rev.plan" },
+      { title: "Rate my topics — RevPlan" },
       {
         name: "description",
         content: "Rate every GCSE topic red, amber or green so you know what to revise first.",
       },
-      { property: "og:title", content: "Rate my topics — rev.plan" },
+      { property: "og:title", content: "Rate my topics — RevPlan" },
       {
         property: "og:description",
         content: "Red, amber or green for every topic in every subject.",

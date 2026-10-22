@@ -54,13 +54,13 @@ import { planDayLabel, sortPlanDays } from "@/lib/plan-dates";
 export const Route = createFileRoute("/_authenticated/plan")({
   head: () => ({
     meta: [
-      { title: "Your timetable — rev.plan" },
+      { title: "Your timetable — RevPlan" },
       {
         name: "description",
         content:
           "Your week-by-week GCSE revision timetable: today's sessions, topics, exam countdown and gaps to revisit.",
       },
-      { property: "og:title", content: "Your timetable — rev.plan" },
+      { property: "og:title", content: "Your timetable — RevPlan" },
       {
         property: "og:description",
         content: "Your week-by-week GCSE revision timetable with an exam countdown.",
@@ -360,7 +360,7 @@ function TimetablePage() {
       <div className="print-week-sheet">
         <header className="print-week-heading hidden">
           <div>
-            <p className="print-brand">rev.plan</p>
+            <p className="print-brand">RevPlan</p>
             <h1>{plan.name}</h1>
           </div>
           <p>Week {week} of {plan.weeks}</p>

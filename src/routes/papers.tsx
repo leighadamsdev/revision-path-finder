@@ -13,13 +13,13 @@ import { subjectStyle } from "@/lib/subjects";
 export const Route = createFileRoute("/papers")({
   head: () => ({
     meta: [
-      { title: "Past papers — rev.plan" },
+      { title: "Past papers — RevPlan" },
       {
         name: "description",
         content:
           "Question papers and mark schemes for every GCSE subject, grouped by exam board, newest exams first.",
       },
-      { property: "og:title", content: "Past papers — rev.plan" },
+      { property: "og:title", content: "Past papers — RevPlan" },
       {
         property: "og:description",
         content: "Question papers and mark schemes for your subjects, in one place.",

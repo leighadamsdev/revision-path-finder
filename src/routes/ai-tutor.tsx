@@ -1,18 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Check, Copy, Download, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { PublicHeader } from "@/components/PublicHeader";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { useActivePlan, useExams, usePlanSubjects, usePlanTopics } from "@/hooks/useActivePlan";
-import { useLibrary } from "@/hooks/useLibrary";
-import { useTopicRatings } from "@/hooks/useTopicRatings";
-import { GCSE_SUBJECTS, isTiered } from "@/lib/gcse-subjects";
-import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
+import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered } from "@/lib/gcse-subjects";
+import { subjectUnits } from "@/lib/gcse-topics";
 import { timetableBoard, timetableExams } from "@/lib/exam-timetable";
-import { topicText } from "@/lib/library";
 import { specUnits } from "@/lib/spec-topics";
 import {
   ACTIVITIES,
@@ -21,15 +16,18 @@ import {
   DEFAULT_RULES,
   DIFFICULTIES,
   NEEDS,
-  QUESTION_TYPES,
   RESPONSE_LENGTHS,
   RULES,
   TONES,
   buildTutorPrompt,
+  defaultQuestionTypes,
+  questionTypesFor,
   type AssistantValue,
   type Choice,
   type TutorForm,
+  type TutorTopic,
 } from "@/lib/tutor-prompt";
+import { takeTutorHandoff, tutorTier } from "@/lib/tutor-handoff";
 
 export const Route = createFileRoute("/ai-tutor")({
   head: () => ({
@@ -57,7 +55,7 @@ const GRADES = ["9", "8", "7", "6", "5", "4", "3"];
 const MINUTES = ["15", "20", "30", "45", "60"];
 const SAVE_KEY = "revplan.aiTutor";
 
-type TopicOption = { key: string; label: string; rating: number | null };
+type TopicOption = { key: string; label: string };
 
 const BLANK: Omit<TutorForm, "subject" | "board" | "tier" | "examDate" | "topics"> = {
   targetGrade: "",
@@ -88,24 +86,31 @@ function loadStyle(): Style {
 }
 
 function AiTutorPage() {
-  const { user, loading } = useAuth();
-  const library = useLibrary();
-  const { plan } = useActivePlan();
-  const planSubjects = usePlanSubjects(plan?.id).data;
-  const planTopics = usePlanTopics(plan?.id).data;
-  const exams = useExams(plan?.id).data;
-  const { ratings } = useTopicRatings();
-
   const [subject, setSubject] = useState("");
   const [board, setBoard] = useState("");
   const [tier, setTier] = useState("");
   const [examDate, setExamDate] = useState("");
   const [chosen, setChosen] = useState<Set<string>>(new Set());
+  const [own, setOwn] = useState<string[]>([]);
+  /** Topics the student rated red, passed in from Rate my topics. */
+  const [rated, setRated] = useState<TutorTopic[]>([]);
+  const [ownDraft, setOwnDraft] = useState("");
   const [style, setStyle] = useState<Style>(BLANK);
   const [assistant, setAssistant] = useState<AssistantValue>("chatgpt");
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => setStyle(loadStyle()), []);
+  useEffect(() => {
+    setStyle(loadStyle());
+    const h = takeTutorHandoff();
+    if (!h || !GCSE_SUBJECTS.some((s) => s.name === h.subject)) return;
+    chooseSubject(h.subject);
+    const b = h.board && BOARDS.includes(h.board) ? h.board : "";
+    const t = isTiered(h.subject) ? tutorTier(h.tier) : "Not tiered";
+    setBoard(b);
+    setTier(t);
+    setExamDate(nextExam(h.subject, b, t));
+    setRated(h.topics.filter((x) => x.text.trim()));
+  }, []);
   useEffect(() => {
     try {
       window.localStorage.setItem(SAVE_KEY, JSON.stringify(style));
@@ -114,105 +119,42 @@ function AiTutorPage() {
     }
   }, [style]);
 
-  /** The student's own subjects first, then the rest of the catalogue. */
-  const subjectNames = useMemo(() => {
-    const mine: string[] = [];
-    const seen = new Set<string>();
-    for (const n of [
-      ...library.subjects.map((s) => s.name),
-      ...(planSubjects ?? []).map((s) => s.name),
-    ]) {
-      const k = n.trim().toLowerCase();
-      if (!seen.has(k)) {
-        seen.add(k);
-        mine.push(n);
-      }
-    }
-    const rest = GCSE_SUBJECTS.map((s) => s.name).filter((n) => !seen.has(n.toLowerCase()));
-    return { mine, rest };
-  }, [library.subjects, planSubjects]);
-
-  // Start on the student's first subject.
-  useEffect(() => {
-    if (!subject && subjectNames.mine[0]) chooseSubject(subjectNames.mine[0]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subjectNames.mine.length]);
-
-  const lib = library.subjects.find(
-    (s) => s.name.trim().toLowerCase() === subject.trim().toLowerCase(),
-  );
-  const planSubject = (planSubjects ?? []).find(
-    (s) => s.name.trim().toLowerCase() === subject.trim().toLowerCase(),
-  );
-
-  /** Topics to choose from: the plan's (with their ratings), then My Topics, then a ready-made list. */
+  /** Topics to choose from: the exam-board list, otherwise the DfE list. */
   const topicOptions: TopicOption[] = useMemo(() => {
     if (!subject) return [];
-    const saved = ratings[subject] ?? {};
-    const fromPlan = (planTopics ?? []).filter(
-      (t) => planSubject && t.subject_id === planSubject.id,
-    );
-    if (fromPlan.length)
-      return fromPlan.map((t) => ({
-        key: t.topic,
-        label: t.topic,
-        rating: t.confidence ?? saved[t.topic] ?? null,
-      }));
-    if (lib?.topics.length)
-      return lib.topics.map((t) => ({
-        key: topicText(t),
-        label: t.title,
-        rating: saved[topicText(t)] ?? null,
-      }));
     const spec = specUnits(subject);
-    if (spec.length)
-      return spec.flatMap((u) =>
-        u.elements.map((e) => ({ key: e.label, label: e.label, rating: saved[e.label] ?? null })),
-      );
-    return subjectUnits(subject).flatMap((u) =>
-      u.elements.map((e) => {
-        const key = detailedTopicText(subject, e.label);
-        return { key, label: e.label, rating: saved[key] ?? null };
-      }),
+    const units = spec.length ? spec : subjectUnits(subject);
+    return units.flatMap((u) =>
+      u.elements.map((e) => ({ key: `${u.unit}|${e.label}`, label: e.label })),
     );
-  }, [subject, ratings, planTopics, planSubject, lib]);
+  }, [subject]);
 
   function chooseSubject(name: string) {
     setSubject(name);
     setChosen(new Set());
-    const l = library.subjects.find(
-      (s) => s.name.trim().toLowerCase() === name.trim().toLowerCase(),
-    );
-    const p = (planSubjects ?? []).find(
-      (s) => s.name.trim().toLowerCase() === name.trim().toLowerCase(),
-    );
-    const b = timetableBoard(l?.exam_board) ?? (l?.exam_board || "");
-    setBoard(b);
-    const t =
-      p?.tier ??
-      (l?.qualification_level?.includes("Higher")
-        ? "Higher"
-        : l?.qualification_level?.includes("Foundation")
-          ? "Foundation"
-          : "");
-    setTier(isTiered(name) ? t : "Not tiered");
-    setExamDate(nextExam(name, b, t));
+    setStyle((s) => ({ ...s, questionTypes: defaultQuestionTypes(name) }));
+    setOwn([]);
+    setRated([]);
+    setBoard("");
+    setTier(name && !isTiered(name) ? "Not tiered" : "");
+    setExamDate("");
   }
 
-  /** The next exam for a subject: from the plan first, otherwise the board's official timetable. */
+  /** The next exam for a subject from the board's official timetable. */
   function nextExam(name: string, b: string, t: string) {
     const today = new Date().toISOString().slice(0, 10);
-    const p = (planSubjects ?? []).find(
-      (s) => s.name.trim().toLowerCase() === name.trim().toLowerCase(),
+    return (
+      timetableExams(name, timetableBoard(b), t)
+        .map((e) => e.date)
+        .find((d) => d >= today) ?? ""
     );
-    const fromPlan = (exams ?? [])
-      .filter((e) => p && e.subject_id === p.id && e.exam_date >= today)
-      .map((e) => e.exam_date)
-      .sort()[0];
-    const fromTimetable = timetableExams(name, timetableBoard(b), t)
-      .map((e) => e.date)
-      .find((d) => d >= today);
-    return fromPlan ?? fromTimetable ?? "";
+  }
+
+  function addOwn() {
+    const text = ownDraft.trim();
+    if (!text) return;
+    if (!own.some((o) => o.toLowerCase() === text.toLowerCase())) setOwn((prev) => [...prev, text]);
+    setOwnDraft("");
   }
 
   function selectWhere(test: (o: TopicOption) => boolean) {
@@ -225,9 +167,13 @@ function AiTutorPage() {
     board,
     tier,
     examDate,
-    topics: topicOptions
-      .filter((o) => chosen.has(o.key))
-      .map((o) => ({ text: o.label, rating: o.rating })),
+    topics: [
+      ...rated,
+      ...topicOptions
+        .filter((o) => chosen.has(o.key))
+        .map((o) => ({ text: o.label, rating: null })),
+      ...own.map((text) => ({ text, rating: null })),
+    ],
   };
   const prompt = buildTutorPrompt(form);
   const assistantInfo = ASSISTANTS.find((a) => a.value === assistant)!;
@@ -261,11 +207,6 @@ function AiTutorPage() {
       [key]: s[key].includes(value) ? s[key].filter((v) => v !== value) : [...s[key], value],
     }));
 
-  const counts = {
-    red: topicOptions.filter((o) => o.rating != null && o.rating <= 2).length,
-    amber: topicOptions.filter((o) => o.rating != null && o.rating > 2 && o.rating <= 4).length,
-  };
-
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
       <PublicHeader />
@@ -277,20 +218,6 @@ function AiTutorPage() {
             write a prompt you can paste into ChatGPT, Claude, Gemini or Copilot to turn it into
             your own GCSE tutor.
           </p>
-          {!loading && !user ? (
-            <p className="mt-2 max-w-[70ch] rounded-[8px] bg-secondary px-3 py-2 text-[12px] font-semibold">
-              Free to use.{" "}
-              <Link
-                to="/auth"
-                search={{ returnTo: "/ai-tutor" }}
-                className="font-extrabold underline"
-              >
-                Sign in
-              </Link>{" "}
-              to fill this in from your own subjects, topics and red/amber/green ratings.
-            </p>
-          ) : null}
-
           <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
             <div className="min-w-0 space-y-4">
               <Section n={1} title="Subject and exam">
@@ -303,22 +230,15 @@ function AiTutorPage() {
                       className={select}
                     >
                       <option value="">Choose a subject…</option>
-                      {subjectNames.mine.length ? (
-                        <optgroup label="My subjects">
-                          {subjectNames.mine.map((n) => (
-                            <option key={n} value={n}>
-                              {n}
+                      {SUBJECT_GROUPS.map((g) => (
+                        <optgroup key={g} label={g}>
+                          {GCSE_SUBJECTS.filter((s) => s.group === g).map((s) => (
+                            <option key={s.name} value={s.name}>
+                              {s.name}
                             </option>
                           ))}
                         </optgroup>
-                      ) : null}
-                      <optgroup label="All GCSE subjects">
-                        {subjectNames.rest.map((n) => (
-                          <option key={n} value={n}>
-                            {n}
-                          </option>
-                        ))}
-                      </optgroup>
+                      ))}
                     </select>
                   </Field>
                   <Field label="Exam board" htmlFor="tutor-board">
@@ -385,80 +305,119 @@ function AiTutorPage() {
               <Section
                 n={2}
                 title="Topics to work on"
-                hint="Your topics and red/amber/green ratings come from your plan and My Topics."
+                hint="Tick topics from the list, add your own, or leave it empty and your tutor will ask."
               >
                 {!subject ? (
                   <p className="text-[13px] font-medium text-muted-foreground">
                     Choose a subject first.
                   </p>
-                ) : !topicOptions.length ? (
-                  <p className="text-[13px] font-medium text-muted-foreground">
-                    No topics for {subject} yet.{" "}
-                    <Link to="/topics" className="font-extrabold underline">
-                      Add your topics
-                    </Link>
-                    , or leave this empty and your tutor will ask what you want to work on.
-                  </p>
                 ) : (
                   <>
-                    <div className="flex flex-wrap gap-1.5">
-                      {counts.red ? (
-                        <QuickButton
-                          onClick={() => selectWhere((o) => o.rating != null && o.rating <= 2)}
-                        >
-                          My red topics ({counts.red})
-                        </QuickButton>
-                      ) : null}
-                      {counts.red + counts.amber ? (
-                        <QuickButton
-                          onClick={() => selectWhere((o) => o.rating != null && o.rating <= 4)}
-                        >
-                          Red and amber ({counts.red + counts.amber})
-                        </QuickButton>
-                      ) : null}
-                      <QuickButton onClick={() => selectWhere(() => true)}>
-                        All ({topicOptions.length})
-                      </QuickButton>
-                      <QuickButton onClick={() => setChosen(new Set())}>Clear</QuickButton>
-                    </div>
-                    <div className="mt-2 max-h-72 space-y-0.5 overflow-y-auto rounded-[10px] p-1 ring-1 ring-border">
-                      {topicOptions.map((o) => (
-                        <label
-                          key={o.key}
-                          className="flex cursor-pointer items-start gap-2 rounded-[8px] px-2 py-1.5 text-[13px] font-medium hover:bg-background"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={chosen.has(o.key)}
-                            onChange={() =>
-                              setChosen((prev) => {
-                                const next = new Set(prev);
-                                if (next.has(o.key)) next.delete(o.key);
-                                else next.add(o.key);
-                                return next;
-                              })
-                            }
-                            className="mt-0.5 size-4 shrink-0 accent-primary"
-                          />
-                          <span className="min-w-0 flex-1">{o.label}</span>
-                          {o.rating != null ? (
+                    {rated.length ? (
+                      <div className="mb-3 rounded-[10px] bg-conf-low/10 p-3 ring-1 ring-conf-low/30">
+                        <p className="text-[12px] font-extrabold">
+                          Your red topics ({rated.length})
+                        </p>
+                        <p className="text-[12px] font-medium text-muted-foreground">
+                          Your tutor will spend most of its time on these.
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {rated.map((r) => (
                             <span
-                              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
-                                o.rating <= 2
-                                  ? "bg-conf-low/15 text-conf-low"
-                                  : o.rating <= 4
-                                    ? "bg-conf-mid/15 text-conf-mid"
-                                    : "bg-conf-high/10 text-conf-high"
-                              }`}
+                              key={r.text}
+                              className="inline-flex items-center gap-1 rounded-full bg-conf-low px-3 py-1 text-[12px] font-bold text-white"
                             >
-                              {o.rating <= 2 ? "Red" : o.rating <= 4 ? "Amber" : "Green"}
+                              {r.text}
+                              <button
+                                type="button"
+                                aria-label={`Remove ${r.text}`}
+                                onClick={() =>
+                                  setRated((prev) => prev.filter((x) => x.text !== r.text))
+                                }
+                                className="ml-1 opacity-80 hover:opacity-100"
+                              >
+                                ×
+                              </button>
                             </span>
-                          ) : null}
-                        </label>
-                      ))}
-                    </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {topicOptions.length ? (
+                      <>
+                        <div className="flex flex-wrap gap-1.5">
+                          <QuickButton onClick={() => selectWhere(() => true)}>
+                            All ({topicOptions.length})
+                          </QuickButton>
+                          <QuickButton onClick={() => setChosen(new Set())}>Clear</QuickButton>
+                        </div>
+                        <div className="mt-2 max-h-72 space-y-0.5 overflow-y-auto rounded-[10px] p-1 ring-1 ring-border">
+                          {topicOptions.map((o) => (
+                            <label
+                              key={o.key}
+                              className="flex cursor-pointer items-start gap-2 rounded-[8px] px-2 py-1.5 text-[13px] font-medium hover:bg-background"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={chosen.has(o.key)}
+                                onChange={() =>
+                                  setChosen((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(o.key)) next.delete(o.key);
+                                    else next.add(o.key);
+                                    return next;
+                                  })
+                                }
+                                className="mt-0.5 size-4 shrink-0 accent-primary"
+                              />
+                              <span className="min-w-0 flex-1">{o.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </>
+                    ) : null}
+                    <form
+                      className="mt-2 flex flex-wrap gap-2"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        addOwn();
+                      }}
+                    >
+                      <input
+                        id="tutor-own-topic"
+                        value={ownDraft}
+                        onChange={(e) => setOwnDraft(e.target.value)}
+                        placeholder="Add your own topic, e.g. Macbeth: the witches"
+                        aria-label="Add your own topic"
+                        maxLength={120}
+                        className={`${select} mt-0 min-w-0 flex-1`}
+                      />
+                      <Button type="submit" variant="outline" disabled={!ownDraft.trim()}>
+                        Add
+                      </Button>
+                    </form>
+                    {own.length ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {own.map((o) => (
+                          <span
+                            key={o}
+                            className="inline-flex items-center gap-1 rounded-full bg-structure px-3 py-1 text-[12px] font-bold text-structure-foreground"
+                          >
+                            {o}
+                            <button
+                              type="button"
+                              aria-label={`Remove ${o}`}
+                              onClick={() => setOwn((prev) => prev.filter((x) => x !== o))}
+                              className="ml-1 opacity-80 hover:opacity-100"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
                     <p className="mt-1 text-[12px] font-semibold text-muted-foreground">
-                      {chosen.size} chosen
+                      {rated.length + chosen.size + own.length} chosen
                     </p>
                   </>
                 )}
@@ -484,8 +443,8 @@ function AiTutorPage() {
                   onToggle={(v) => toggle("activities", v)}
                 />
                 <MultiGroup
-                  label="Types of question"
-                  options={QUESTION_TYPES}
+                  label={subject ? `Types of ${subject} exam question` : "Types of exam question"}
+                  options={questionTypesFor(subject)}
                   values={style.questionTypes}
                   onToggle={(v) => toggle("questionTypes", v)}
                 />

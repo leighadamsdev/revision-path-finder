@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { Bot, ChevronDown } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { BandLegend } from "@/components/BandChip";
@@ -15,6 +15,7 @@ import { topicText, type LibSubject } from "@/lib/library";
 import { specUnits } from "@/lib/spec-topics";
 import { subjectStyle } from "@/lib/subjects";
 import { ratingsAreLocalOnly } from "@/lib/topic-ratings";
+import { saveTutorHandoff } from "@/lib/tutor-handoff";
 
 export const Route = createFileRoute("/_authenticated/rate-topics")({
   head: () => ({
@@ -79,7 +80,28 @@ function groupsFor(name: string, kind: ListKind, lib: LibSubject | undefined): R
   }));
 }
 
+/** Every topic rated red for a subject, across all of its lists, once each. */
+function redTopics(
+  name: string,
+  lib: LibSubject | undefined,
+  mine: Record<string, number>,
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const kind of listsFor(name, lib)) {
+    for (const r of groupsFor(name, kind, lib).flatMap((g) => g.rows)) {
+      const v = mine[r.key];
+      const label = r.label.trim();
+      if (!v || v > 2 || seen.has(label.toLowerCase())) continue;
+      seen.add(label.toLowerCase());
+      out.push(label);
+    }
+  }
+  return out;
+}
+
 function RateTopicsPage() {
+  const navigate = useNavigate();
   const library = useLibrary();
   const { plan } = useActivePlan();
   const planSubjectsData = usePlanSubjects(plan?.id).data;
@@ -172,6 +194,19 @@ function RateTopicsPage() {
                 </button>
                 {isOpen ? (
                   <div className="border-t border-border px-4 py-3">
+                    <TutorFromReds
+                      name={name}
+                      reds={redTopics(name, lib, mine)}
+                      onBuild={(reds) => {
+                        saveTutorHandoff({
+                          subject: name,
+                          board: lib?.exam_board,
+                          tier: lib?.qualification_level,
+                          topics: reds.map((text) => ({ text, rating: 1 })),
+                        });
+                        void navigate({ to: "/ai-tutor" });
+                      }}
+                    />
                     {kinds.length > 1 ? (
                       <div className="mb-3 flex flex-wrap gap-1.5">
                         {kinds.map((k) => (
@@ -264,5 +299,34 @@ function RateTopicsPage() {
         </label>
       </div>
     </AppShell>
+  );
+}
+
+function TutorFromReds({
+  name,
+  reds,
+  onBuild,
+}: {
+  name: string;
+  reds: string[];
+  onBuild: (reds: string[]) => void;
+}) {
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[10px] bg-background px-3 py-2.5 ring-1 ring-border">
+      <Bot className="size-4 shrink-0 text-muted-foreground" />
+      <p className="min-w-0 flex-1 text-[12px] font-semibold text-muted-foreground">
+        {reds.length
+          ? `Build an AI tutor that focuses on your ${reds.length} red ${name} topic${reds.length === 1 ? "" : "s"}.`
+          : `Rate some ${name} topics red and you can build an AI tutor that focuses on them.`}
+      </p>
+      <button
+        type="button"
+        disabled={!reds.length}
+        onClick={() => onBuild(reds)}
+        className="rounded-full bg-structure px-3 py-1.5 text-[12px] font-bold text-structure-foreground disabled:opacity-40"
+      >
+        Build my AI tutor
+      </button>
+    </div>
   );
 }

@@ -10,16 +10,16 @@ import { useIsAdmin } from "@/hooks/useRole";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Shared content admin — rev.plan" },
+      { title: "Shared content admin — RevPlan" },
       {
         name: "description",
         content:
-          "Maintain the shared rev.plan content: subjects, topic lists, past paper links and revision links.",
+          "Maintain the shared RevPlan content: subjects, topic lists, past paper links and revision links.",
       },
-      { property: "og:title", content: "Shared content admin — rev.plan" },
+      { property: "og:title", content: "Shared content admin — RevPlan" },
       {
         property: "og:description",
-        content: "Maintain shared rev.plan subjects, topics, past papers and revision links.",
+        content: "Maintain shared RevPlan subjects, topics, past papers and revision links.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

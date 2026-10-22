@@ -12,9 +12,9 @@ import { useLibrary } from "@/hooks/useLibrary";
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({
     meta: [
-      { title: "My Subjects — rev.plan" },
+      { title: "My Subjects — RevPlan" },
       { name: "description", content: "Add and manage your GCSE subjects before adding topics to your revision library." },
-      { property: "og:title", content: "My Subjects — rev.plan" },
+      { property: "og:title", content: "My Subjects — RevPlan" },
       { property: "og:description", content: "Add and manage your GCSE subjects before adding topics to your revision library." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

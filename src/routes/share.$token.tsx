@@ -10,15 +10,15 @@ import { planDayDate, sortPlanDays } from "@/lib/plan-dates";
 export const Route = createFileRoute("/share/$token")({
   head: () => ({
     meta: [
-      { title: "Shared revision plan — rev.plan" },
+      { title: "Shared revision plan — RevPlan" },
       {
         name: "description",
-        content: "A week-by-week GCSE revision plan shared from rev.plan.",
+        content: "A week-by-week GCSE revision plan shared from RevPlan.",
       },
-      { property: "og:title", content: "Shared revision plan — rev.plan" },
+      { property: "og:title", content: "Shared revision plan — RevPlan" },
       {
         property: "og:description",
-        content: "A week-by-week GCSE revision plan shared from rev.plan.",
+        content: "A week-by-week GCSE revision plan shared from RevPlan.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -55,7 +55,7 @@ function SharedPlanPage() {
               to="/"
               className="mt-5 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground"
             >
-              Find out about rev.plan
+              Find out about RevPlan
             </Link>
           </div>
         ) : (
@@ -161,7 +161,7 @@ function SharedPlanPage() {
             <p className="mt-12 rounded-[16px] bg-card p-5 text-center text-[13px] font-semibold text-muted-foreground ring-1 ring-black/5">
               Shared from{" "}
               <Link to="/" className="font-extrabold text-primary underline underline-offset-2">
-                rev.plan
+                RevPlan
               </Link>{" "}
               — a topic-focused GCSE revision timetable.
             </p>

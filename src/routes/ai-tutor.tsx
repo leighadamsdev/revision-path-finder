@@ -34,13 +34,13 @@ import {
 export const Route = createFileRoute("/ai-tutor")({
   head: () => ({
     meta: [
-      { title: "Build my AI tutor — rev.plan" },
+      { title: "Build my AI tutor — RevPlan" },
       {
         name: "description",
         content:
           "Fill in a short form to create a prompt that turns ChatGPT, Claude, Gemini or Copilot into your own GCSE tutor.",
       },
-      { property: "og:title", content: "Build my AI tutor — rev.plan" },
+      { property: "og:title", content: "Build my AI tutor — RevPlan" },
       {
         property: "og:description",
         content: "Create your own GCSE AI tutor prompt in a few clicks.",

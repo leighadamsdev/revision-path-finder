@@ -7,13 +7,13 @@ import { HomeSteps } from "@/components/HomeSteps";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "rev.plan — a calm GCSE revision timetable" },
+      { title: "RevPlan — a calm GCSE revision timetable" },
       {
         name: "description",
         content:
-          "Pick your subjects, say how much time you have, and rev.plan builds a week-by-week GCSE revision timetable you can actually follow.",
+          "Pick your subjects, say how much time you have, and RevPlan builds a week-by-week GCSE revision timetable you can actually follow.",
       },
-      { property: "og:title", content: "rev.plan — a calm GCSE revision timetable" },
+      { property: "og:title", content: "RevPlan — a calm GCSE revision timetable" },
       {
         property: "og:description",
         content:
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
 const POINTS = [
   {
     title: "Your subjects and topics",
-    body: "Search for each subject and add the sub-topics you want to focus on. Alternatively upload your school's options booklet and revision guide and let rev.plan draft the list for you.",
+    body: "Search for each subject and add the sub-topics you want to focus on. Alternatively upload your school's options booklet and revision guide and let RevPlan draft the list for you.",
     dot: "bg-maths",
   },
   {
@@ -220,7 +220,7 @@ function PlanMockup() {
         </div>
       </div>
       <p className="mt-3 text-center text-[13px] font-semibold text-muted-foreground">
-        Two sessions a day, one topic each — rate how it went and rev.plan brings weak topics back
+        Two sessions a day, one topic each — rate how it went and RevPlan brings weak topics back
         before exam day.
       </p>
     </div>
@@ -256,7 +256,7 @@ function CheckerMockup() {
         <div className="flex flex-wrap items-center justify-between gap-3 bg-structure px-4 py-3 text-structure-foreground">
           <div>
             <p className="text-[11px] font-extrabold uppercase text-primary">
-              rev.plan · active recall
+              RevPlan · active recall
             </p>
             <p className="mt-0.5 text-[15px] font-extrabold">
               Closed book first. Be honest with the gaps.

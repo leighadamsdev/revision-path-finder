@@ -209,7 +209,7 @@ async function readLink(
   const res = await fetch(url, {
     redirect: "follow",
     headers: {
-      "User-Agent": "rev.plan exam date reader",
+      "User-Agent": "RevPlan exam date reader",
       Accept: "text/html,application/pdf;q=0.9,*/*;q=0.5",
     },
     signal: AbortSignal.timeout(15_000),

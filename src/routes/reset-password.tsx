@@ -9,15 +9,15 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Choose a new password — rev.plan" },
+      { title: "Choose a new password — RevPlan" },
       {
         name: "description",
-        content: "Set a new password for your rev.plan account and get back to your revision plan.",
+        content: "Set a new password for your RevPlan account and get back to your revision plan.",
       },
-      { property: "og:title", content: "Choose a new password — rev.plan" },
+      { property: "og:title", content: "Choose a new password — RevPlan" },
       {
         property: "og:description",
-        content: "Set a new password for your rev.plan account.",
+        content: "Set a new password for your RevPlan account.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

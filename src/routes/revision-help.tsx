@@ -24,20 +24,20 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/revision-help")({
   head: () => ({
     meta: [
-      { title: "Revision Knowledge Checker — active recall guide | rev.plan" },
+      { title: "Revision Knowledge Checker — active recall guide | RevPlan" },
       {
         name: "description",
         content:
-          "Use the rev.plan Knowledge Checker to test what you remember, reveal gaps, and decide what to revise next.",
+          "Use the RevPlan Knowledge Checker to test what you remember, reveal gaps, and decide what to revise next.",
       },
       {
         property: "og:title",
-        content: "Revision Knowledge Checker — active recall guide | rev.plan",
+        content: "Revision Knowledge Checker — active recall guide | RevPlan",
       },
       {
         property: "og:description",
         content:
-          "Use the rev.plan Knowledge Checker to test what you remember, reveal gaps, and decide what to revise next.",
+          "Use the RevPlan Knowledge Checker to test what you remember, reveal gaps, and decide what to revise next.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -124,7 +124,7 @@ function RevisionHelp() {
           <div className="mx-auto max-w-5xl px-5 py-12 sm:py-16">
             <div className="flex flex-wrap items-center gap-2 text-xs font-extrabold uppercase text-checker-mint">
               <span className="rounded-full bg-checker-mint px-3 py-1 text-checker-ink">Year 10 + 11</span>
-              <span>rev.plan Knowledge Checker</span>
+              <span>RevPlan Knowledge Checker</span>
             </div>
             <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-tight sm:text-6xl">
               Find the gaps before the exam does.

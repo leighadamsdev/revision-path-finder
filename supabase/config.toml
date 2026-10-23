@@ -1,1 +1,5 @@
 project_id = "scwquwpolpvouihnuiby"
+
+[functions.weekly-summary]
+# Called by the Sunday schedule (no user) and by signed-in students; it checks tokens itself.
+verify_jwt = false

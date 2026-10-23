@@ -160,3 +160,34 @@ export async function needsOnboarding(userId: string) {
 export function topicText(topic: LibTopic) {
   return topic.items.length ? `${topic.title}: ${topic.items.map((i) => i.title).join(", ")}` : topic.title;
 }
+
+/** Separates a topic from its sub-topic in plan and rating keys ("Number › Standard form"). */
+export const TOPIC_SUB_SEP = " › ";
+
+/**
+ * The rateable, plannable lines for a library topic: one per content item
+ * ("Number › Standard form"), or just the title when it has no items.
+ */
+export function topicLines(topic: LibTopic): string[] {
+  return topic.items.length
+    ? topic.items.map((i) => `${topic.title}${TOPIC_SUB_SEP}${i.title}`)
+    : [topic.title];
+}
+
+/**
+ * Before topics were split into sub-topics, a whole library topic was rated under its
+ * `topicText` key. Fills each sub-topic line that has no rating of its own from that
+ * older whole-topic rating, so earlier ratings aren't lost.
+ */
+export function withWholeTopicRatings<T extends number | null>(
+  ratings: Record<string, T>,
+  topics: LibTopic[],
+): Record<string, T> {
+  const out = { ...ratings };
+  for (const t of topics) {
+    const whole = ratings[topicText(t)];
+    if (whole == null || !t.items.length) continue;
+    for (const line of topicLines(t)) if (out[line] == null) out[line] = whole;
+  }
+  return out;
+}

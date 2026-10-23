@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
+import { Upload } from "lucide-react";
 import { toast } from "sonner";
+
+import { ReadingProgress } from "@/components/ReadingProgress";
 
 import { extractExamDates } from "@/lib/revision.functions";
 import { MAX_EXAM_DATES } from "@/lib/exam-dates";
@@ -28,8 +31,7 @@ export function ExamDateUpload({
     const exact = subjects.find((subject) => subject.toLowerCase() === clean);
     if (exact) return exact;
     const partial = subjects.find(
-      (subject) =>
-        clean.includes(subject.toLowerCase()) || subject.toLowerCase().includes(clean),
+      (subject) => clean.includes(subject.toLowerCase()) || subject.toLowerCase().includes(clean),
     );
     return partial ?? "";
   }
@@ -63,7 +65,9 @@ export function ExamDateUpload({
         return;
       }
       setRows(matched);
-      toast.success(`Found ${matched.length} exam${matched.length === 1 ? "" : "s"} — check them below.`);
+      toast.success(
+        `Found ${matched.length} exam${matched.length === 1 ? "" : "s"} — check them below.`,
+      );
     } catch (error) {
       console.error(error);
       toast.error("We couldn't read that timetable. Try a clearer file or add the dates by hand.");
@@ -97,24 +101,32 @@ export function ExamDateUpload({
         Got your exam timetable?
       </p>
       <p className="mt-1 text-[12px] font-medium text-muted-foreground">
-        Upload it and we'll read the dates out for you to check. You can always type or change
-        dates yourself.
+        Upload it and we'll read the dates out for you to check. You can always type or change dates
+        yourself.
       </p>
-      <input
-        type="file"
-        accept="application/pdf,image/*"
-        disabled={reading}
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) void read(file);
-          event.target.value = "";
-        }}
-        className="mt-2 block w-full text-[12px] font-bold text-muted-foreground"
-      />
+      <label
+        className={`mt-2 inline-flex cursor-pointer items-center gap-2 rounded-full bg-card px-3.5 py-2 text-[12px] font-bold ring-1 ring-border hover:bg-secondary focus-within:ring-2 focus-within:ring-primary ${
+          reading ? "pointer-events-none opacity-60" : ""
+        }`}
+      >
+        <Upload className="size-4" aria-hidden="true" />
+        Upload a photo or PDF
+        <input
+          type="file"
+          accept="application/pdf,image/*"
+          disabled={reading}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void read(file);
+            event.target.value = "";
+          }}
+          className="sr-only"
+        />
+      </label>
       {reading ? (
-        <p className="mt-1 text-[12px] font-bold text-muted-foreground">
-          Reading your timetable…
-        </p>
+        <div className="mt-2">
+          <ReadingProgress what="timetable" />
+        </div>
       ) : null}
 
       {rows.length ? (

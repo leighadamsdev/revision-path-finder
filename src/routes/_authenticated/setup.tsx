@@ -38,7 +38,7 @@ import { AppShell } from "@/components/AppShell";
 import { useActivePlan } from "@/hooks/useActivePlan";
 import { useLibrary } from "@/hooks/useLibrary";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
-import { topicText as libraryTopicText, addSubject as addLibrarySubject, updateSubject as updateLibrarySubject, saveTopics as saveLibraryTopics, newKey } from "@/lib/library";
+import { topicLines as libraryTopicLines, withWholeTopicRatings, addSubject as addLibrarySubject, updateSubject as updateLibrarySubject, saveTopics as saveLibraryTopics, newKey } from "@/lib/library";
 import { EditableTopicList, SUB_SEP, isSub, subLabel } from "@/components/planner/EditableTopicList";
 import { fetchExcludedTopics, saveExcludedTopics } from "@/lib/plan";
 
@@ -142,10 +142,12 @@ function SetupPage() {
   const subjectsQuery = useQuery({ queryKey: ["subjects"], queryFn: fetchSubjects });
   const subjects = subjectsQuery.data ?? [];
   const library = useLibrary();
-  /** Library topics for a subject name (matched by name), as "Title: items" lines. */
+  function librarySubject(subjectName: string) {
+    return library.subjects.find((x) => x.name.trim().toLowerCase() === subjectName.trim().toLowerCase());
+  }
+  /** Library topics for a subject name, one line per sub-topic ("Number › Standard form"). */
   function libraryOptions(subjectName: string): string[] {
-    const s = library.subjects.find((x) => x.name.trim().toLowerCase() === subjectName.trim().toLowerCase());
-    return (s?.topics ?? []).map(libraryTopicText);
+    return (librarySubject(subjectName)?.topics ?? []).flatMap(libraryTopicLines);
   }
 
   const routeSearch = Route.useSearch();
@@ -195,7 +197,10 @@ function SetupPage() {
   /** Ratings saved on "Rate my topics"; ones given here take priority. */
   const savedRatings = useTopicRatings();
   const ratingsFor = (subjectName: string): Record<string, number | null> => ({
-    ...(savedRatings.ratings[subjectName] ?? {}),
+    ...withWholeTopicRatings<number | null>(
+      savedRatings.ratings[subjectName] ?? {},
+      librarySubject(subjectName)?.topics ?? [],
+    ),
     ...(topicRatings[subjectName] ?? {}),
   });
   const [topicRatings, setTopicRatings] = useState<Record<string, Record<string, number | null>>>(
@@ -855,7 +860,7 @@ function SetupPage() {
     }
     return out.sort((a, b) => b.score - a.score);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [picks, examDates, topicRatings, savedRatings.ratings, chosen, source, manualText]);
+  }, [picks, examDates, topicRatings, savedRatings.ratings, library.subjects, chosen, source, manualText]);
 
   function openPriorities() {
     setCheckState(ranked.some((r) => r.rating != null) ? "done" : "skipped");

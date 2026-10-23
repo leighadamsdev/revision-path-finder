@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, ChevronDown, ChevronRight, Crop as CropIcon, RotateCcw, RotateCw, Upload, Undo2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
+import { ReadingProgress } from "@/components/ReadingProgress";
 import { toast } from "sonner";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -179,6 +180,7 @@ export function ImportPanel({
               <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button onClick={() => void runExtract()} disabled={busy}>{busy ? "Reading your page…" : "Extract Topics"}</Button>
             </div>
+            {busy ? <ReadingProgress /> : null}
           </div>
         ) : null}
 
@@ -267,3 +269,4 @@ function CropBox({ src, active, onCrop }: { src: string; active: boolean; onCrop
     </div>
   );
 }
+

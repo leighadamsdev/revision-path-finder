@@ -472,8 +472,16 @@ function EditPlanPage() {
 
                   <div className="mt-3">
                     <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                      Exam dates (up to 3)
+                      Exam dates used for planning
                     </span>
+                    <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">
+                      Your first, middle and last papers set the pace of your plan. See every paper
+                      and add mocks on your{" "}
+                      <Link to="/exams" className="font-bold underline">
+                        exam timetable
+                      </Link>
+                      .
+                    </p>
                     <div className="mt-1">
                       <ExamDatesField
                         dates={row.examDates}

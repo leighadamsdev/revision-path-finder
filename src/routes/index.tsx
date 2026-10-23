@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { LogoOnDark } from "@/components/Logo";
 import { PublicHeader } from "@/components/PublicHeader";
 import { HomeSteps } from "@/components/HomeSteps";
+import { BandChip } from "@/components/BandChip";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -96,7 +97,7 @@ const MOCK_WEEK = [
         subject: "Maths",
         color: "maths",
         topic: "Quadratic equations — solving by factorising",
-        confidence: 4,
+        confidence: 5,
         gaps: "Mixed up the negative case — redo Q7–Q9.",
       },
       {
@@ -116,14 +117,14 @@ const MOCK_WEEK = [
         subject: "Biology",
         color: "sci",
         topic: "Cell division — mitosis and stem cells",
-        confidence: 2,
+        confidence: 1,
         gaps: "Can't remember the stages in order.",
       },
       {
         subject: "History",
         color: "hist",
         topic: "Weimar Germany — hyperinflation and recovery",
-        confidence: 4,
+        confidence: 3,
         gaps: null,
       },
     ],
@@ -137,18 +138,6 @@ const SUBJECT_STYLES: Record<string, { tag: string; dot: string; fill: string }>
   hist: { tag: "bg-hist/10 text-hist", dot: "bg-hist", fill: "bg-hist" },
 };
 
-function ConfidenceDots({ value, fill }: { value: number; fill: string }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      {[1, 2, 3, 4, 5].map((v) => (
-        <span
-          key={v}
-          className={`size-4 rounded-full ${value >= v ? fill : "ring-1 ring-border"}`}
-        />
-      ))}
-    </div>
-  );
-}
 
 function PlanMockup() {
   return (
@@ -206,7 +195,7 @@ function PlanMockup() {
                         <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                           Confidence
                         </span>
-                        <ConfidenceDots value={session.confidence} fill={style.fill} />
+                        <BandChip value={session.confidence} />
                       </div>
                       <p className="mt-2 rounded-[10px] bg-card px-3 py-1.5 text-[12px] font-medium text-muted-foreground ring-1 ring-border">
                         {session.gaps ?? "Gaps to revisit…"}

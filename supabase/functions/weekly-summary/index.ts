@@ -298,6 +298,9 @@ async function weeklyRun(db: SupabaseClient, force: boolean) {
   if (!force && !(now.weekday === "Sunday" && now.hour >= 18 && now.hour < 23)) {
     return json({ skipped: "Not Sunday evening in the UK yet." });
   }
+  if (!RESEND_API_KEY || !DIGEST_FROM) {
+    return json({ skipped: "Email isn't set up yet: add RESEND_API_KEY and DIGEST_FROM." });
+  }
   const sixDaysAgo = new Date(Date.now() - 6 * 86_400_000).toISOString();
   const { data: profiles, error } = await db
     .from("profiles")

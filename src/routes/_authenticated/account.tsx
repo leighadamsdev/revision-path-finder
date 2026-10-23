@@ -101,8 +101,9 @@ function AccountPage() {
             <span>
               <span className="block text-[13px] font-extrabold">Weekly summary email</span>
               <span className="block text-[12px] font-medium text-muted-foreground">
-                Sessions done vs planned, mastery per subject and exam countdown — sent to you, and to
-                your parent email if you've added one.
+                Every Sunday at 6pm: sessions ticked off, knowledge checkers, topics rated, mocks
+                added and your exam countdown. Sent to you, and to your parent or carer if you've
+                added their email.
               </span>
             </span>
           </label>
@@ -110,7 +111,64 @@ function AccountPage() {
             {saving ? "Saving…" : "Save"}
           </Button>
         </div>
+        <WeeklySummaryPreview />
       </div>
     </AppShell>
+  );
+}
+
+/** Shows this week's summary email as it would arrive, and can send a test copy. */
+function WeeklySummaryPreview() {
+  const [preview, setPreview] = useState<{ subject: string; html: string } | null>(null);
+  const [busy, setBusy] = useState<"preview" | "test" | null>(null);
+
+  async function run(mode: "preview" | "test") {
+    setBusy(mode);
+    const { data, error } = await supabase.functions.invoke("weekly-summary", { body: { mode } });
+    setBusy(null);
+    const message = (data as { error?: string } | null)?.error;
+    if (error || message) {
+      let detail = message;
+      if (!detail && error && "context" in error) {
+        try {
+          detail = ((await (error as { context: Response }).context.json()) as { error?: string }).error;
+        } catch {
+          /* no body */
+        }
+      }
+      toast.error(detail ?? "The weekly summary isn't available yet. Please try again later.");
+      return;
+    }
+    if (mode === "preview") setPreview(data as { subject: string; html: string });
+    else toast.success(`Sent to ${(data as { sent: string }).sent}. Check your inbox (and spam).`);
+  }
+
+  return (
+    <div className="mt-5 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+      <h2 className="text-sm font-extrabold">Your weekly summary</h2>
+      <p className="mt-1 text-[12px] font-medium text-muted-foreground">
+        See what this week's email says so far. It updates as you tick off sessions, use the
+        Knowledge Checker and rate topics.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => void run("preview")} disabled={busy !== null}>
+          {busy === "preview" ? "Loading…" : preview ? "Refresh preview" : "Preview this week's email"}
+        </Button>
+        <Button variant="ghost" onClick={() => void run("test")} disabled={busy !== null}>
+          {busy === "test" ? "Sending…" : "Email me a test"}
+        </Button>
+      </div>
+      {preview ? (
+        <div className="mt-4">
+          <p className="text-[12px] font-bold text-muted-foreground">Subject: {preview.subject}</p>
+          <iframe
+            title="Weekly summary email preview"
+            srcDoc={preview.html}
+            sandbox=""
+            className="mt-2 h-[640px] w-full rounded-[12px] ring-1 ring-border"
+          />
+        </div>
+      ) : null}
+    </div>
   );
 }

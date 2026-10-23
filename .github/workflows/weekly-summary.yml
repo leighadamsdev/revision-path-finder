@@ -1,0 +1,22 @@
+# Sends the RevPlan weekly summary emails at 6pm UK time on Sundays.
+# GitHub schedules run in UTC, so this calls at 17:05 and 18:05 UTC; the function itself
+# only sends once it is 6pm or later in the UK, and never more than once a week per student.
+name: Weekly summary emails
+
+on:
+  schedule:
+    - cron: "5 17 * * 0"
+    - cron: "5 18 * * 0"
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the weekly-summary function
+        run: |
+          curl --fail-with-body -sS -X POST \
+            "https://scwquwpolpvouihnuiby.supabase.co/functions/v1/weekly-summary" \
+            -H "apikey: sb_publishable_UhVAGU_0EIyLgIlU2YlDPQ_lSASsqk8" \
+            -H "Content-Type: application/json" \
+            -d '{}'

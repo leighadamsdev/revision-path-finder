@@ -1141,68 +1141,22 @@ export const SUBJECT_TOPICS: Record<string, SubjectUnit[]> = {
   ],
   "English Language": [
     {
-      unit: "Critical Reading & Comprehension (50% Weighting)",
+      unit: "Reading",
       elements: [
-        {
-          label: "Explicit & Implicit Meanings (AO1)",
-          detail:
-            "Identifying facts, interpreting inferred meanings, and synthesising information from across single or multiple unseen texts (19th, 20th, and 21st centuries).",
-        },
-        {
-          label: "Language Analysis (AO2)",
-          detail:
-            "Analysing writers' choices of vocabulary, grammatical structures, and literary/rhetorical devices using precise subject terminology.",
-        },
-        {
-          label: "Structural Analysis (AO2)",
-          detail:
-            "Evaluating narrative perspectives, sentence pacing, focus shifts, chronological developments, and structural cohesion.",
-        },
-        {
-          label: "Comparative Analysis (AO3)",
-          detail:
-            "Comparing perspectives, ideas, and thematic conveyance across two contrasting texts.",
-        },
-        {
-          label: "Critical Evaluation (AO4)",
-          detail:
-            "Formulating evaluative judgements on a text's effectiveness and impact, supported by embedded textual evidence.",
-        },
+        { label: "Finding and interpreting information", detail: "Picking out facts and working out what is suggested, across fiction and non-fiction from the 19th to 21st centuries." },
+        { label: "Language analysis", detail: "How writers use words, phrases, techniques and sentence forms, named with the right terms." },
+        { label: "Structure analysis", detail: "How texts are organised: openings, shifts in focus, pace and endings." },
+        { label: "Comparing texts", detail: "Comparing writers' ideas, viewpoints and methods across two texts." },
+        { label: "Evaluating texts", detail: "Giving a critical view of a text, backed by evidence." },
       ],
     },
     {
-      unit: "Writing (50% Weighting)",
+      unit: "Writing",
       elements: [
-        {
-          label: "Audience, Purpose & Register (AO5)",
-          detail:
-            "Adapting tone and form for transactional tasks (letters, articles, speeches, essays) and creative tasks (descriptive or narrative writing).",
-        },
-        {
-          label: "Structural Organization (AO5)",
-          detail:
-            "Crafting paragraphs, cohesive discourse markers, transitions, and structural progression across an entire text.",
-        },
-        {
-          label: "Technical Accuracy (AO6 - 20% of qualification)",
-          detail:
-            "Using accurate punctuation (colons, semi-colons, dashes, brackets), varied sentence structures, spelling, and standard English vocabulary.",
-        },
-      ],
-    },
-    {
-      unit: "Spoken Language Endorsement (Unweighted / Graded Separately)",
-      elements: [
-        {
-          label: "Presentation & Delivery (AO7/AO9)",
-          detail:
-            "Delivering a formal spoken presentation using Standard English and persuasive rhetoric.",
-        },
-        {
-          label: "Listening & Discussion (AO8)",
-          detail:
-            "Responding appropriately to questions, feedback, and challenges from an audience.",
-        },
+        { label: "Descriptive and narrative writing", detail: "Imaginative writing with vivid detail and a clear structure." },
+        { label: "Writing to argue and persuade", detail: "Putting across a viewpoint convincingly for a given audience and purpose." },
+        { label: "Organising your writing", detail: "Paragraphs, linking ideas and structuring a whole piece." },
+        { label: "Spelling, punctuation and grammar", detail: "Accurate writing with varied sentences and ambitious vocabulary." },
       ],
     },
   ],

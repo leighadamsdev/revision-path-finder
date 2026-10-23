@@ -126,7 +126,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-extrabold">{s.name}</p>
                 <p className="text-[12px] font-medium text-muted-foreground">
-                  {[s.exam_board, s.qualification_level].filter(Boolean).join(" · ") || "No exam board added"} — {s.topics.length} Topics, {items} content items
+                  {[s.exam_board, s.qualification_level].filter(Boolean).join(" · ") || "No exam board added"} — {s.topics.length} {s.topics.length === 1 ? "Topic" : "Topics"}, {items} content {items === 1 ? "item" : "items"}
                 </p>
               </div>
             </div>

@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { Check, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 
@@ -45,6 +45,9 @@ import { fetchExcludedTopics, saveExcludedTopics } from "@/lib/plan";
 import { JourneyProgress, SubjectConfidence, type JourneyStatus } from "@/components/planner/JourneyProgress";
 import { daysToNextExam, priorityScore } from "@/lib/scheduling";
 
+
+/** Longest plan allowed: a full school year. */
+const MAX_WEEKS = 52;
 
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({
@@ -212,6 +215,8 @@ function SetupPage() {
   const nameError = !trimmedName ? "Give this plan a name so you can tell your plans apart." : nameTaken ? "You already have a plan with this name — choose a different one." : null;
   const [startDate, setStartDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [weeks, setWeeks] = useState(6);
+  /** True until the student moves the slider: weeks then follow their exam dates. */
+  const [weeksAuto, setWeeksAuto] = useState(true);
   const [dayConfigs, setDayConfigs] = useState<Record<string, DayConfig>>({
     Monday: { ...DEFAULT_DAY },
     Tuesday: { ...DEFAULT_DAY },
@@ -262,6 +267,7 @@ function SetupPage() {
         setName(routeSearch.mode === "copy" ? `Copy of ${p.name}` : p.name);
         setStartDate(p.start_date);
         setWeeks(p.weeks);
+        setWeeksAuto(false);
         const dp = p.day_plan?.length ? p.day_plan : p.study_days.map((day) => ({ day, sessions: p.sessions_per_day, minutes: p.session_length_minutes }));
         setDayConfigs(Object.fromEntries(dp.map((d) => [d.day, { sessions: d.sessions, minutes: d.minutes }])));
         setHolidays(p.holiday_periods ?? []);
@@ -305,6 +311,7 @@ function SetupPage() {
       if (d.dayConfigs) setDayConfigs(d.dayConfigs);
        if (d.startDate) setStartDate(d.startDate);
       if (d.weeks) setWeeks(d.weeks);
+      if (d.weeksAuto === false) setWeeksAuto(false);
       if (d.name) setName(d.name);
       if (d.holidays) setHolidays(d.holidays);
       if (d.intensity !== undefined) setIntensity(d.intensity);
@@ -323,14 +330,14 @@ function SetupPage() {
 
   useEffect(() => {
     if (!user || !restored || fromId) return;
-    const d = { picks, chosen, source, manualText, uploaded, examDates, boards, variants, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step };
+    const d = { picks, chosen, source, manualText, uploaded, examDates, boards, variants, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, weeksAuto, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step };
     window.localStorage.setItem(DRAFT_KEY + user.id, JSON.stringify(d));
     // Also save to the student's account (debounced) so it resumes on any device.
     const t = setTimeout(() => {
       void supabase.from("setup_drafts").upsert({ user_id: user.id, data: d as never, updated_at: new Date().toISOString() });
     }, 1200);
     return () => clearTimeout(t);
-  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, boards, variants, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step]);
+  }, [user, restored, picks, chosen, source, manualText, uploaded, examDates, boards, variants, confidences, topicRatings, priorities, dayConfigs, startDate, weeks, weeksAuto, name, holidays, intensity, checkState, topicsVisited, order, excluded, excludedSubjects, step]);
 
   const studyDays = useMemo(
     () => WEEK_DAYS.filter((d) => dayConfigs[d]).map((d) => d as string),
@@ -461,6 +468,21 @@ function SetupPage() {
     setPicks((prev) => [...prev, { name: trimmed, tier: null }]);
     setCustomName("");
   }
+
+  /**
+   * Subjects with topics already in My Topics start on that list with every topic ticked,
+   * so a student who chose their topics earlier doesn't have to pick them again here.
+   */
+  useEffect(() => {
+    if (library.isLoading) return;
+    const fresh = picks.filter(
+      (p) => source[p.name] === undefined && chosen[p.name] === undefined && libraryOptions(p.name).length > 0,
+    );
+    if (!fresh.length) return;
+    setSource((prev) => ({ ...prev, ...Object.fromEntries(fresh.map((p) => [p.name, "library" as TopicSource])) }));
+    setChosen((prev) => ({ ...prev, ...Object.fromEntries(fresh.map((p) => [p.name, libraryOptions(p.name)])) }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picks, library.isLoading, library.subjects, source, chosen]);
 
   function toggleTopic(subjectName: string, label: string) {
     setChosen((prev) => {
@@ -783,6 +805,21 @@ function SetupPage() {
   const missingTiers = picks.filter((p) => isTiered(p.name) && !p.tier).length;
   const holidayError = holidays.some((holiday) => holiday.start && holiday.end && holiday.end < holiday.start);
   const missingConfidence = picks.filter((p) => confidences[p.name] == null).map((p) => p.name);
+  /** Weeks from the start date to the student's last exam, so the plan covers every paper. */
+  const weeksToLastExam = useMemo(() => {
+    const last = picks
+      .flatMap((p) => examDates[p.name] ?? [])
+      .filter(Boolean)
+      .sort()
+      .pop();
+    if (!last || !startDate) return 0;
+    const days = differenceInCalendarDays(parseISO(last), parseISO(startDate));
+    return days > 0 ? Math.ceil(days / 7) : 0;
+  }, [picks, examDates, startDate]);
+  useEffect(() => {
+    if (weeksAuto && weeksToLastExam > 0) setWeeks(Math.min(weeksToLastExam, MAX_WEEKS));
+  }, [weeksAuto, weeksToLastExam]);
+
   const readyForPlan = !nameError && picks.length > 0 && missingTiers === 0 && studyDays.length > 0 && weeks > 0 && Boolean(startDate) && !holidayError && missingConfidence.length === 0;
   const totalSessions =
     weeks * studyDays.reduce((sum, day) => sum + (dayConfigs[day]?.sessions ?? 0), 0);
@@ -1395,11 +1432,30 @@ function SetupPage() {
                 <input
                   type="range"
                   min={1}
-                  max={26}
+                  max={MAX_WEEKS}
                   value={weeks}
-                  onChange={(e) => setWeeks(Number(e.target.value))}
+                  onChange={(e) => {
+                    setWeeks(Number(e.target.value));
+                    setWeeksAuto(false);
+                  }}
                   className="mt-2 w-full accent-maths"
                 />
+                {weeksToLastExam > 0 ? (
+                  <span className="mt-1 block text-[12px] font-medium text-muted-foreground">
+                    {weeksAuto || weeks === Math.min(weeksToLastExam, MAX_WEEKS)
+                      ? `Set from your exam dates: your last exam is ${weeksToLastExam} week${weeksToLastExam === 1 ? "" : "s"} away.`
+                      : `Your last exam is ${weeksToLastExam} week${weeksToLastExam === 1 ? "" : "s"} away. `}
+                    {!weeksAuto && weeks !== Math.min(weeksToLastExam, MAX_WEEKS) ? (
+                      <button
+                        type="button"
+                        className="font-bold underline"
+                        onClick={() => setWeeksAuto(true)}
+                      >
+                        Match my exams
+                      </button>
+                    ) : null}
+                  </span>
+                ) : null}
               </label>
 
               <div className="mt-4">
@@ -1590,7 +1646,7 @@ function SetupPage() {
                   <Row
                     key={p.name}
                     label={`${p.name}${p.tier ? ` (${p.tier})` : ""}`}
-                    value={`${confidences[p.name] == null ? "Confidence not set" : (confidences[p.name] ?? 0) <= 2 ? "Red confidence" : (confidences[p.name] ?? 0) <= 4 ? "Amber confidence" : "Green confidence"} · ${(examDates[p.name] ?? []).filter(Boolean).length ? `${(examDates[p.name] ?? []).filter(Boolean).length} exam date(s)` : "No exam date yet"}`}
+                    value={`${confidences[p.name] == null ? "Confidence not set" : (confidences[p.name] ?? 0) <= 2 ? "Red confidence" : (confidences[p.name] ?? 0) <= 4 ? "Amber confidence" : "Green confidence"} · ${(examDates[p.name] ?? []).filter(Boolean).length ? `${(examDates[p.name] ?? []).filter(Boolean).length} exam date${(examDates[p.name] ?? []).filter(Boolean).length === 1 ? "" : "s"}` : "No exam date yet"}`}
                   />
                 ))}
                 <Row label="Study days" value={studyDays.length ? studyDays.join(", ") : "None"} />

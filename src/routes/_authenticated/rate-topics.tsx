@@ -94,7 +94,7 @@ function redTopics(
       const label = r.label.trim();
       if (!v || v > 2 || seen.has(label.toLowerCase())) continue;
       seen.add(label.toLowerCase());
-      out.push(label);
+      out.push(kind === "library" && r.detail ? `${label}: ${r.detail}` : label);
     }
   }
   return out;

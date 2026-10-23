@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   useActivePlan,
+  useExams,
   usePlanSessions,
   usePlanSubjects,
   usePlanTopics,
@@ -87,6 +88,7 @@ function TimetablePage() {
   const topicsQuery = usePlanTopics(plan?.id);
   const sessionsQuery = usePlanSessions(plan?.id);
   const cardsQuery = useFlashcards(plan?.id);
+  const planExams = useExams(plan?.id).data;
   const subtopicsQuery = useSubtopics(plan?.id);
   const cards = cardsQuery.data ?? [];
   const subtopics = subtopicsQuery.data ?? [];
@@ -278,7 +280,7 @@ function TimetablePage() {
         </div>
       </div>
 
-      <ExamCountdown subjects={subjects} />
+      <ExamCountdown subjects={subjects} exams={planExams} />
 
       <MasteryStrip subjects={subjects} topics={topics} subtopics={subtopics} cards={cards} />
 

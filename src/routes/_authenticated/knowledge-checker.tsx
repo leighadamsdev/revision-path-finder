@@ -21,7 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
 import { FocusSound } from "@/components/FocusSound";
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
-import { topicText } from "@/lib/library";
+import { TOPIC_SUB_SEP, withWholeTopicRatings } from "@/lib/library";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { BandLegend } from "@/components/BandChip";
@@ -200,15 +200,13 @@ function KnowledgeCheckerPage() {
       .filter((t) => t.items.length);
     if (!topics.length) return;
     // Rate with the same wording plans use, so ratings carry into "Rate my topics" and plans.
-    const libTopics = library.subjects.find((s) => s.id === libSubject.id)?.topics ?? [];
     setRateTargets({
       subject: libSubject.name,
       items:
         libSubject.source === "library"
-          ? topics.flatMap((t) => {
-              const full = libTopics.find((lt) => lt.id === t.id);
-              return full ? [{ key: topicText(full), label: t.title }] : [];
-            })
+          ? topics.flatMap((t) =>
+              t.items.map((i) => ({ key: `${t.title}${TOPIC_SUB_SEP}${i.title}`, label: i.title })),
+            )
           : topics.flatMap((t) =>
               t.items.map((i) => ({
                 key: libSubject.source === "dfe" ? detailedTopicText(libSubject.name, i.title) : i.title,
@@ -680,7 +678,12 @@ function KnowledgeCheckerPage() {
                   <ConfidencePicker
                     size="sm"
                     label={item.label}
-                    value={topicRatings.ratings[rateTargets.subject]?.[item.key] ?? null}
+                    value={
+                      withWholeTopicRatings(
+                        topicRatings.ratings[rateTargets.subject] ?? {},
+                        library.subjects.find((s) => s.name === rateTargets.subject)?.topics ?? [],
+                      )[item.key] ?? null
+                    }
                     onChange={(v) => void topicRatings.rate(rateTargets.subject, item.key, v).catch(() => undefined)}
                   />
                 </li>

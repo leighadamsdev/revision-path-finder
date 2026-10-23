@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { fileToImage, renderPrepared } from "@/components/library/image-prep";
 import { extractExamDates } from "@/lib/revision.functions";
 import { readAsDataUrl, textFromFile } from "@/lib/read-document";
+import { ReadingProgress } from "@/components/ReadingProgress";
 
 type Source = "link" | "photo" | "file" | "paste";
 type Found = { subject: string; date: string; paper: string; subjectId: string; keep: boolean };
@@ -278,9 +279,9 @@ export function MockExamImport({
         ) : null}
 
         {reading ? (
-          <p className="mt-2 text-[12px] font-bold text-muted-foreground">
-            Reading your mock timetable…
-          </p>
+          <div className="mt-2">
+            <ReadingProgress what="mock timetable" />
+          </div>
         ) : null}
       </div>
 

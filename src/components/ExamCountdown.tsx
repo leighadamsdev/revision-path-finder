@@ -1,26 +1,45 @@
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { Check } from "lucide-react";
 
+import type { Exam } from "@/lib/exams";
 import type { PlanSubject } from "@/lib/plan";
 import { subjectStyle } from "@/lib/subjects";
 
 /** Countdown that changes from a subject's colour through amber to red in the final three days. */
-export function ExamCountdown({ subjects }: { subjects: PlanSubject[] }) {
+export function ExamCountdown({
+  subjects,
+  exams,
+}: {
+  subjects: PlanSubject[];
+  /** Every paper and mock from the exam timetable; preferred over the plan's 3 dates per subject. */
+  exams?: Exam[] | undefined;
+}) {
   const today = new Date();
-  const dated = subjects
-    .flatMap((subject) =>
-      subject.exam_dates.map((value, index) => {
-        const date = parseISO(value);
-        return {
-          key: `${subject.id}-${index}`,
-          subject,
-          paper: subject.exam_dates.length > 1 ? `Paper ${index + 1}` : null,
-          date,
-          days: differenceInCalendarDays(date, today),
-        };
-      }),
-    )
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  const fromTimetable = (exams ?? []).flatMap((exam) => {
+    const subject = subjects.find((s) => s.id === exam.subject_id);
+    if (!subject || !exam.exam_date) return [];
+    const sameSubject = (exams ?? []).filter((e) => e.subject_id === exam.subject_id);
+    const name = exam.label?.trim() || (sameSubject.length > 1 ? `Paper ${exam.paper_no}` : "");
+    const paper = [exam.kind === "mock" ? "Mock" : "", name].filter(Boolean).join(" ") || null;
+    const date = parseISO(exam.exam_date);
+    return [{ key: exam.id, subject, paper, date, days: differenceInCalendarDays(date, today) }];
+  });
+  const dated = (
+    fromTimetable.length
+      ? fromTimetable
+      : subjects.flatMap((subject) =>
+          subject.exam_dates.map((value, index) => {
+            const date = parseISO(value);
+            return {
+              key: `${subject.id}-${index}`,
+              subject,
+              paper: subject.exam_dates.length > 1 ? `Paper ${index + 1}` : null,
+              date,
+              days: differenceInCalendarDays(date, today),
+            };
+          }),
+        )
+  ).sort((a, b) => a.date.getTime() - b.date.getTime());
 
   if (dated.length === 0) return null;
 
@@ -38,7 +57,11 @@ export function ExamCountdown({ subjects }: { subjects: PlanSubject[] }) {
           const sat = days < 0;
           const urgent = days >= 0 && days <= 3;
           const approaching = days > 3 && days <= 14;
-          const urgencyText = urgent ? "text-exam-imminent" : approaching ? "text-conf-mid" : style.text;
+          const urgencyText = urgent
+            ? "text-exam-imminent"
+            : approaching
+              ? "text-conf-mid"
+              : style.text;
           const urgencyDot = urgent ? "bg-exam-imminent" : approaching ? "bg-conf-mid" : style.dot;
           const urgencySurface = urgent
             ? "bg-exam-imminent/10 ring-exam-imminent/35"

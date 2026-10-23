@@ -11,7 +11,7 @@ import { useLibrary } from "@/hooks/useLibrary";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { GCSE_SUBJECTS, catalogueSubject } from "@/lib/gcse-subjects";
 import { detailedTopicText, subjectUnits } from "@/lib/gcse-topics";
-import { topicText, type LibSubject } from "@/lib/library";
+import { TOPIC_SUB_SEP, topicLines, withWholeTopicRatings, type LibSubject } from "@/lib/library";
 import { specUnits } from "@/lib/spec-topics";
 import { subjectStyle } from "@/lib/subjects";
 import { ratingsAreLocalOnly } from "@/lib/topic-ratings";
@@ -58,16 +58,16 @@ function listsFor(name: string, lib: LibSubject | undefined): ListKind[] {
 
 function groupsFor(name: string, kind: ListKind, lib: LibSubject | undefined): RateGroup[] {
   if (kind === "library") {
-    return [
-      {
-        heading: null,
-        rows: (lib?.topics ?? []).map((t) => ({
-          key: topicText(t),
-          label: t.title,
-          detail: t.items.map((i) => i.title).join(", "),
-        })),
-      },
-    ];
+    // One row per sub-topic, grouped under its topic, so "Number" isn't rated as one block.
+    return (lib?.topics ?? []).map((t) => ({
+      heading: t.items.length ? t.title : null,
+      rows: topicLines(t).map((line) => ({
+        key: line,
+        label: line.includes(TOPIC_SUB_SEP)
+          ? line.slice(line.indexOf(TOPIC_SUB_SEP) + TOPIC_SUB_SEP.length)
+          : line,
+      })),
+    }));
   }
   const units = kind === "spec" ? specUnits(name) : subjectUnits(name);
   return units.map((u) => ({
@@ -84,7 +84,7 @@ function groupsFor(name: string, kind: ListKind, lib: LibSubject | undefined): R
 function redTopics(
   name: string,
   lib: LibSubject | undefined,
-  mine: Record<string, number>,
+  mine: Record<string, number | null>,
 ): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -94,7 +94,7 @@ function redTopics(
       const label = r.label.trim();
       if (!v || v > 2 || seen.has(label.toLowerCase())) continue;
       seen.add(label.toLowerCase());
-      out.push(kind === "library" && r.detail ? `${label}: ${r.detail}` : label);
+      out.push(kind === "library" ? r.key : label);
     }
   }
   return out;
@@ -158,7 +158,7 @@ function RateTopicsPage() {
             const kind = list[name] && kinds.includes(list[name]!) ? list[name]! : kinds[0];
             const groups = kind ? groupsFor(name, kind, lib) : [];
             const rows = groups.flatMap((g) => g.rows);
-            const mine = ratings[name] ?? {};
+            const mine = withWholeTopicRatings(ratings[name] ?? {}, lib?.topics ?? []);
             const count = { red: 0, amber: 0, green: 0 };
             for (const r of rows) {
               const v = mine[r.key];

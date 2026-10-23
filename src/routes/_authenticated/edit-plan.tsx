@@ -321,7 +321,7 @@ function EditPlanPage() {
             <input
               type="range"
               min={1}
-              max={26}
+              max={52}
               value={weeks}
               onChange={(event) => setWeeks(Number(event.target.value))}
               className="mt-2 w-full accent-maths"

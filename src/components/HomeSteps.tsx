@@ -1,13 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, RefreshCw } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan, useExams, usePlanTopics } from "@/hooks/useActivePlan";
 import { useLibrary } from "@/hooks/useLibrary";
+import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { supabase } from "@/integrations/supabase/client";
 
-type To = "/library" | "/exams" | "/topics" | "/knowledge-checker" | "/setup" | "/plan";
+type To =
+  "/library" | "/exams" | "/topics" | "/rate-topics" | "/knowledge-checker" | "/setup" | "/plan";
 
 type Step = {
   title: string;
@@ -17,10 +19,12 @@ type Step = {
   /** Button label when this is the student's next step. */
   cta: string;
   done: boolean;
+  /** Something students keep doing rather than finish once: shown with a repeat icon. */
+  ongoing?: boolean;
 };
 
 /**
- * The five steps on the home page, each linking to where it's done. For a signed-in student
+ * The steps on the home page (four to set up, then one to keep doing), each linking to where it's done. For a signed-in student
  * finished steps are ticked and the next one is highlighted with its own button, so there's
  * no separate "what to do next" box. Signed-out visitors are sent to sign up first.
  */
@@ -30,6 +34,7 @@ export function HomeSteps() {
   const library = useLibrary();
   const exams = useExams(plan?.id).data ?? [];
   const topics = usePlanTopics(plan?.id).data ?? [];
+  const savedRatings = useTopicRatings().ratings;
   const draft = useQuery({
     queryKey: ["setup-draft", user?.id],
     enabled: Boolean(user) && !plan,
@@ -47,7 +52,9 @@ export function HomeSteps() {
   const hasSubjects =
     library.subjects.length > 0 || Boolean(plan) || (draft.data?.picks?.length ?? 0) > 0;
   const hasTopics = library.subjects.some((s) => s.topics.length > 0) || topics.length > 0;
-  const hasRatings = topics.some((t) => t.confidence != null);
+  const hasRatings =
+    topics.some((t) => t.confidence != null) ||
+    Object.values(savedRatings).some((subject) => Object.keys(subject).length > 0);
   const inSetup = !plan && Boolean(draft.data);
 
   const steps: Step[] = [
@@ -59,18 +66,11 @@ export function HomeSteps() {
       done: signedIn && hasSubjects,
     },
     {
-      title: "Choose your topics",
-      body: "Use a ready-made exam board list, upload a photo of your revision guide, or type your own.",
-      to: "/topics",
-      cta: "Choose my topics",
-      done: signedIn && hasTopics,
-    },
-    {
-      title: "Check what you know",
-      body: "Use the Knowledge Checker, then rate each topic red, amber or green.",
-      to: "/knowledge-checker",
-      cta: "Check what I know",
-      done: signedIn && hasRatings,
+      title: "Choose and rate your topics",
+      body: "Use a ready-made exam board list, upload a photo of your revision guide, or type your own. Then rate each topic red, amber or green: red topics get the most revision time.",
+      to: hasTopics ? "/rate-topics" : "/topics",
+      cta: hasTopics ? "Rate my topics" : "Choose my topics",
+      done: signedIn && hasTopics && hasRatings,
     },
     {
       title: "Get your exam dates",
@@ -86,11 +86,19 @@ export function HomeSteps() {
       cta: plan ? "Open my plan" : inSetup ? "Carry on with my plan" : "Build my plan",
       done: signedIn && Boolean(plan),
     },
+    {
+      title: "Keep checking what you know",
+      body: "After you revise a topic, test yourself with the Knowledge Checker. Then update its red, amber or green rating, or change any rating in Rate my topics whenever you like, so your plan keeps focusing on what you find hardest.",
+      to: "/knowledge-checker",
+      cta: "Test myself",
+      done: false,
+      ongoing: true,
+    },
   ];
 
-  // Signed out: step 1 starts things off. Signed in: the first step not done yet.
+  // Signed out: step 1 starts things off. Signed in: the first set-up step not done yet,
+  // and once those are all done, the ongoing "keep checking" step.
   const next = !signedIn ? 0 : steps.findIndex((s) => !s.done);
-  const allDone = signedIn && next === -1;
 
   return (
     <div className="relative mt-8 w-full">
@@ -116,6 +124,8 @@ export function HomeSteps() {
               >
                 {step.done ? (
                   <Check className="size-6" strokeWidth={3} aria-label="Done" />
+                ) : step.ongoing ? (
+                  <RefreshCw className="size-6" strokeWidth={3} aria-label="Keep doing" />
                 ) : (
                   String(i + 1).padStart(2, "0")
                 )}
@@ -134,6 +144,8 @@ export function HomeSteps() {
                   >
                     {step.done ? (
                       <Check className="size-4" strokeWidth={3} aria-hidden="true" />
+                    ) : step.ongoing ? (
+                      <RefreshCw className="size-4" strokeWidth={3} aria-hidden="true" />
                     ) : (
                       String(i + 1).padStart(2, "0")
                     )}
@@ -143,8 +155,10 @@ export function HomeSteps() {
                   <h2 className="text-xl font-extrabold tracking-tight">{step.title}</h2>
                   {isNext ? (
                     <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-primary-foreground">
-                      {signedIn ? "Next" : "Start here"}
+                      {!signedIn ? "Start here" : step.ongoing ? "Keep going" : "Next"}
                     </span>
+                  ) : step.ongoing ? (
+                    <span className="text-[12px] font-bold text-primary">As you revise</span>
                   ) : step.done ? (
                     <span className="text-[12px] font-bold text-conf-high">Done</span>
                   ) : null}
@@ -157,7 +171,7 @@ export function HomeSteps() {
                   </span>
                 ) : (
                   <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-primary opacity-80 transition-opacity group-hover:opacity-100">
-                    {step.done ? "Review or change" : "Go to this step"}
+                    {step.ongoing ? step.cta : step.done ? "Review or change" : "Go to this step"}
                     <ArrowRight className="size-3.5" aria-hidden="true" />
                   </span>
                 )}
@@ -166,11 +180,6 @@ export function HomeSteps() {
           );
         })}
       </ol>
-      {allDone ? (
-        <p className="mt-5 text-[13px] font-semibold text-muted-foreground">
-          All set. Open your plan for today's session, and come back to any step to update it.
-        </p>
-      ) : null}
       {!loading && !signedIn ? (
         <p className="mt-5 text-[13px] font-semibold text-muted-foreground">
           Free · your plan stays private to you

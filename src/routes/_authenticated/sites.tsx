@@ -11,7 +11,7 @@ import { REVISION_LINK_GROUPS } from "@/lib/revision-sites";
 import { defaultLinksFor } from "@/lib/revision-links-default";
 import { subjectStyle } from "@/lib/subjects";
 
-export const Route = createFileRoute("/sites")({
+export const Route = createFileRoute("/_authenticated/sites")({
   head: () => ({
     meta: [
       { title: "Revision links — RevPlan" },

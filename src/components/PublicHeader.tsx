@@ -4,33 +4,38 @@ import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
+import { PremiumTag } from "@/components/PremiumGate";
 
-const MY_REVISION = [
+type NavItem = { to: string; label: string; premium?: boolean };
+
+const MY_REVISION: readonly NavItem[] = [
   { to: "/library", label: "My Subjects" },
   { to: "/topics", label: "My Topics" },
   { to: "/rate-topics", label: "Rate my topics" },
-  { to: "/knowledge-checker", label: "Knowledge Checker" },
-  { to: "/exams", label: "Exam timetable" },
-  { to: "/plan", label: "Revision Planner" },
-] as const;
+  { to: "/knowledge-checker", label: "Knowledge Checker", premium: true },
+  { to: "/exams", label: "Exam timetable", premium: true },
+  { to: "/plan", label: "Revision Planner", premium: true },
+  { to: "/ai-tutor", label: "Build my AI tutor", premium: true },
+];
 
-const FREE_RESOURCES = [
+const FREE_RESOURCES: readonly NavItem[] = [
   { to: "/revision-guide", label: "Effective Revision" },
   { to: "/papers", label: "Past Papers" },
   { to: "/sites", label: "Revision Links" },
   { to: "/revision-tools", label: "Revision Tools" },
-  { to: "/ai-tutor", label: "Build my AI tutor" },
-] as const;
+];
 
-const GROUPS: { label: string; items: readonly { to: string; label: string }[] }[] = [
+const GROUPS: { label: string; items: readonly NavItem[] }[] = [
   { label: "My revision", items: MY_REVISION },
-  { label: "Free Resources", items: FREE_RESOURCES },
+  { label: "Revision resources", items: FREE_RESOURCES },
 ];
 
 const MOBILE_PRIMARY = ["/library", "/topics"] as const;
 
 export function PublicHeader() {
   const { user } = useAuth();
+  const { isPremium } = usePremium();
   const [moreOpen, setMoreOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const pathname = useLocation().pathname;
@@ -64,7 +69,7 @@ export function PublicHeader() {
           {user ? (
             <Link to="/plan" className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">My plan</Link>
           ) : (
-            <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }} className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Start free</Link>
+            <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/library" }} className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Sign up free</Link>
           )}
         </div>
         <nav className="mt-3 hidden border-t border-border pt-2 sm:block" aria-label="Main navigation">
@@ -104,11 +109,12 @@ export function PublicHeader() {
                         key={item.to}
                         to={item.to}
                         onClick={() => setOpenGroup(null)}
-                        className={`block whitespace-nowrap rounded-[8px] px-3 py-2.5 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${
+                        className={`flex items-center gap-2 whitespace-nowrap rounded-[8px] px-3 py-2.5 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${
                           isActive(item.to) ? activeLinkClass : ""
                         }`}
                       >
                         {item.label}
+                        {item.premium && !isPremium ? <PremiumTag className="ml-auto" /> : null}
                       </Link>
                     ))}
                   </div>
@@ -147,7 +153,7 @@ export function PublicHeader() {
                   <div key={group.label}>
                     <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70">{group.label}</p>
                     {group.items.map((item) => (
-                      <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)} className={`block rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${isActive(item.to) ? activeLinkClass : ""}`}>{item.label}</Link>
+                      <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)} className={`flex items-center gap-2 rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${isActive(item.to) ? activeLinkClass : ""}`}>{item.label}{item.premium && !isPremium ? <PremiumTag className="ml-auto" /> : null}</Link>
                     ))}
                   </div>
                 ))}
@@ -155,7 +161,7 @@ export function PublicHeader() {
                   {user ? (
                     <Link to="/plan" onClick={() => setMoreOpen(false)} className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">My plan</Link>
                   ) : (
-                    <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }} onClick={() => setMoreOpen(false)} className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">Start free</Link>
+                    <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/library" }} onClick={() => setMoreOpen(false)} className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">Sign up free</Link>
                   )}
                 </div>
               </div>

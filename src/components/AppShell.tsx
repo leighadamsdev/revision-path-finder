@@ -24,36 +24,38 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useActivePlan } from "@/hooks/useActivePlan";
 import { useIsAdmin } from "@/hooks/useRole";
+import { usePremium } from "@/hooks/usePremium";
+import { PremiumTag } from "@/components/PremiumGate";
 import { LogoOnDark } from "@/components/Logo";
 
 
-const MY_REVISION_TABS = [
+const MY_REVISION_TABS: readonly NavTab[] = [
   { to: "/library", label: "My Subjects", icon: BookOpen },
   { to: "/topics", label: "My Topics", icon: FolderOpen },
   { to: "/rate-topics", label: "Rate my topics", icon: Gauge },
-  { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck },
-  { to: "/exams", label: "Exam timetable", icon: CalendarDays },
-  { to: "/plan", label: "Revision Planner", icon: CalendarDays },
-] as const;
+  { to: "/knowledge-checker", label: "Knowledge Checker", icon: ClipboardCheck, premium: true },
+  { to: "/exams", label: "Exam timetable", icon: CalendarDays, premium: true },
+  { to: "/plan", label: "Revision Planner", icon: CalendarDays, premium: true },
+  { to: "/ai-tutor", label: "Build my AI tutor", icon: Bot, premium: true },
+];
 
-const FREE_RESOURCE_TABS = [
+const FREE_RESOURCE_TABS: readonly NavTab[] = [
   { to: "/revision-guide", label: "Effective Revision", icon: GraduationCap },
   { to: "/papers", label: "Past Papers", icon: FileText },
   { to: "/sites", label: "Revision Links", icon: Sparkles },
   { to: "/revision-tools", label: "Revision Tools", icon: Wrench },
-  { to: "/ai-tutor", label: "Build my AI tutor", icon: Bot },
-] as const;
+];
 
 import type { LucideIcon } from "lucide-react";
 
 const GROUPS: { label: string; items: readonly NavTab[] }[] = [
   { label: "My revision", items: MY_REVISION_TABS },
-  { label: "Free Resources", items: FREE_RESOURCE_TABS },
+  { label: "Revision resources", items: FREE_RESOURCE_TABS },
 ];
 
 const ALL_TABS: readonly NavTab[] = [...MY_REVISION_TABS, ...FREE_RESOURCE_TABS];
 
-type NavTab = { to: string; label: string; icon: LucideIcon };
+type NavTab = { to: string; label: string; icon: LucideIcon; premium?: boolean };
 
 const ADMIN_TAB = { to: "/admin", label: "Admin", icon: Settings } as const;
 
@@ -70,6 +72,8 @@ export function AppShell({
   const queryClient = useQueryClient();
   const { plan, plans, setActive } = useActivePlan();
   const { isAdmin } = useIsAdmin();
+  const { isPremium, loading: premiumLoading } = usePremium();
+  const showUpgrade = !premiumLoading && !isPremium;
   const [moreOpen, setMoreOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const pathname = useLocation().pathname;
@@ -139,12 +143,21 @@ export function AppShell({
                 </Link>
               ) : null}
 
-              <Link
-                to="/setup"
-                className="hidden rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground sm:inline-flex"
-              >
-                {plan ? "Create another plan" : "Create plan"}
-              </Link>
+              {showUpgrade ? (
+                <Link
+                  to="/upgrade"
+                  className="hidden rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground sm:inline-flex"
+                >
+                  Upgrade to Premium
+                </Link>
+              ) : (
+                <Link
+                  to="/setup"
+                  className="hidden rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground sm:inline-flex"
+                >
+                  {plan ? "Create another plan" : "Create plan"}
+                </Link>
+              )}
               <Link
                 to="/account"
                 className="hidden rounded-full px-3 py-2 text-[13px] font-bold text-structure-foreground/75 hover:bg-structure-foreground/10 sm:inline-flex"
@@ -202,6 +215,7 @@ export function AppShell({
                         >
                           <tab.icon className="size-4 shrink-0" strokeWidth={2.5} />
                           {tab.label}
+                          {tab.premium && showUpgrade ? <PremiumTag className="ml-auto" /> : null}
                         </Link>
                       ))}
                     </div>
@@ -257,6 +271,7 @@ export function AppShell({
                       {group.items.map((tab) => (
                         <Link key={tab.to} to={tab.to} onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10" activeProps={{ className: "bg-structure-foreground/10 text-primary" }}>
                           <tab.icon className="size-4 shrink-0" />{tab.label}
+                          {tab.premium && showUpgrade ? <PremiumTag className="ml-auto" /> : null}
                         </Link>
                       ))}
                     </div>
@@ -266,6 +281,9 @@ export function AppShell({
                       <Link to="/admin" onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10" activeProps={{ className: "bg-structure-foreground/10 text-primary" }}>
                         <Settings className="size-4 shrink-0" />Admin
                       </Link>
+                    ) : null}
+                    {showUpgrade ? (
+                      <Link to="/upgrade" onClick={() => setMoreOpen(false)} className="mb-2 block rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">Upgrade to Premium</Link>
                     ) : null}
                     <Link to="/account" onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10">Account</Link>
                     <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-[8px] px-3 py-3 text-left text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10">Sign out</button>

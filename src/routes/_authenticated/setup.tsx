@@ -1,3 +1,4 @@
+import { PremiumPage } from "@/components/PremiumPage";
 import { supabase } from "@/integrations/supabase/client";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -72,7 +73,11 @@ export const Route = createFileRoute("/_authenticated/setup")({
     ...(typeof raw["from"] === "string" ? { from: raw["from"] } : {}),
     ...(raw["mode"] === "edit" || raw["mode"] === "copy" ? { mode: raw["mode"] } : {}),
   }),
-  component: SetupPage,
+  component: () => (
+    <PremiumPage feature="Your revision plan">
+      <SetupPage />
+    </PremiumPage>
+  ),
 });
 
 type PlanKind = "quick" | "topic" | "personalised";

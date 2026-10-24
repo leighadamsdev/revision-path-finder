@@ -309,10 +309,15 @@ async function weeklyRun(db: SupabaseClient, force: boolean) {
     .or(`last_digest_sent_at.is.null,last_digest_sent_at.lt.${sixDaysAgo}`);
   if (error) return json({ error: error.message }, 500);
 
+  // The weekly summary is a Premium feature.
+  const { data: premium } = await db.from("subscribers").select("user_id").eq("subscribed", true);
+  const premiumIds = new Set((premium ?? []).map((row) => row.user_id as string));
+
   const emails = await emailsFor(db);
   let sent = 0;
   const failures: string[] = [];
   for (const profile of profiles ?? []) {
+    if (!premiumIds.has(profile.id)) continue;
     const studentEmail = emails.get(profile.id);
     if (!studentEmail) continue;
     // Claim this week first so a second run at the same time can't send twice.
@@ -356,6 +361,9 @@ async function forSignedInStudent(db: SupabaseClient, req: Request, mode: "previ
   const unsub = await unsubscribeUrl(user.id, "student");
   const email = renderEmail(summary, false, unsub);
   if (mode === "preview") return json({ subject: email.subject, html: email.html });
+
+  const { data: sub } = await db.from("subscribers").select("subscribed").eq("user_id", user.id).maybeSingle();
+  if (!sub?.subscribed) return json({ error: "The weekly summary email is part of Premium." }, 403);
 
   if (profile?.last_digest_test_at && Date.now() - Date.parse(profile.last_digest_test_at) < 10 * 60_000) {
     return json({ error: "A test email was sent in the last 10 minutes. Check your inbox (and spam)." }, 429);

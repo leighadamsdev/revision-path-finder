@@ -204,13 +204,13 @@ function AuthPage() {
             <>
               <p className="text-lg font-extrabold tracking-tight">
                 {mode === "signup"
-                  ? search.context === "create-plan" ? "Create your revision plan" : "Create your account"
+                  ? "Create your free account"
                   : search.context === "exams" ? "Sign in to view your exam timetable" : "Welcome back"}
               </p>
               <p className="mt-1 text-[13px] font-medium text-muted-foreground">
                 {mode === "signin"
                   ? search.context === "exams" ? "We'll bring you back to your exam timetable after sign-in." : "Sign in to pick up your revision plan."
-                  : "Your plan is private to your account."}
+                  : "Free: add your subjects and topics, rate them red, amber or green, and use past papers and revision links. Upgrade any time for your revision plan, Knowledge Checker and AI tutor."}
               </p>
 
               <div className="mt-5" />

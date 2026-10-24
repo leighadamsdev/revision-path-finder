@@ -16,6 +16,8 @@ import { specUnits } from "@/lib/spec-topics";
 import { subjectStyle } from "@/lib/subjects";
 import { ratingsAreLocalOnly } from "@/lib/topic-ratings";
 import { saveTutorHandoff } from "@/lib/tutor-handoff";
+import { usePremium } from "@/hooks/usePremium";
+import { PremiumTag } from "@/components/PremiumGate";
 
 export const Route = createFileRoute("/_authenticated/rate-topics")({
   head: () => ({
@@ -327,6 +329,12 @@ function TutorFromReds({
       >
         Build my AI tutor
       </button>
+      <PremiumTagIfFree />
     </div>
   );
+}
+
+function PremiumTagIfFree() {
+  const { isPremium, loading } = usePremium();
+  return !loading && !isPremium ? <PremiumTag /> : null;
 }

@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { SchoolSearch, fetchAllSchools } from "@/components/SchoolSearch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
+import { PremiumTag } from "@/components/PremiumGate";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
@@ -85,6 +87,7 @@ function AccountPage() {
       <div className="mx-auto max-w-lg">
         <h1 className="text-xl font-extrabold tracking-tight">Your account</h1>
         <p className="mt-1 text-[13px] font-medium text-muted-foreground">{user?.email}</p>
+        <MembershipCard />
         <div className="mt-5 space-y-4 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
           <label className="block">
             <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">School</span>
@@ -99,7 +102,9 @@ function AccountPage() {
           <label className="flex items-start gap-2.5">
             <input type="checkbox" className="mt-1" checked={digest} onChange={(e) => setDigest(e.target.checked)} />
             <span>
-              <span className="block text-[13px] font-extrabold">Weekly summary email</span>
+              <span className="flex items-center gap-2 text-[13px] font-extrabold">
+                Weekly summary email <PremiumBadgeIfFree />
+              </span>
               <span className="block text-[12px] font-medium text-muted-foreground">
                 Every Sunday at 6pm: sessions ticked off, knowledge checkers, topics rated, mocks
                 added and your exam countdown. Sent to you, and to your parent or carer if you've
@@ -111,7 +116,9 @@ function AccountPage() {
             {saving ? "Saving…" : "Save"}
           </Button>
         </div>
-        <WeeklySummaryPreview />
+        <PremiumOnly>
+          <WeeklySummaryPreview />
+        </PremiumOnly>
       </div>
     </AppShell>
   );
@@ -169,6 +176,39 @@ function WeeklySummaryPreview() {
           />
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function PremiumBadgeIfFree() {
+  const { isPremium, loading } = usePremium();
+  return !loading && !isPremium ? <PremiumTag /> : null;
+}
+
+function PremiumOnly({ children }: { children: ReactNode }) {
+  const { isPremium } = usePremium();
+  return isPremium ? <>{children}</> : null;
+}
+
+/** Free or Premium, with the next step for each. */
+function MembershipCard() {
+  const { isPremium, subscription, loading } = usePremium();
+  if (loading) return null;
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Membership</p>
+        <p className="text-sm font-extrabold">
+          {isPremium
+            ? subscription?.subscribed
+              ? `Premium (${subscription.plan === "yearly" ? "yearly" : "monthly"})`
+              : "Premium (admin access)"
+            : "Free"}
+        </p>
+      </div>
+      <Button asChild variant={isPremium ? "outline" : "default"}>
+        <Link to="/upgrade">{isPremium ? "Manage membership" : "Upgrade to Premium"}</Link>
+      </Button>
     </div>
   );
 }

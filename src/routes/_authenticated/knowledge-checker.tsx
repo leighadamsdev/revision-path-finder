@@ -1,3 +1,4 @@
+import { PremiumPage } from "@/components/PremiumPage";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import {
@@ -63,7 +64,11 @@ export const Route = createFileRoute("/_authenticated/knowledge-checker")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: KnowledgeCheckerPage,
+  component: () => (
+    <PremiumPage feature="The Knowledge Checker">
+      <KnowledgeCheckerPage />
+    </PremiumPage>
+  ),
 });
 
 type CheckerRow = { id: string; component: string; recall: string; gaps: string };

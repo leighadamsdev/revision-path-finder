@@ -1,3 +1,4 @@
+import { PremiumPage } from "@/components/PremiumPage";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -70,7 +71,11 @@ export const Route = createFileRoute("/_authenticated/plan")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: TimetablePage,
+  component: () => (
+    <PremiumPage feature="Your revision plan">
+      <TimetablePage />
+    </PremiumPage>
+  ),
 });
 
 function TimetablePage() {

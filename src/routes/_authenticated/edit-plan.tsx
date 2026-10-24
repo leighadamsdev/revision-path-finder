@@ -1,3 +1,4 @@
+import { PremiumPage } from "@/components/PremiumPage";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -58,7 +59,11 @@ export const Route = createFileRoute("/_authenticated/edit-plan")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: EditPlanPage,
+  component: () => (
+    <PremiumPage feature="Your revision plan">
+      <EditPlanPage />
+    </PremiumPage>
+  ),
 });
 
 type Row = {

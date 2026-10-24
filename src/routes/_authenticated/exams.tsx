@@ -1,3 +1,4 @@
+import { PremiumPage } from "@/components/PremiumPage";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ExamsEditor } from "@/components/ExamsEditor";
@@ -42,7 +43,11 @@ export const Route = createFileRoute("/_authenticated/exams")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ExamCalendarPage,
+  component: () => (
+    <PremiumPage feature="The exam timetable">
+      <ExamCalendarPage />
+    </PremiumPage>
+  ),
 });
 
 const WEEK_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];

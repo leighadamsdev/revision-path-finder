@@ -43,6 +43,13 @@
       "when": 1792743112879,
       "tag": "0005_weekly_summary_email",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792850964625,
+      "tag": "0006_premium_subscriptions",
+      "breakpoints": true
     }
   ]
 }

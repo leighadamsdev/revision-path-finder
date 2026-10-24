@@ -1,9 +1,10 @@
+import { PremiumPage } from "@/components/PremiumPage";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Check, Copy, Download, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
-import { PublicHeader } from "@/components/PublicHeader";
+import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { GCSE_SUBJECTS, SUBJECT_GROUPS, isTiered } from "@/lib/gcse-subjects";
 import { subjectUnits } from "@/lib/gcse-topics";
@@ -29,7 +30,7 @@ import {
 } from "@/lib/tutor-prompt";
 import { takeTutorHandoff, tutorTier } from "@/lib/tutor-handoff";
 
-export const Route = createFileRoute("/ai-tutor")({
+export const Route = createFileRoute("/_authenticated/ai-tutor")({
   head: () => ({
     meta: [
       { title: "Build my AI tutor — RevPlan" },
@@ -47,7 +48,11 @@ export const Route = createFileRoute("/ai-tutor")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: AiTutorPage,
+  component: () => (
+    <PremiumPage feature="Build my AI tutor">
+      <AiTutorPage />
+    </PremiumPage>
+  ),
 });
 
 const BOARDS = ["AQA", "Edexcel (Pearson)", "OCR", "WJEC / Eduqas", "CCEA", "Other"];
@@ -208,9 +213,8 @@ function AiTutorPage() {
     }));
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground">
-      <PublicHeader />
-      <main className="px-5 pb-20 pt-6">
+    <AppShell>
+      <div>
         <div className="mx-auto max-w-6xl">
           <h1 className="text-xl font-extrabold tracking-tight">Build my AI tutor</h1>
           <p className="mt-1 max-w-[70ch] text-[13px] font-medium text-muted-foreground">
@@ -591,8 +595,8 @@ function AiTutorPage() {
             </aside>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 

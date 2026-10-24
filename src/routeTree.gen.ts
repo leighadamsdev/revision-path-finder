@@ -11,27 +11,28 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AiTutorRouteImport } from './routes/ai-tutor'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as PapersRouteImport } from './routes/papers'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RevisionGuideRouteImport } from './routes/revision-guide'
 import { Route as RevisionHelpRouteImport } from './routes/revision-help'
 import { Route as RevisionToolsRouteImport } from './routes/revision-tools'
-import { Route as SitesRouteImport } from './routes/sites'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAiTutorRouteImport } from './routes/_authenticated/ai-tutor'
 import { Route as AuthenticatedEditPlanRouteImport } from './routes/_authenticated/edit-plan'
 import { Route as AuthenticatedExamsRouteImport } from './routes/_authenticated/exams'
 import { Route as AuthenticatedKnowledgeCheckerRouteImport } from './routes/_authenticated/knowledge-checker'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedMyPlansRouteImport } from './routes/_authenticated/my-plans'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedPapersRouteImport } from './routes/_authenticated/papers'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
 import { Route as AuthenticatedRateTopicsRouteImport } from './routes/_authenticated/rate-topics'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
+import { Route as AuthenticatedSitesRouteImport } from './routes/_authenticated/sites'
 import { Route as AuthenticatedTopicsRouteImport } from './routes/_authenticated/topics'
+import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -43,19 +44,9 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AiTutorRoute = AiTutorRouteImport.update({
-  id: '/ai-tutor',
-  path: '/ai-tutor',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PapersRoute = PapersRouteImport.update({
-  id: '/papers',
-  path: '/papers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -78,11 +69,6 @@ const RevisionToolsRoute = RevisionToolsRouteImport.update({
   path: '/revision-tools',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SitesRoute = SitesRouteImport.update({
-  id: '/sites',
-  path: '/sites',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   id: '/account',
   path: '/account',
@@ -91,6 +77,11 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAiTutorRoute = AuthenticatedAiTutorRouteImport.update({
+  id: '/ai-tutor',
+  path: '/ai-tutor',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEditPlanRoute = AuthenticatedEditPlanRouteImport.update({
@@ -124,6 +115,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPapersRoute = AuthenticatedPapersRouteImport.update({
+  id: '/papers',
+  path: '/papers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPlanRoute = AuthenticatedPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -144,9 +140,19 @@ const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSitesRoute = AuthenticatedSitesRouteImport.update({
+  id: '/sites',
+  path: '/sites',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTopicsRoute = AuthenticatedTopicsRouteImport.update({
   id: '/topics',
   path: '/topics',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedUpgradeRoute = AuthenticatedUpgradeRouteImport.update({
+  id: '/upgrade',
+  path: '/upgrade',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ShareTokenRoute = ShareTokenRouteImport.update({
@@ -157,171 +163,174 @@ const ShareTokenRoute = ShareTokenRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/ai-tutor': typeof AiTutorRoute
   '/auth': typeof AuthRoute
-  '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
   '/revision-tools': typeof RevisionToolsRoute
-  '/sites': typeof SitesRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/ai-tutor': typeof AuthenticatedAiTutorRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
   '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/my-plans': typeof AuthenticatedMyPlansRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/rate-topics': typeof AuthenticatedRateTopicsRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/sites': typeof AuthenticatedSitesRoute
   '/topics': typeof AuthenticatedTopicsRoute
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/ai-tutor': typeof AiTutorRoute
   '/auth': typeof AuthRoute
-  '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
   '/revision-tools': typeof RevisionToolsRoute
-  '/sites': typeof SitesRoute
   '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/ai-tutor': typeof AuthenticatedAiTutorRoute
   '/edit-plan': typeof AuthenticatedEditPlanRoute
   '/exams': typeof AuthenticatedExamsRoute
   '/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/my-plans': typeof AuthenticatedMyPlansRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/rate-topics': typeof AuthenticatedRateTopicsRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/sites': typeof AuthenticatedSitesRoute
   '/topics': typeof AuthenticatedTopicsRoute
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/ai-tutor': typeof AiTutorRoute
   '/auth': typeof AuthRoute
-  '/papers': typeof PapersRoute
   '/reset-password': typeof ResetPasswordRoute
   '/revision-guide': typeof RevisionGuideRoute
   '/revision-help': typeof RevisionHelpRoute
   '/revision-tools': typeof RevisionToolsRoute
-  '/sites': typeof SitesRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/ai-tutor': typeof AuthenticatedAiTutorRoute
   '/_authenticated/edit-plan': typeof AuthenticatedEditPlanRoute
   '/_authenticated/exams': typeof AuthenticatedExamsRoute
   '/_authenticated/knowledge-checker': typeof AuthenticatedKnowledgeCheckerRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/my-plans': typeof AuthenticatedMyPlansRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/papers': typeof AuthenticatedPapersRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
   '/_authenticated/rate-topics': typeof AuthenticatedRateTopicsRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
+  '/_authenticated/sites': typeof AuthenticatedSitesRoute
   '/_authenticated/topics': typeof AuthenticatedTopicsRoute
+  '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/ai-tutor'
     | '/auth'
-    | '/papers'
     | '/reset-password'
     | '/revision-guide'
     | '/revision-help'
     | '/revision-tools'
-    | '/sites'
     | '/account'
     | '/admin'
+    | '/ai-tutor'
     | '/edit-plan'
     | '/exams'
     | '/knowledge-checker'
     | '/library'
     | '/my-plans'
     | '/onboarding'
+    | '/papers'
     | '/plan'
     | '/print-plan'
     | '/rate-topics'
     | '/setup'
+    | '/sites'
     | '/topics'
+    | '/upgrade'
     | '/share/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/ai-tutor'
     | '/auth'
-    | '/papers'
     | '/reset-password'
     | '/revision-guide'
     | '/revision-help'
     | '/revision-tools'
-    | '/sites'
     | '/account'
     | '/admin'
+    | '/ai-tutor'
     | '/edit-plan'
     | '/exams'
     | '/knowledge-checker'
     | '/library'
     | '/my-plans'
     | '/onboarding'
+    | '/papers'
     | '/plan'
     | '/print-plan'
     | '/rate-topics'
     | '/setup'
+    | '/sites'
     | '/topics'
+    | '/upgrade'
     | '/share/$token'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/ai-tutor'
     | '/auth'
-    | '/papers'
     | '/reset-password'
     | '/revision-guide'
     | '/revision-help'
     | '/revision-tools'
-    | '/sites'
     | '/_authenticated/account'
     | '/_authenticated/admin'
+    | '/_authenticated/ai-tutor'
     | '/_authenticated/edit-plan'
     | '/_authenticated/exams'
     | '/_authenticated/knowledge-checker'
     | '/_authenticated/library'
     | '/_authenticated/my-plans'
     | '/_authenticated/onboarding'
+    | '/_authenticated/papers'
     | '/_authenticated/plan'
     | '/_authenticated/print-plan'
     | '/_authenticated/rate-topics'
     | '/_authenticated/setup'
+    | '/_authenticated/sites'
     | '/_authenticated/topics'
+    | '/_authenticated/upgrade'
     | '/share/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AiTutorRoute: typeof AiTutorRoute
   AuthRoute: typeof AuthRoute
-  PapersRoute: typeof PapersRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RevisionGuideRoute: typeof RevisionGuideRoute
   RevisionHelpRoute: typeof RevisionHelpRoute
   RevisionToolsRoute: typeof RevisionToolsRoute
-  SitesRoute: typeof SitesRoute
   ShareTokenRoute: typeof ShareTokenRoute
 }
 
@@ -341,25 +350,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ai-tutor': {
-      id: '/ai-tutor'
-      path: '/ai-tutor'
-      fullPath: '/ai-tutor'
-      preLoaderRoute: typeof AiTutorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/papers': {
-      id: '/papers'
-      path: '/papers'
-      fullPath: '/papers'
-      preLoaderRoute: typeof PapersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -390,13 +385,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RevisionToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sites': {
-      id: '/sites'
-      path: '/sites'
-      fullPath: '/sites'
-      preLoaderRoute: typeof SitesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/account': {
       id: '/_authenticated/account'
       path: '/account'
@@ -409,6 +397,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ai-tutor': {
+      id: '/_authenticated/ai-tutor'
+      path: '/ai-tutor'
+      fullPath: '/ai-tutor'
+      preLoaderRoute: typeof AuthenticatedAiTutorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/edit-plan': {
@@ -453,6 +448,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/papers': {
+      id: '/_authenticated/papers'
+      path: '/papers'
+      fullPath: '/papers'
+      preLoaderRoute: typeof AuthenticatedPapersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/plan': {
       id: '/_authenticated/plan'
       path: '/plan'
@@ -481,11 +483,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sites': {
+      id: '/_authenticated/sites'
+      path: '/sites'
+      fullPath: '/sites'
+      preLoaderRoute: typeof AuthenticatedSitesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/topics': {
       id: '/_authenticated/topics'
       path: '/topics'
       fullPath: '/topics'
       preLoaderRoute: typeof AuthenticatedTopicsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/upgrade': {
+      id: '/_authenticated/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof AuthenticatedUpgradeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/share/$token': {
@@ -501,33 +517,41 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAiTutorRoute: typeof AuthenticatedAiTutorRoute
   AuthenticatedEditPlanRoute: typeof AuthenticatedEditPlanRoute
   AuthenticatedExamsRoute: typeof AuthenticatedExamsRoute
   AuthenticatedKnowledgeCheckerRoute: typeof AuthenticatedKnowledgeCheckerRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedMyPlansRoute: typeof AuthenticatedMyPlansRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPapersRoute: typeof AuthenticatedPapersRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
   AuthenticatedRateTopicsRoute: typeof AuthenticatedRateTopicsRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
+  AuthenticatedSitesRoute: typeof AuthenticatedSitesRoute
   AuthenticatedTopicsRoute: typeof AuthenticatedTopicsRoute
+  AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAiTutorRoute: AuthenticatedAiTutorRoute,
   AuthenticatedEditPlanRoute: AuthenticatedEditPlanRoute,
   AuthenticatedExamsRoute: AuthenticatedExamsRoute,
   AuthenticatedKnowledgeCheckerRoute: AuthenticatedKnowledgeCheckerRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedMyPlansRoute: AuthenticatedMyPlansRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPapersRoute: AuthenticatedPapersRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,
   AuthenticatedRateTopicsRoute: AuthenticatedRateTopicsRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
+  AuthenticatedSitesRoute: AuthenticatedSitesRoute,
   AuthenticatedTopicsRoute: AuthenticatedTopicsRoute,
+  AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -536,14 +560,11 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AiTutorRoute: AiTutorRoute,
   AuthRoute: AuthRoute,
-  PapersRoute: PapersRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RevisionGuideRoute: RevisionGuideRoute,
   RevisionHelpRoute: RevisionHelpRoute,
   RevisionToolsRoute: RevisionToolsRoute,
-  SitesRoute: SitesRoute,
   ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport

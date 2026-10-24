@@ -6,10 +6,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan, useExams, usePlanTopics } from "@/hooks/useActivePlan";
 import { useLibrary } from "@/hooks/useLibrary";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
+import { usePremium } from "@/hooks/usePremium";
+import { PremiumTag } from "@/components/PremiumGate";
 import { supabase } from "@/integrations/supabase/client";
 
 type To =
-  "/library" | "/exams" | "/topics" | "/rate-topics" | "/knowledge-checker" | "/setup" | "/plan";
+  | "/library"
+  | "/exams"
+  | "/topics"
+  | "/rate-topics"
+  | "/knowledge-checker"
+  | "/setup"
+  | "/plan"
+  | "/upgrade";
 
 type Step = {
   title: string;
@@ -21,6 +30,8 @@ type Step = {
   done: boolean;
   /** Something students keep doing rather than finish once: shown with a repeat icon. */
   ongoing?: boolean;
+  /** Part of Premium: free students are sent to the Upgrade page instead. */
+  premium?: boolean;
 };
 
 /**
@@ -35,6 +46,7 @@ export function HomeSteps() {
   const exams = useExams(plan?.id).data ?? [];
   const topics = usePlanTopics(plan?.id).data ?? [];
   const savedRatings = useTopicRatings().ratings;
+  const { isPremium } = usePremium();
   const draft = useQuery({
     queryKey: ["setup-draft", user?.id],
     enabled: Boolean(user) && !plan,
@@ -78,6 +90,7 @@ export function HomeSteps() {
       to: plan ? "/exams" : "/setup",
       cta: plan ? "Check my exams" : "Add my exam dates",
       done: signedIn && exams.length > 0,
+      premium: true,
     },
     {
       title: "Get your plan",
@@ -85,6 +98,7 @@ export function HomeSteps() {
       to: plan ? "/plan" : "/setup",
       cta: plan ? "Open my plan" : inSetup ? "Carry on with my plan" : "Build my plan",
       done: signedIn && Boolean(plan),
+      premium: true,
     },
     {
       title: "Keep checking what you know",
@@ -93,12 +107,14 @@ export function HomeSteps() {
       cta: "Test myself",
       done: false,
       ongoing: true,
+      premium: true,
     },
   ];
 
   // Signed in: the first set-up step not done yet, then the ongoing "keep checking" step.
   // Signed out: no step is highlighted; the "Create your plan" heading has the sign-up button.
   const next = !signedIn ? -1 : steps.findIndex((s) => !s.done);
+  const locked = (step: Step) => Boolean(step.premium) && !isPremium;
 
   return (
     <section className="mt-8 w-full" aria-labelledby="create-plan-heading">
@@ -126,7 +142,7 @@ export function HomeSteps() {
           {steps.map((step, i) => {
             const isNext = i === next;
             const linkProps = signedIn
-              ? { to: step.to }
+              ? { to: locked(step) ? ("/upgrade" as const) : step.to }
               : ({
                   to: "/auth",
                   search: { mode: "signup", context: "create-plan", returnTo: step.to },
@@ -178,13 +194,14 @@ export function HomeSteps() {
                     ) : step.done ? (
                       <span className="text-[12px] font-bold text-conf-high">Done</span>
                     ) : null}
+                    {locked(step) ? <PremiumTag /> : null}
                   </div>
                   <p className="mt-1 text-base font-medium leading-relaxed opacity-90">
                     {step.body}
                   </p>
                   {isNext ? (
                     <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground">
-                      {step.cta}
+                      {locked(step) ? "Upgrade to Premium" : step.cta}
                       <ArrowRight className="size-4" aria-hidden="true" />
                     </span>
                   ) : (
@@ -200,7 +217,8 @@ export function HomeSteps() {
         </ol>
         {!loading && !signedIn ? (
           <p className="mt-5 text-[13px] font-semibold text-muted-foreground">
-            Free · your plan stays private to you
+            Sign up free for steps 1 and 2. Premium adds your exam timetable, plan and the Knowledge
+            Checker.
           </p>
         ) : null}
       </div>

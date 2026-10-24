@@ -1,3 +1,4 @@
+import { PremiumPage } from "@/components/PremiumPage";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Printer } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -27,7 +28,11 @@ export const Route = createFileRoute("/_authenticated/print-plan")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: PrintablePlanPage,
+  component: () => (
+    <PremiumPage feature="Your revision plan">
+      <PrintablePlanPage />
+    </PremiumPage>
+  ),
 });
 
 

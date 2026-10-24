@@ -282,7 +282,7 @@ function RevisionGuide() {
               </p>
             </div>
             <Button asChild size="lg" className="mt-5 bg-checker-ink font-extrabold text-checker-paper hover:bg-checker-ink/90 sm:mt-0">
-              <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }}>Create your revision plan <ArrowRight /></Link>
+              <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/library" }}>Create your revision plan <ArrowRight /></Link>
             </Button>
           </div>
         </section>

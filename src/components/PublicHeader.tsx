@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +34,14 @@ export function PublicHeader() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const pathname = useLocation().pathname;
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [moreOpen]);
 
   const isActive = (to: string) => pathname === to || pathname.startsWith(to + "/");
   const groupActive = (items: readonly { to: string }[]) => items.some((item) => isActive(item.to));
@@ -122,17 +130,35 @@ export function PublicHeader() {
             </button>
           </div>
           {moreOpen ? (
-            <div className="absolute inset-x-0 top-full z-30 mt-2 rounded-[8px] bg-card p-2 shadow-lg ring-1 ring-border">
-               {GROUPS.map((group) => (
-                <div key={group.label}>
-                  <p className="px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70">{group.label}</p>
-                  {group.items
-                    .filter((item) => !(MOBILE_PRIMARY as readonly string[]).includes(item.to))
-                    .map((item) => (
-                       <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)} className={`block rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${isActive(item.to) ? activeLinkClass : ""}`}>{item.label}</Link>
+            <div className="fixed inset-0 z-50 flex flex-col bg-card">
+              <div className="flex items-center justify-between border-b border-border px-5 py-3">
+                <span className="text-sm font-bold text-foreground">Menu</span>
+                <button
+                  type="button"
+                  onClick={() => setMoreOpen(false)}
+                  aria-label="Close menu"
+                  className="grid size-10 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-3 pb-10">
+                {GROUPS.map((group) => (
+                  <div key={group.label}>
+                    <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70">{group.label}</p>
+                    {group.items.map((item) => (
+                      <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)} className={`block rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${isActive(item.to) ? activeLinkClass : ""}`}>{item.label}</Link>
                     ))}
+                  </div>
+                ))}
+                <div className="mt-4 border-t border-border px-3 pt-4">
+                  {user ? (
+                    <Link to="/plan" onClick={() => setMoreOpen(false)} className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">My plan</Link>
+                  ) : (
+                    <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/setup" }} onClick={() => setMoreOpen(false)} className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">Start free</Link>
+                  )}
                 </div>
-              ))}
+              </div>
             </div>
           ) : null}
         </nav>

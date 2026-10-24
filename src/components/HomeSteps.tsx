@@ -96,95 +96,114 @@ export function HomeSteps() {
     },
   ];
 
-  // Signed out: step 1 starts things off. Signed in: the first set-up step not done yet,
-  // and once those are all done, the ongoing "keep checking" step.
-  const next = !signedIn ? 0 : steps.findIndex((s) => !s.done);
+  // Signed in: the first set-up step not done yet, then the ongoing "keep checking" step.
+  // Signed out: no step is highlighted; the "Create your plan" heading has the sign-up button.
+  const next = !signedIn ? -1 : steps.findIndex((s) => !s.done);
 
   return (
-    <div className="relative mt-8 w-full">
-      <div
-        aria-hidden="true"
-        className="absolute bottom-6 left-[26px] top-6 hidden w-0.5 bg-primary sm:block"
-      />
-      <ol className="space-y-6">
-        {steps.map((step, i) => {
-          const isNext = i === next;
-          const linkProps = signedIn
-            ? { to: step.to }
-            : ({
-                to: "/auth",
-                search: { mode: "signup", context: "create-plan", returnTo: step.to },
-              } as const);
-          return (
-            <li key={step.title} className="relative flex items-start">
-              <div
-                className={`z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-[8px] text-lg font-extrabold shadow-lg sm:flex ${
-                  step.done ? "bg-conf-high text-white" : "bg-primary text-primary-foreground"
-                }`}
-              >
-                {step.done ? (
-                  <Check className="size-6" strokeWidth={3} aria-label="Done" />
-                ) : step.ongoing ? (
-                  <RefreshCw className="size-6" strokeWidth={3} aria-label="Keep doing" />
-                ) : (
-                  String(i + 1).padStart(2, "0")
-                )}
-              </div>
-              <Link
-                {...linkProps}
-                className={`group block w-full rounded-[8px] bg-structure p-5 text-structure-foreground shadow-lg transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary sm:ml-8 sm:p-6 ${
-                  isNext ? "ring-2 ring-primary" : ""
-                } ${step.done && !isNext ? "opacity-80" : ""}`}
-              >
-                <div className="mb-3 flex items-center gap-2 sm:hidden">
-                  <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-[8px] text-sm font-extrabold shadow-md ${
-                      step.done ? "bg-conf-high text-white" : "bg-primary text-primary-foreground"
-                    }`}
-                  >
-                    {step.done ? (
-                      <Check className="size-4" strokeWidth={3} aria-hidden="true" />
-                    ) : step.ongoing ? (
-                      <RefreshCw className="size-4" strokeWidth={3} aria-hidden="true" />
-                    ) : (
-                      String(i + 1).padStart(2, "0")
-                    )}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl font-extrabold tracking-tight">{step.title}</h2>
-                  {isNext ? (
-                    <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-primary-foreground">
-                      {!signedIn ? "Start here" : step.ongoing ? "Keep going" : "Next"}
-                    </span>
+    <section className="mt-8 w-full" aria-labelledby="create-plan-heading">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="create-plan-heading" className="text-2xl font-extrabold tracking-tight">
+          Create your plan
+        </h2>
+        {!loading && !signedIn ? (
+          <Link
+            to="/auth"
+            search={{ mode: "signup", context: "create-plan", returnTo: "/library" }}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground shadow-md hover:brightness-105"
+          >
+            Sign up free
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        ) : null}
+      </div>
+      <div className="relative mt-5 w-full">
+        <div
+          aria-hidden="true"
+          className="absolute bottom-6 left-[26px] top-6 hidden w-0.5 bg-primary sm:block"
+        />
+        <ol className="space-y-6">
+          {steps.map((step, i) => {
+            const isNext = i === next;
+            const linkProps = signedIn
+              ? { to: step.to }
+              : ({
+                  to: "/auth",
+                  search: { mode: "signup", context: "create-plan", returnTo: step.to },
+                } as const);
+            return (
+              <li key={step.title} className="relative flex items-start">
+                <div
+                  className={`z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-[8px] text-lg font-extrabold shadow-lg sm:flex ${
+                    step.done ? "bg-conf-high text-white" : "bg-primary text-primary-foreground"
+                  }`}
+                >
+                  {step.done ? (
+                    <Check className="size-6" strokeWidth={3} aria-label="Done" />
                   ) : step.ongoing ? (
-                    <span className="text-[12px] font-bold text-primary">As you revise</span>
-                  ) : step.done ? (
-                    <span className="text-[12px] font-bold text-conf-high">Done</span>
-                  ) : null}
+                    <RefreshCw className="size-6" strokeWidth={3} aria-label="Keep doing" />
+                  ) : (
+                    String(i + 1).padStart(2, "0")
+                  )}
                 </div>
-                <p className="mt-1 text-base font-medium leading-relaxed opacity-90">{step.body}</p>
-                {isNext ? (
-                  <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground">
-                    {signedIn ? step.cta : "Create your free plan"}
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </span>
-                ) : (
-                  <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-primary opacity-80 transition-opacity group-hover:opacity-100">
-                    {step.ongoing ? step.cta : step.done ? "Review or change" : "Go to this step"}
-                    <ArrowRight className="size-3.5" aria-hidden="true" />
-                  </span>
-                )}
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
-      {!loading && !signedIn ? (
-        <p className="mt-5 text-[13px] font-semibold text-muted-foreground">
-          Free · your plan stays private to you
-        </p>
-      ) : null}
-    </div>
+                <Link
+                  {...linkProps}
+                  className={`group block w-full rounded-[8px] bg-structure p-5 text-structure-foreground shadow-lg transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary sm:ml-8 sm:p-6 ${
+                    isNext ? "ring-2 ring-primary" : ""
+                  } ${step.done && !isNext ? "opacity-80" : ""}`}
+                >
+                  <div className="mb-3 flex items-center gap-2 sm:hidden">
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-[8px] text-sm font-extrabold shadow-md ${
+                        step.done ? "bg-conf-high text-white" : "bg-primary text-primary-foreground"
+                      }`}
+                    >
+                      {step.done ? (
+                        <Check className="size-4" strokeWidth={3} aria-hidden="true" />
+                      ) : step.ongoing ? (
+                        <RefreshCw className="size-4" strokeWidth={3} aria-hidden="true" />
+                      ) : (
+                        String(i + 1).padStart(2, "0")
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl font-extrabold tracking-tight">{step.title}</h2>
+                    {isNext ? (
+                      <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-primary-foreground">
+                        {step.ongoing ? "Keep going" : "Next"}
+                      </span>
+                    ) : step.ongoing ? (
+                      <span className="text-[12px] font-bold text-primary">As you revise</span>
+                    ) : step.done ? (
+                      <span className="text-[12px] font-bold text-conf-high">Done</span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-base font-medium leading-relaxed opacity-90">
+                    {step.body}
+                  </p>
+                  {isNext ? (
+                    <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground">
+                      {step.cta}
+                      <ArrowRight className="size-4" aria-hidden="true" />
+                    </span>
+                  ) : (
+                    <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-primary opacity-80 transition-opacity group-hover:opacity-100">
+                      {step.ongoing ? step.cta : step.done ? "Review or change" : "Go to this step"}
+                      <ArrowRight className="size-3.5" aria-hidden="true" />
+                    </span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
+        {!loading && !signedIn ? (
+          <p className="mt-5 text-[13px] font-semibold text-muted-foreground">
+            Free · your plan stays private to you
+          </p>
+        ) : null}
+      </div>
+    </section>
   );
 }

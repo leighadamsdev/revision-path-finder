@@ -74,6 +74,14 @@ export function AppShell({
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const pathname = useLocation().pathname;
 
+  useEffect(() => {
+    if (!moreOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [moreOpen]);
+
   const isActive = (to: string) => pathname === to || pathname.startsWith(to + "/");
   const groupActive = (items: readonly { to: string }[]) => items.some((item) => isActive(item.to));
 
@@ -230,26 +238,39 @@ export function AppShell({
               </button>
             </div>
             {moreOpen ? (
-              <div className="absolute inset-x-0 top-full z-30 mt-2 rounded-[8px] bg-structure p-2 shadow-lg ring-1 ring-structure-foreground/15">
-                {GROUPS.map((group) => (
-                  <div key={group.label}>
-                    <p className="px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wide text-structure-foreground/50">{group.label}</p>
-                    {group.items
-                      .filter((tab) => !(MOBILE_PRIMARY as readonly string[]).includes(tab.to))
-                      .map((tab) => (
+              <div className="fixed inset-0 z-50 flex flex-col bg-structure text-structure-foreground">
+                <div className="flex items-center justify-between border-b border-structure-foreground/15 px-5 py-3">
+                  <span className="text-sm font-bold">Menu</span>
+                  <button
+                    type="button"
+                    onClick={() => setMoreOpen(false)}
+                    aria-label="Close menu"
+                    className="grid size-10 place-items-center rounded-full text-structure-foreground/75 hover:bg-structure-foreground/10"
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto px-3 pb-10">
+                  {GROUPS.map((group) => (
+                    <div key={group.label}>
+                      <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-wide text-structure-foreground/50">{group.label}</p>
+                      {group.items.map((tab) => (
                         <Link key={tab.to} to={tab.to} onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10" activeProps={{ className: "bg-structure-foreground/10 text-primary" }}>
                           <tab.icon className="size-4 shrink-0" />{tab.label}
                         </Link>
                       ))}
+                    </div>
+                  ))}
+                  <div className="mt-4 border-t border-structure-foreground/15 pt-2">
+                    {isAdmin ? (
+                      <Link to="/admin" onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10" activeProps={{ className: "bg-structure-foreground/10 text-primary" }}>
+                        <Settings className="size-4 shrink-0" />Admin
+                      </Link>
+                    ) : null}
+                    <Link to="/account" onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10">Account</Link>
+                    <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-[8px] px-3 py-3 text-left text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10">Sign out</button>
                   </div>
-                ))}
-                {isAdmin ? (
-                  <Link to="/admin" onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10" activeProps={{ className: "bg-structure-foreground/10 text-primary" }}>
-                    <Settings className="size-4 shrink-0" />Admin
-                  </Link>
-                ) : null}
-                <Link to="/account" onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10">Account</Link>
-                <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-[8px] px-3 py-3 text-left text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10">Sign out</button>
+                </div>
               </div>
             ) : null}
           </nav>

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, FileImage, ListChecks, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArchiveRestore, ArrowDown, ArrowUp, ChevronDown, ChevronRight, FileImage, FolderInput, ListChecks, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,14 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   deleteSubject,
   deleteTopic,
+  fetchArchivedTopics,
   futureSessionsUsing,
   moveTopic,
   newKey,
   removeFromFutureSessions,
   replaceTopic,
   saveTopics,
+  setTopicArchived,
   updateSubject,
   type DraftTopic,
   type LibSubject,
@@ -30,6 +32,7 @@ import { BandLegend } from "@/components/BandChip";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { topicLines, withWholeTopicRatings } from "@/lib/library";
+import { BAND_LABEL, confidenceBand, confidenceTone, type Band } from "@/lib/confidence";
 
 export const libField =
   "w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring";
@@ -104,9 +107,36 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
   const [editTopic, setEditTopic] = useState<LibTopic | null>(null);
   const [removeTopic, setRemoveTopic] = useState<{ topic: LibTopic; sessions: number } | null>(null);
   const [open, setOpen] = useState<Set<string>>(new Set());
+  const [folderOpen, setFolderOpen] = useState<Set<string>>(new Set());
+  const [archivedTopics, setArchivedTopics] = useState<LibTopic[]>([]);
+  const [bandFilter, setBandFilter] = useState<Band | "all">("all");
   // On My Topics, every sub-topic can be rated red, amber or green right where it's listed.
   const canRate = mode === "topics";
   const topicRatings = useTopicRatings();
+
+  async function reloadArchived() {
+    if (mode === "subjects") return;
+    try {
+      setArchivedTopics(await fetchArchivedTopics());
+    } catch {
+      /* folder simply stays as it was */
+    }
+  }
+
+  useEffect(() => {
+    void reloadArchived();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  async function archiveTopic(topic: LibTopic, archived: boolean) {
+    await setTopicArchived(topic.id, archived);
+    if (archived) toast.success(`“${topic.title}” moved to Kept for later.`);
+    else toast.success(`“${topic.title}” is back in your topics.`);
+    refresh();
+    void reloadArchived();
+  }
+
+  const archivedFor = (subjectId: string) => archivedTopics.filter((t) => t.subject_id === subjectId);
 
   async function viewSource(path: string) {
     const { data } = await supabase.storage.from("topic-sources").createSignedUrl(path, 300);

@@ -63,4 +63,4 @@
 - [x] Align the Knowledge Checker page colours with the site palette (navy structure, orange actions, light grey canvas)
 
 - [x] My Topics: archive folder (Kept for later) + red/amber/green filter
-- [ ] My Topics: add topic directly under each DfE heading (store category on topic)
+- [x] My Topics: add topic directly under each DfE heading (store category on topic)

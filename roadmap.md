@@ -64,3 +64,7 @@
 
 - [x] My Topics: archive folder (Kept for later) + red/amber/green filter
 - [x] My Topics: add topic directly under each DfE heading (store category on topic)
+
+## User management deployment
+- [x] Deploy the existing admin-users function; verify unsigned-in and non-admin requests are rejected.
+- [x] Apply and verify saved practice sets and complimentary Premium database changes (0010 timestamp was skipped; reapplied safely in 0012).

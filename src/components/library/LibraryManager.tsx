@@ -27,7 +27,7 @@ import { GCSE_SUBJECTS, SUBJECT_GROUPS, catalogueSubject, isTiered } from "@/lib
 import { TopicDraftEditor } from "./TopicDraftEditor";
 import { ReadyListDialog } from "./ReadyListDialog";
 import { readyListFor } from "@/lib/spec-topics";
-import { groupByDfeCategory } from "@/lib/dfe-categories";
+import { OTHER_CATEGORY, groupByDfeCategory } from "@/lib/dfe-categories";
 import { BandLegend } from "@/components/BandChip";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
@@ -207,7 +207,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                 </Button>
               ) : null}
               {mode !== "subjects" ? <Button size="sm" variant={readyListFor(s.name).units.length ? "outline" : "default"} onClick={() => setImportFor(s)}><Upload /> Import from a Contents Page or Photo</Button> : null}
-              {mode !== "subjects" ? <Button size="sm" variant="outline" onClick={() => setManualFor(s)}><Plus /> Add Topic Manually</Button> : null}
+              {mode !== "subjects" ? <Button size="sm" variant="outline" onClick={() => { setManualCategory(null); setManualFor(s); }}><Plus /> Add Topic Manually</Button> : null}
               {mode !== "topics" ? <Button size="sm" variant="outline" onClick={() => setEditSubject(s)}><Pencil /> Edit Subject</Button> : null}
               {mode !== "topics" ? <Button
                 size="sm"

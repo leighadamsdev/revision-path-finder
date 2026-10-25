@@ -4,6 +4,7 @@ import { Bot, ChevronDown } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { BandLegend } from "@/components/BandChip";
+import { RagFilter, bandOf, useRagFilter, type Band } from "@/components/RagFilter";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActivePlan, usePlanSubjects } from "@/hooks/useActivePlan";
@@ -108,6 +109,7 @@ function RateTopicsPage() {
   const { plan } = useActivePlan();
   const planSubjectsData = usePlanSubjects(plan?.id).data;
   const { ratings, rate, isLoading } = useTopicRatings();
+  const rag = useRagFilter();
   const [extra, setExtra] = useState<string[]>([]);
   const [open, setOpen] = useState<string | null>(null);
   const [list, setList] = useState<Record<string, ListKind>>({});
@@ -129,6 +131,20 @@ function RateTopicsPage() {
     return out;
   }, [library.subjects, planSubjectsData, extra]);
 
+  /** How many topics are red, amber, green or not rated, across every subject's current list. */
+  const totals = useMemo(() => {
+    const out: Record<Band, number> = { red: 0, amber: 0, green: 0, unrated: 0 };
+    for (const name of names) {
+      const lib = library.subjects.find((s) => s.name.trim().toLowerCase() === name.trim().toLowerCase());
+      const kinds = listsFor(name, lib);
+      const kind = list[name] && kinds.includes(list[name]!) ? list[name]! : kinds[0];
+      if (!kind) continue;
+      const mine = withWholeTopicRatings(ratings[name] ?? {}, lib?.topics ?? []);
+      for (const r of groupsFor(name, kind, lib).flatMap((g) => g.rows)) out[bandOf(mine[r.key])]++;
+    }
+    return out;
+  }, [names, library.subjects, list, ratings]);
+
   const addable = GCSE_SUBJECTS.filter(
     (s) => !names.some((n) => n.toLowerCase() === s.name.toLowerCase()),
   );
@@ -143,6 +159,15 @@ function RateTopicsPage() {
         </p>
         <div className="mt-2">
           <BandLegend />
+        </div>
+        <div className="mt-3">
+          <RagFilter shown={rag.shown} setShown={rag.setShown} counts={totals} />
+          {rag.filtering ? (
+            <p className="mt-1.5 text-[12px] font-medium text-muted-foreground">
+              Showing only {[...rag.shown].map((b) => (b === "unrated" ? "not rated" : b)).join(" and ")} topics, in
+              every subject.
+            </p>
+          ) : null}
         </div>
         {ratingsAreLocalOnly() ? (
           <p className="mt-2 rounded-[8px] bg-secondary px-3 py-2 text-[12px] font-semibold">
@@ -161,6 +186,10 @@ function RateTopicsPage() {
             const groups = kind ? groupsFor(name, kind, lib) : [];
             const rows = groups.flatMap((g) => g.rows);
             const mine = withWholeTopicRatings(ratings[name] ?? {}, lib?.topics ?? []);
+            const shownGroups = groups
+              .map((g) => ({ ...g, rows: g.rows.filter((r) => rag.matches(mine[r.key])) }))
+              .filter((g) => g.rows.length);
+            const matchCount = shownGroups.reduce((n, g) => n + g.rows.length, 0);
             const count = { red: 0, amber: 0, green: 0 };
             for (const r of rows) {
               const v = mine[r.key];
@@ -170,7 +199,8 @@ function RateTopicsPage() {
               else count.green++;
             }
             const rated = count.red + count.amber + count.green;
-            const isOpen = open === name;
+            // While filtering by colour, every subject with matching topics opens, so they can be seen together.
+            const isOpen = open === name || (rag.filtering && matchCount > 0);
             const style = subjectStyle(catalogueSubject(name)?.colorKey);
             return (
               <div key={name} className="rounded-[12px] bg-card ring-1 ring-black/5">
@@ -237,7 +267,12 @@ function RateTopicsPage() {
                       </p>
                     ) : (
                       <div className="space-y-4">
-                        {groups.map((g, gi) => (
+                        {!shownGroups.length ? (
+                          <p className="text-[13px] font-medium text-muted-foreground">
+                            No topics in {name} match the colours you've chosen.
+                          </p>
+                        ) : null}
+                        {shownGroups.map((g, gi) => (
                           <div key={g.heading ?? gi}>
                             {g.heading ? (
                               <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">

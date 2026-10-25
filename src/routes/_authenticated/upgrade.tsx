@@ -104,7 +104,9 @@ function UpgradePage() {
               {success ? "Welcome to Premium! " : ""}
               {subscription?.subscribed
                 ? `You're on Premium (${subscription.plan === "yearly" ? "yearly" : "monthly"}).`
-                : "You have full access as an admin."}
+                : subscription?.complimentary
+                  ? "You have free Premium, given by RevPlan."
+                  : "You have full access as an admin."}
             </p>
             {renews ? (
               <p className="mt-1 text-[14px] font-medium text-muted-foreground">Renews or ends on {renews}.</p>
@@ -134,7 +136,7 @@ function UpgradePage() {
                 </Button>
               ) : null}
             </div>
-            {isAdmin && !subscription?.subscribed ? (
+            {isAdmin && !subscription?.subscribed && !subscription?.complimentary ? (
               <p className="mt-3 text-[12px] font-medium text-muted-foreground">
                 Admins see every Premium feature without paying, so you can check the site.
               </p>

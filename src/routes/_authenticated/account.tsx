@@ -202,7 +202,9 @@ function MembershipCard() {
           {isPremium
             ? subscription?.subscribed
               ? `Premium (${subscription.plan === "yearly" ? "yearly" : "monthly"})`
-              : "Premium (admin access)"
+              : subscription?.complimentary
+                ? "Premium (free)"
+                : "Premium (admin access)"
             : "Free"}
         </p>
       </div>

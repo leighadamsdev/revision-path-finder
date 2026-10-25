@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Subscription = {
   subscribed: boolean;
+  /** Free Premium given by an admin. */
+  complimentary?: boolean;
   plan: string | null;
   current_period_end: string | null;
 };
@@ -55,7 +57,7 @@ export function usePremium() {
     queryFn: async (): Promise<Subscription | null> => {
       const { data, error } = await supabase
         .from("subscribers" as never)
-        .select("subscribed, plan, current_period_end")
+        .select("subscribed, complimentary, plan, current_period_end")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) return null;
@@ -74,7 +76,7 @@ export function usePremium() {
 
   const subscription = query.data ?? null;
   return {
-    isPremium: isAdmin || Boolean(subscription?.subscribed),
+    isPremium: isAdmin || Boolean(subscription?.subscribed) || Boolean(subscription?.complimentary),
     isAdmin,
     subscription,
     loading: authLoading || adminLoading || (Boolean(user) && query.isLoading),

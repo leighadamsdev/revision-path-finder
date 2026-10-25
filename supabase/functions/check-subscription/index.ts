@@ -53,6 +53,8 @@ Deno.serve(async (req) => {
     const db = adminClient();
     const user = await signedInUser(db, req);
     if (!user?.email) return json({ error: "Please sign in again." }, 401);
+    // Payments not set up yet: everyone is on the free plan, no error.
+    if (!Deno.env.get("STRIPE_SECRET_KEY")) return json({ subscribed: false, payments_enabled: false });
     const stripe = stripeClient();
     const customer = await findCustomer(stripe, db, user);
     const now = new Date().toISOString();

@@ -102,7 +102,7 @@ export function HomeSteps() {
     },
     {
       title: "Keep checking what you know",
-      body: "After you revise a topic, test yourself with the Knowledge Checker. Then update its red, amber or green rating, or change any rating in Rate my topics whenever you like, so your plan keeps focusing on what you find hardest.",
+      body: "After you revise a topic, test yourself with the Knowledge Checker or practice exam questions. Then update its red, amber or green rating, or change any rating in Rate my topics whenever you like, so your plan keeps focusing on what you find hardest.",
       to: "/knowledge-checker",
       cta: "Test myself",
       done: false,

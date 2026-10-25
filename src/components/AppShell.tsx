@@ -13,6 +13,7 @@ import {
   Sparkles,
   ClipboardCheck,
   Bot,
+  PenLine,
   Gauge,
   GraduationCap,
   Wrench,
@@ -37,6 +38,7 @@ const MY_REVISION_TABS: readonly NavTab[] = [
   { to: "/exams", label: "Exam timetable", icon: CalendarDays, premium: true },
   { to: "/plan", label: "Revision Planner", icon: CalendarDays, premium: true },
   { to: "/ai-tutor", label: "Build my AI tutor", icon: Bot, premium: true },
+  { to: "/practice-questions", label: "Practice questions", icon: PenLine, premium: true },
 ];
 
 const FREE_RESOURCE_TABS: readonly NavTab[] = [

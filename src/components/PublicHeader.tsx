@@ -17,6 +17,7 @@ const MY_REVISION: readonly NavItem[] = [
   { to: "/exams", label: "Exam timetable", premium: true },
   { to: "/plan", label: "Revision Planner", premium: true },
   { to: "/ai-tutor", label: "Build my AI tutor", premium: true },
+  { to: "/practice-questions", label: "Practice questions", premium: true },
 ];
 
 const FREE_RESOURCES: readonly NavItem[] = [

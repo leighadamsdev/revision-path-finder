@@ -782,6 +782,33 @@ export type Database = {
           },
         ]
       }
+      practice_sets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          settings: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          settings?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          settings?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -990,6 +1017,7 @@ export type Database = {
       }
       subscribers: {
         Row: {
+          complimentary: boolean
           current_period_end: string | null
           email: string | null
           plan: string | null
@@ -999,6 +1027,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          complimentary?: boolean
           current_period_end?: string | null
           email?: string | null
           plan?: string | null
@@ -1008,6 +1037,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          complimentary?: boolean
           current_period_end?: string | null
           email?: string | null
           plan?: string | null

@@ -8,13 +8,13 @@ import { BandChip } from "@/components/BandChip";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "RevPlan — a calm GCSE revision timetable" },
+      { title: "RevPlan — GCSE revision planner and knowledge checker" },
       {
         name: "description",
         content:
           "Pick your subjects, say how much time you have, and RevPlan builds a week-by-week GCSE revision timetable you can actually follow.",
       },
-      { property: "og:title", content: "RevPlan — a calm GCSE revision timetable" },
+      { property: "og:title", content: "RevPlan — GCSE revision planner and knowledge checker" },
       {
         property: "og:description",
         content:

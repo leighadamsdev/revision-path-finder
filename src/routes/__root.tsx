@@ -78,13 +78,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "RevPlan — personalised GCSE revision timetables" },
+      { title: "RevPlan — GCSE revision planner and knowledge checker" },
       {
         name: "description",
         content:
           "RevPlan builds a calm, week-by-week GCSE revision timetable around your subjects and the time you actually have.",
       },
-      { property: "og:title", content: "RevPlan — personalised GCSE revision timetables" },
+      { property: "og:title", content: "RevPlan — GCSE revision planner and knowledge checker" },
       {
         property: "og:description",
         content:

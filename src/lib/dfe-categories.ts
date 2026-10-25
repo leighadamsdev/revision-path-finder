@@ -15,8 +15,8 @@ function words(text: string): Set<string> {
 
 export const OTHER_CATEGORY = "Other topics";
 
-/** Groups a subject's topics under the DfE checklist categories, in DfE order; unmatched topics go last under "Other topics". */
-export function groupByDfeCategory<T extends { title: string; items: { title: string }[] }>(
+/** Groups a subject's topics under the DfE checklist categories, in DfE order; unmatched topics go last under "Other topics". A topic with a stored category always sits under that heading. */
+export function groupByDfeCategory<T extends { title: string; items: { title: string }[]; category?: string | null }>(
   subjectName: string,
   topics: T[],
 ): { category: string; topics: T[] }[] {
@@ -28,6 +28,14 @@ export function groupByDfeCategory<T extends { title: string; items: { title: st
   }));
   const buckets = new Map<number, T[]>();
   for (const t of topics) {
+    // A heading the student chose beats the automatic wording match.
+    const stored = t.category?.trim().toLowerCase();
+    if (stored) {
+      const i = units.findIndex((u) => u.unit.trim().toLowerCase() === stored);
+      const k = i >= 0 ? i : -1;
+      buckets.set(k, [...(buckets.get(k) ?? []), t]);
+      continue;
+    }
     const tw = words([t.title, ...t.items.map((i) => i.title)].join(" "));
     let best = -1;
     let bestScore = 0;

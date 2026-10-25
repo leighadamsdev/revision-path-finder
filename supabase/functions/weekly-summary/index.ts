@@ -14,7 +14,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const DIGEST_FROM = Deno.env.get("DIGEST_FROM") ?? "";
-const APP_URL = (Deno.env.get("APP_URL") ?? "https://revision-path-finder.lovable.app").replace(/\/$/, "");
+const APP_URL = (Deno.env.get("APP_URL") ?? "https://revisionplan.lovable.app").replace(/\/$/, "");
 const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/weekly-summary`;
 
 const CORS = {

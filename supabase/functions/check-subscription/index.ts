@@ -10,7 +10,7 @@ const CORS = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 
-const APP_URL = (Deno.env.get("APP_URL") ?? "https://revision-path-finder.lovable.app").replace(/\/$/, "");
+const APP_URL = (Deno.env.get("APP_URL") ?? "https://revisionplan.lovable.app").replace(/\/$/, "");
 
 /** The site the student came from (so links work on a custom domain too), else the published site. */
 function siteUrl(req: Request) {

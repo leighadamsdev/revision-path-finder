@@ -100,7 +100,7 @@ Use a legible, slightly rounded sans-serif and generous whitespace over dense ta
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://revision-path-finder.lovable.app
+**Live app**: https://revisionplan.lovable.app
 
 ## Build with Lovable
 

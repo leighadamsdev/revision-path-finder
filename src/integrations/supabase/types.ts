@@ -340,6 +340,7 @@ export type Database = {
       }
       library_topics: {
         Row: {
+          archived: boolean
           created_at: string
           id: string
           position: number
@@ -351,6 +352,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived?: boolean
           created_at?: string
           id?: string
           position?: number
@@ -362,6 +364,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          archived?: boolean
           created_at?: string
           id?: string
           position?: number
@@ -782,6 +785,8 @@ export type Database = {
           digest_opt_in: boolean
           display_name: string | null
           id: string
+          last_digest_sent_at: string | null
+          last_digest_test_at: string | null
           onboarding_completed_at: string | null
           parent_email: string | null
           school_id: string | null
@@ -791,6 +796,8 @@ export type Database = {
           digest_opt_in?: boolean
           display_name?: string | null
           id: string
+          last_digest_sent_at?: string | null
+          last_digest_test_at?: string | null
           onboarding_completed_at?: string | null
           parent_email?: string | null
           school_id?: string | null
@@ -800,6 +807,8 @@ export type Database = {
           digest_opt_in?: boolean
           display_name?: string | null
           id?: string
+          last_digest_sent_at?: string | null
+          last_digest_test_at?: string | null
           onboarding_completed_at?: string | null
           parent_email?: string | null
           school_id?: string | null
@@ -976,6 +985,36 @@ export type Database = {
         }
         Relationships: []
       }
+      subscribers: {
+        Row: {
+          current_period_end: string | null
+          email: string | null
+          plan: string | null
+          stripe_customer_id: string | null
+          subscribed: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_period_end?: string | null
+          email?: string | null
+          plan?: string | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_period_end?: string | null
+          email?: string | null
+          plan?: string | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       topic_library: {
         Row: {
           id: string
@@ -1055,6 +1094,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_premium: { Args: { uid: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

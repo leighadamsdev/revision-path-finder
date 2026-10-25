@@ -102,6 +102,7 @@ export function SubjectFields({
 export function LibraryManager({ subjects, refresh, showTopics = true, mode = "all" }: { subjects: LibSubject[]; refresh: () => void; showTopics?: boolean; mode?: "all" | "subjects" | "topics" }) {
   const [importFor, setImportFor] = useState<LibSubject | null>(null);
   const [manualFor, setManualFor] = useState<LibSubject | null>(null);
+  const [manualCategory, setManualCategory] = useState<string | null>(null);
   const [readyFor, setReadyFor] = useState<LibSubject | null>(null);
   const [editSubject, setEditSubject] = useState<LibSubject | null>(null);
   const [editTopic, setEditTopic] = useState<LibTopic | null>(null);
@@ -226,7 +227,20 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                 {s.topics.length > 0 && visibleTopics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No {BAND_LABEL[bandFilter as Band].toLowerCase()} topics in this subject.</li> : null}
                 {(mode === "topics" ? groupByDfeCategory(s.name, visibleTopics) : [{ category: "", topics: s.topics }]).map((g) => (
                   <li key={g.category || "all"} className="space-y-2">
-                    {g.category ? <p className="pt-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">{g.category}</p> : null}
+                    {g.category ? (
+                      <div className="flex items-center gap-2 pt-1">
+                        <p className="flex-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">{g.category}</p>
+                        {canRate ? (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold text-muted-foreground ring-1 ring-border hover:text-foreground"
+                            onClick={() => { setManualCategory(g.category === OTHER_CATEGORY ? null : g.category); setManualFor(s); }}
+                          >
+                            <Plus className="size-3" /> Add topic
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
                     <ul className="space-y-2">
                 {g.topics.map((t) => { const i = s.topics.indexOf(t); return (
                   <li key={t.id} className="rounded-[12px] bg-background p-3 ring-1 ring-border">
@@ -304,7 +318,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
 
       <ReadyListDialog subject={readyFor} onClose={() => setReadyFor(null)} onSaved={refresh} />
 
-      <ManualTopicDialog subject={manualFor} onClose={() => setManualFor(null)} onSaved={refresh} />
+      <ManualTopicDialog subject={manualFor} category={manualCategory} onClose={() => { setManualFor(null); setManualCategory(null); }} onSaved={refresh} />
 
       <EditSubjectDialog subject={editSubject} onClose={() => setEditSubject(null)} onSaved={refresh} />
 
@@ -338,7 +352,7 @@ function blankTopic(): DraftTopic {
   return { key: newKey(), title: "", items: [{ key: newKey(), title: "", uncertain: false }] };
 }
 
-function ManualTopicDialog({ subject, onClose, onSaved }: { subject: LibSubject | null; onClose: () => void; onSaved: () => void }) {
+function ManualTopicDialog({ subject, category, onClose, onSaved }: { subject: LibSubject | null; category?: string | null; onClose: () => void; onSaved: () => void }) {
   const [draft, setDraft] = useState<DraftTopic[]>([blankTopic()]);
   const [busy, setBusy] = useState(false);
   async function save(another: boolean) {
@@ -347,7 +361,7 @@ function ManualTopicDialog({ subject, onClose, onSaved }: { subject: LibSubject 
     if (!t.items.some((i) => i.title.trim())) return void toast.error("Add at least one content item.");
     setBusy(true);
     try {
-      await saveTopics(subject.id, [t], { type: "manual", path: null }, subject.topics.length);
+      await saveTopics(subject.id, [t], { type: "manual", path: null }, subject.topics.length, category);
       toast.success("Topic saved.");
       onSaved();
       setDraft([blankTopic()]);
@@ -361,7 +375,7 @@ function ManualTopicDialog({ subject, onClose, onSaved }: { subject: LibSubject 
   return (
     <Dialog open={Boolean(subject)} onOpenChange={(v) => { if (!v) { setDraft([blankTopic()]); onClose(); } }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Add a Topic to {subject?.name}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Add a Topic to {subject?.name}{category ? ` — ${category}` : ""}</DialogTitle></DialogHeader>
         <TopicDraftEditor topics={draft} onChange={(n) => setDraft(n.length ? n.slice(0, 1) : [blankTopic()])} allowAddTopic={false} />
         <DialogFooter className="gap-2">
           <Button variant="outline" disabled={busy} onClick={() => void save(true)}>Save and add another</Button>

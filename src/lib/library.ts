@@ -9,6 +9,7 @@ export type LibTopic = {
   source_type: "image" | "pdf" | "manual";
   source_path: string | null;
   archived: boolean;
+  category: string | null;
   items: LibItem[];
 };
 export type LibSubject = {
@@ -28,7 +29,7 @@ export const newKey = () => Math.random().toString(36).slice(2, 10);
 export async function fetchLibrary(): Promise<LibSubject[]> {
   const [s, t, i] = await Promise.all([
     supabase.from("library_subjects").select("id,name,exam_board,qualification_level,position").order("position").order("created_at"),
-    supabase.from("library_topics").select("id,subject_id,title,position,source_type,source_path,archived").eq("archived", false).order("position"),
+    supabase.from("library_topics").select("id,subject_id,title,position,source_type,source_path,archived,category").eq("archived", false).order("position"),
     supabase.from("library_items").select("id,topic_id,title,position,uncertain").order("position"),
   ]);
   if (s.error) throw s.error;
@@ -68,6 +69,7 @@ export async function saveTopics(
   topics: DraftTopic[],
   source: { type: "image" | "pdf" | "manual"; path: string | null },
   startPosition: number,
+  category?: string | null,
 ) {
   for (const [index, topic] of topics.entries()) {
     const { data, error } = await supabase
@@ -78,6 +80,7 @@ export async function saveTopics(
         position: startPosition + index,
         source_type: source.type,
         source_path: source.path,
+        category: category ?? null,
       })
       .select("id")
       .single();
@@ -125,7 +128,7 @@ export async function setTopicArchived(topicId: string, archived: boolean) {
 /** Topics filed away for later, with their items, newest first. */
 export async function fetchArchivedTopics(): Promise<LibTopic[]> {
   const [t, i] = await Promise.all([
-    supabase.from("library_topics").select("id,subject_id,title,position,source_type,source_path,archived").eq("archived", true).order("position"),
+    supabase.from("library_topics").select("id,subject_id,title,position,source_type,source_path,archived,category").eq("archived", true).order("position"),
     supabase.from("library_items").select("id,topic_id,title,position,uncertain").order("position"),
   ]);
   if (t.error) throw t.error;

@@ -341,6 +341,7 @@ export type Database = {
       library_topics: {
         Row: {
           archived: boolean
+          category: string | null
           created_at: string
           id: string
           position: number
@@ -353,6 +354,7 @@ export type Database = {
         }
         Insert: {
           archived?: boolean
+          category?: string | null
           created_at?: string
           id?: string
           position?: number
@@ -365,6 +367,7 @@ export type Database = {
         }
         Update: {
           archived?: boolean
+          category?: string | null
           created_at?: string
           id?: string
           position?: number

@@ -61,3 +61,6 @@
 - [x] Step 3 include/exclude subjects and topics; left-out topics saved for later
 - [x] Knowledge Checker sub-points
 - [x] Align the Knowledge Checker page colours with the site palette (navy structure, orange actions, light grey canvas)
+
+- [x] My Topics: archive folder (Kept for later) + red/amber/green filter
+- [x] My Topics: add topic directly under each DfE heading (store category on topic)

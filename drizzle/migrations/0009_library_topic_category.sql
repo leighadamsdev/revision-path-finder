@@ -1,0 +1,2 @@
+ALTER TABLE public.library_topics ADD COLUMN category text;
+COMMENT ON COLUMN public.library_topics.category IS 'DfE category heading the student filed the topic under; null means place by automatic wording match.';

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, FileImage, ListChecks, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArchiveRestore, ArrowDown, ArrowUp, ChevronDown, ChevronRight, FileImage, FolderInput, ListChecks, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,14 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   deleteSubject,
   deleteTopic,
+  fetchArchivedTopics,
   futureSessionsUsing,
   moveTopic,
   newKey,
   removeFromFutureSessions,
   replaceTopic,
   saveTopics,
+  setTopicArchived,
   updateSubject,
   type DraftTopic,
   type LibSubject,
@@ -25,11 +27,12 @@ import { GCSE_SUBJECTS, SUBJECT_GROUPS, catalogueSubject, isTiered } from "@/lib
 import { TopicDraftEditor } from "./TopicDraftEditor";
 import { ReadyListDialog } from "./ReadyListDialog";
 import { readyListFor } from "@/lib/spec-topics";
-import { groupByDfeCategory } from "@/lib/dfe-categories";
+import { OTHER_CATEGORY, groupByDfeCategory } from "@/lib/dfe-categories";
 import { BandLegend } from "@/components/BandChip";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { topicLines, withWholeTopicRatings } from "@/lib/library";
+import { BAND_LABEL, confidenceBand, confidenceTone, type Band } from "@/lib/confidence";
 
 export const libField =
   "w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring";
@@ -99,14 +102,42 @@ export function SubjectFields({
 export function LibraryManager({ subjects, refresh, showTopics = true, mode = "all" }: { subjects: LibSubject[]; refresh: () => void; showTopics?: boolean; mode?: "all" | "subjects" | "topics" }) {
   const [importFor, setImportFor] = useState<LibSubject | null>(null);
   const [manualFor, setManualFor] = useState<LibSubject | null>(null);
+  const [manualCategory, setManualCategory] = useState<string | null>(null);
   const [readyFor, setReadyFor] = useState<LibSubject | null>(null);
   const [editSubject, setEditSubject] = useState<LibSubject | null>(null);
   const [editTopic, setEditTopic] = useState<LibTopic | null>(null);
   const [removeTopic, setRemoveTopic] = useState<{ topic: LibTopic; sessions: number } | null>(null);
   const [open, setOpen] = useState<Set<string>>(new Set());
+  const [folderOpen, setFolderOpen] = useState<Set<string>>(new Set());
+  const [archivedTopics, setArchivedTopics] = useState<LibTopic[]>([]);
+  const [bandFilter, setBandFilter] = useState<Band | "all">("all");
   // On My Topics, every sub-topic can be rated red, amber or green right where it's listed.
   const canRate = mode === "topics";
   const topicRatings = useTopicRatings();
+
+  async function reloadArchived() {
+    if (mode === "subjects") return;
+    try {
+      setArchivedTopics(await fetchArchivedTopics());
+    } catch {
+      /* folder simply stays as it was */
+    }
+  }
+
+  useEffect(() => {
+    void reloadArchived();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  async function archiveTopic(topic: LibTopic, archived: boolean) {
+    await setTopicArchived(topic.id, archived);
+    if (archived) toast.success(`“${topic.title}” moved to Kept for later.`);
+    else toast.success(`“${topic.title}” is back in your topics.`);
+    refresh();
+    void reloadArchived();
+  }
+
+  const archivedFor = (subjectId: string) => archivedTopics.filter((t) => t.subject_id === subjectId);
 
   async function viewSource(path: string) {
     const { data } = await supabase.storage.from("topic-sources").createSignedUrl(path, 300);
@@ -125,11 +156,36 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
         <div className="rounded-[12px] bg-card px-4 py-3 ring-1 ring-black/5">
           <p className="text-[13px] font-extrabold">Rate each topic as you go</p>
           <BandLegend />
+          <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Show topics by rating">
+            <span className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">Show:</span>
+            {(["all", "red", "amber", "green", "unrated"] as const).map((band) => {
+              const active = bandFilter === band;
+              const tone = band === "all" ? null : confidenceTone(band === "unrated" ? null : band === "red" ? 1 : band === "amber" ? 3 : 5);
+              return (
+                <button
+                  key={band}
+                  type="button"
+                  onClick={() => setBandFilter(band)}
+                  aria-pressed={active}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ring-1 transition ${active ? "bg-primary text-primary-foreground ring-primary" : "bg-background text-foreground ring-border hover:ring-ring"}`}
+                >
+                  {tone ? <span className={`size-2 rounded-full ${tone.fill}`} /> : null}
+                  {band === "all" ? "All" : BAND_LABEL[band]}
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : null}
       {subjects.map((s) => {
         const ratings = canRate ? withWholeTopicRatings(topicRatings.ratings[s.name] ?? {}, s.topics) : {};
         const items = s.topics.reduce((n, t) => n + t.items.length, 0);
+        // Rating filter: a topic shows when any of its rateable lines has the chosen colour.
+        const visibleTopics =
+          canRate && bandFilter !== "all"
+            ? s.topics.filter((t) => topicLines(t).some((line) => confidenceBand(ratings[line]) === bandFilter))
+            : s.topics;
+        const keptForLater = archivedFor(s.id);
         const isOpen = mode === "topics" || open.has(s.id);
         return (
           <div key={s.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
@@ -151,7 +207,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                 </Button>
               ) : null}
               {mode !== "subjects" ? <Button size="sm" variant={readyListFor(s.name).units.length ? "outline" : "default"} onClick={() => setImportFor(s)}><Upload /> Import from a Contents Page or Photo</Button> : null}
-              {mode !== "subjects" ? <Button size="sm" variant="outline" onClick={() => setManualFor(s)}><Plus /> Add Topic Manually</Button> : null}
+              {mode !== "subjects" ? <Button size="sm" variant="outline" onClick={() => { setManualCategory(null); setManualFor(s); }}><Plus /> Add Topic Manually</Button> : null}
               {mode !== "topics" ? <Button size="sm" variant="outline" onClick={() => setEditSubject(s)}><Pencil /> Edit Subject</Button> : null}
               {mode !== "topics" ? <Button
                 size="sm"
@@ -168,9 +224,23 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
             {mode !== "subjects" && showTopics && isOpen ? (
               <ul className="mt-3 space-y-2">
                 {s.topics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No Topics yet.</li> : null}
-                {(mode === "topics" ? groupByDfeCategory(s.name, s.topics) : [{ category: "", topics: s.topics }]).map((g) => (
+                {s.topics.length > 0 && visibleTopics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No {BAND_LABEL[bandFilter as Band].toLowerCase()} topics in this subject.</li> : null}
+                {(mode === "topics" ? groupByDfeCategory(s.name, visibleTopics) : [{ category: "", topics: s.topics }]).map((g) => (
                   <li key={g.category || "all"} className="space-y-2">
-                    {g.category ? <p className="pt-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">{g.category}</p> : null}
+                    {g.category ? (
+                      <div className="flex items-center gap-2 pt-1">
+                        <p className="flex-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">{g.category}</p>
+                        {canRate ? (
+                          <button
+                            type="button"
+                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold text-muted-foreground ring-1 ring-border hover:text-foreground"
+                            onClick={() => { setManualCategory(g.category === OTHER_CATEGORY ? null : g.category); setManualFor(s); }}
+                          >
+                            <Plus className="size-3" /> Add topic
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
                     <ul className="space-y-2">
                 {g.topics.map((t) => { const i = s.topics.indexOf(t); return (
                   <li key={t.id} className="rounded-[12px] bg-background p-3 ring-1 ring-border">
@@ -180,6 +250,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                       <Button size="icon" variant="ghost" aria-label="Move down" disabled={i === s.topics.length - 1} onClick={async () => { await moveTopic(s.topics, i, i + 1); refresh(); }}><ArrowDown /></Button>
                       {t.source_path ? <Button size="icon" variant="ghost" aria-label="View original file" onClick={() => void viewSource(t.source_path!)}><FileImage /></Button> : null}
                       <Button size="icon" variant="ghost" aria-label="Edit topic" onClick={() => setEditTopic(t)}><Pencil /></Button>
+                      <Button size="icon" variant="ghost" aria-label="Keep for later" title="Move to Kept for later" onClick={() => void archiveTopic(t, true)}><FolderInput /></Button>
                       <Button size="icon" variant="ghost" aria-label="Remove topic" onClick={() => void askRemoveTopic(t)}><Trash2 /></Button>
                     </div>
                     {canRate ? (
@@ -211,6 +282,32 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                 ))}
               </ul>
             ) : null}
+            {mode !== "subjects" && keptForLater.length ? (
+              <div className="mt-3 rounded-[12px] bg-muted/60 p-3 ring-1 ring-border">
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 text-left text-[12px] font-extrabold text-muted-foreground"
+                  aria-expanded={folderOpen.has(s.id)}
+                  onClick={() => setFolderOpen((o) => { const n = new Set(o); if (n.has(s.id)) n.delete(s.id); else n.add(s.id); return n; })}
+                >
+                  {folderOpen.has(s.id) ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+                  Kept for later ({keptForLater.length})
+                </button>
+                {folderOpen.has(s.id) ? (
+                  <ul className="mt-2 space-y-2">
+                    {keptForLater.map((t) => (
+                      <li key={t.id} className="flex items-center gap-1 rounded-[10px] bg-background p-2.5 ring-1 ring-border">
+                        <span className="min-w-0 flex-1 text-[13px] font-bold">{t.title}
+                          <span className="block text-[11px] font-medium text-muted-foreground">{t.items.length} content {t.items.length === 1 ? "item" : "items"} — not used in plans while kept here</span>
+                        </span>
+                        <Button size="icon" variant="ghost" aria-label={`Bring ${t.title} back`} title="Bring back to my topics" onClick={() => void archiveTopic(t, false)}><ArchiveRestore /></Button>
+                        <Button size="icon" variant="ghost" aria-label={`Delete ${t.title}`} onClick={() => void askRemoveTopic(t)}><Trash2 /></Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         );
       })}
@@ -221,7 +318,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
 
       <ReadyListDialog subject={readyFor} onClose={() => setReadyFor(null)} onSaved={refresh} />
 
-      <ManualTopicDialog subject={manualFor} onClose={() => setManualFor(null)} onSaved={refresh} />
+      <ManualTopicDialog subject={manualFor} category={manualCategory} onClose={() => { setManualFor(null); setManualCategory(null); }} onSaved={refresh} />
 
       <EditSubjectDialog subject={editSubject} onClose={() => setEditSubject(null)} onSaved={refresh} />
 
@@ -241,7 +338,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                 Remove from future sessions only
               </Button>
             ) : null}
-            <Button variant="destructive" onClick={async () => { await deleteTopic(removeTopic!.topic.id); setRemoveTopic(null); refresh(); }}>
+            <Button variant="destructive" onClick={async () => { await deleteTopic(removeTopic!.topic.id); setRemoveTopic(null); refresh(); void reloadArchived(); }}>
               Delete from library
             </Button>
           </DialogFooter>
@@ -255,7 +352,7 @@ function blankTopic(): DraftTopic {
   return { key: newKey(), title: "", items: [{ key: newKey(), title: "", uncertain: false }] };
 }
 
-function ManualTopicDialog({ subject, onClose, onSaved }: { subject: LibSubject | null; onClose: () => void; onSaved: () => void }) {
+function ManualTopicDialog({ subject, category, onClose, onSaved }: { subject: LibSubject | null; category?: string | null; onClose: () => void; onSaved: () => void }) {
   const [draft, setDraft] = useState<DraftTopic[]>([blankTopic()]);
   const [busy, setBusy] = useState(false);
   async function save(another: boolean) {
@@ -264,7 +361,7 @@ function ManualTopicDialog({ subject, onClose, onSaved }: { subject: LibSubject 
     if (!t.items.some((i) => i.title.trim())) return void toast.error("Add at least one content item.");
     setBusy(true);
     try {
-      await saveTopics(subject.id, [t], { type: "manual", path: null }, subject.topics.length);
+      await saveTopics(subject.id, [t], { type: "manual", path: null }, subject.topics.length, category);
       toast.success("Topic saved.");
       onSaved();
       setDraft([blankTopic()]);
@@ -278,7 +375,7 @@ function ManualTopicDialog({ subject, onClose, onSaved }: { subject: LibSubject 
   return (
     <Dialog open={Boolean(subject)} onOpenChange={(v) => { if (!v) { setDraft([blankTopic()]); onClose(); } }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Add a Topic to {subject?.name}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Add a Topic to {subject?.name}{category ? ` — ${category}` : ""}</DialogTitle></DialogHeader>
         <TopicDraftEditor topics={draft} onChange={(n) => setDraft(n.length ? n.slice(0, 1) : [blankTopic()])} allowAddTopic={false} />
         <DialogFooter className="gap-2">
           <Button variant="outline" disabled={busy} onClick={() => void save(true)}>Save and add another</Button>

@@ -29,9 +29,13 @@ let refreshedFor: string | null = null;
 
 /** Refreshes the saved subscription from Stripe and returns the latest status. */
 export async function refreshSubscription(): Promise<Subscription | null> {
-  const { data, error } = await supabase.functions.invoke("check-subscription", { body: {} });
-  if (error || !data || (data as { error?: string }).error) return null;
-  return data as Subscription;
+  try {
+    const { data, error } = await supabase.functions.invoke("check-subscription", { body: {} });
+    if (error || !data || (data as { error?: string }).error) return null;
+    return data as Subscription;
+  } catch {
+    return null;
+  }
 }
 
 /**

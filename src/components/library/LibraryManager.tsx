@@ -223,7 +223,8 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
             {mode !== "subjects" && showTopics && isOpen ? (
               <ul className="mt-3 space-y-2">
                 {s.topics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No Topics yet.</li> : null}
-                {(mode === "topics" ? groupByDfeCategory(s.name, s.topics) : [{ category: "", topics: s.topics }]).map((g) => (
+                {s.topics.length > 0 && visibleTopics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No {BAND_LABEL[bandFilter as Band].toLowerCase()} topics in this subject.</li> : null}
+                {(mode === "topics" ? groupByDfeCategory(s.name, visibleTopics) : [{ category: "", topics: s.topics }]).map((g) => (
                   <li key={g.category || "all"} className="space-y-2">
                     {g.category ? <p className="pt-1 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">{g.category}</p> : null}
                     <ul className="space-y-2">
@@ -235,6 +236,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                       <Button size="icon" variant="ghost" aria-label="Move down" disabled={i === s.topics.length - 1} onClick={async () => { await moveTopic(s.topics, i, i + 1); refresh(); }}><ArrowDown /></Button>
                       {t.source_path ? <Button size="icon" variant="ghost" aria-label="View original file" onClick={() => void viewSource(t.source_path!)}><FileImage /></Button> : null}
                       <Button size="icon" variant="ghost" aria-label="Edit topic" onClick={() => setEditTopic(t)}><Pencil /></Button>
+                      <Button size="icon" variant="ghost" aria-label="Keep for later" title="Move to Kept for later" onClick={() => void archiveTopic(t, true)}><FolderInput /></Button>
                       <Button size="icon" variant="ghost" aria-label="Remove topic" onClick={() => void askRemoveTopic(t)}><Trash2 /></Button>
                     </div>
                     {canRate ? (

@@ -60,7 +60,8 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
     if (!customer) {
       await db.from("subscribers").upsert({ user_id: user.id, email: user.email, subscribed: false, plan: null, current_period_end: null, updated_at: now });
-      return json({ subscribed: false });
+      const { data: row } = await db.from("subscribers").select("complimentary").eq("user_id", user.id).maybeSingle();
+      return json({ subscribed: false, complimentary: Boolean(row?.complimentary) });
     }
     const subs = await stripe.subscriptions.list({ customer, status: "all", limit: 10 });
     const live = subs.data.find((s) => ["active", "trialing", "past_due"].includes(s.status));
@@ -79,7 +80,14 @@ Deno.serve(async (req) => {
       current_period_end,
       updated_at: now,
     });
-    return json({ subscribed: Boolean(live), plan, current_period_end, cancelling: Boolean(live?.cancel_at_period_end) });
+    const { data: row } = await db.from("subscribers").select("complimentary").eq("user_id", user.id).maybeSingle();
+    return json({
+      subscribed: Boolean(live),
+      complimentary: Boolean(row?.complimentary),
+      plan,
+      current_period_end,
+      cancelling: Boolean(live?.cancel_at_period_end),
+    });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }

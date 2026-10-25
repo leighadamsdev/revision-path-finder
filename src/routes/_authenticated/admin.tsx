@@ -1,3 +1,4 @@
+import { UsersPanel } from "@/components/admin/UsersPanel";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -28,9 +29,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type TabKey = "subjects" | "topics" | "papers" | "sites" | "exams" | "schools";
+type TabKey = "users" | "subjects" | "topics" | "papers" | "sites" | "exams" | "schools";
 
 const TABS: { key: TabKey; label: string }[] = [
+  { key: "users", label: "Users" },
   { key: "subjects", label: "Subjects" },
   { key: "topics", label: "Topic lists" },
   { key: "papers", label: "Past papers" },
@@ -47,7 +49,7 @@ const pill = "rounded-full px-4 py-2 text-[13px] font-bold";
 function AdminPage() {
   const navigate = useNavigate();
   const { isAdmin, loading } = useIsAdmin();
-  const [tab, setTab] = useState<TabKey>("subjects");
+  const [tab, setTab] = useState<TabKey>("users");
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/plan", replace: true });
@@ -63,9 +65,9 @@ function AdminPage() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-extrabold tracking-tight">Shared content</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">Admin</h1>
       <p className="mt-1 text-[13px] font-medium text-muted-foreground">
-        Everything here is shared by every student. Students can read it; only admins can change it.
+        Manage users, and the content shared by every student. Only admins can see this page.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2">
@@ -85,6 +87,7 @@ function AdminPage() {
       </div>
 
       <div className="mt-5">
+        {tab === "users" ? <UsersPanel /> : null}
         {tab === "subjects" ? <SubjectsPanel /> : null}
         {tab === "topics" ? <TopicsPanel /> : null}
         {tab === "papers" ? <PapersPanel /> : null}

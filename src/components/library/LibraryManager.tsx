@@ -32,7 +32,7 @@ import { BandLegend } from "@/components/BandChip";
 import { ConfidencePicker } from "@/components/ConfidencePicker";
 import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { topicLines, withWholeTopicRatings } from "@/lib/library";
-import { BAND_LABEL, confidenceBand, confidenceTone, type Band } from "@/lib/confidence";
+import { RagFilter, useRagFilter } from "@/components/RagFilter";
 
 export const libField =
   "w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring";
@@ -110,7 +110,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [folderOpen, setFolderOpen] = useState<Set<string>>(new Set());
   const [archivedTopics, setArchivedTopics] = useState<LibTopic[]>([]);
-  const [bandFilter, setBandFilter] = useState<Band | "all">("all");
+  const rag = useRagFilter();
   // On My Topics, every sub-topic can be rated red, amber or green right where it's listed.
   const canRate = mode === "topics";
   const topicRatings = useTopicRatings();
@@ -156,24 +156,8 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
         <div className="rounded-[12px] bg-card px-4 py-3 ring-1 ring-black/5">
           <p className="text-[13px] font-extrabold">Rate each topic as you go</p>
           <BandLegend />
-          <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Show topics by rating">
-            <span className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">Show:</span>
-            {(["all", "red", "amber", "green", "unrated"] as const).map((band) => {
-              const active = bandFilter === band;
-              const tone = band === "all" ? null : confidenceTone(band === "unrated" ? null : band === "red" ? 1 : band === "amber" ? 3 : 5);
-              return (
-                <button
-                  key={band}
-                  type="button"
-                  onClick={() => setBandFilter(band)}
-                  aria-pressed={active}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ring-1 transition ${active ? "bg-primary text-primary-foreground ring-primary" : "bg-background text-foreground ring-border hover:ring-ring"}`}
-                >
-                  {tone ? <span className={`size-2 rounded-full ${tone.fill}`} /> : null}
-                  {band === "all" ? "All" : BAND_LABEL[band]}
-                </button>
-              );
-            })}
+          <div className="mt-2">
+            <RagFilter shown={rag.shown} setShown={rag.setShown} />
           </div>
         </div>
       ) : null}
@@ -182,8 +166,8 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
         const items = s.topics.reduce((n, t) => n + t.items.length, 0);
         // Rating filter: a topic shows when any of its rateable lines has the chosen colour.
         const visibleTopics =
-          canRate && bandFilter !== "all"
-            ? s.topics.filter((t) => topicLines(t).some((line) => confidenceBand(ratings[line]) === bandFilter))
+          canRate && rag.filtering
+            ? s.topics.filter((t) => topicLines(t).some((line) => rag.matches(ratings[line])))
             : s.topics;
         const keptForLater = archivedFor(s.id);
         const isOpen = mode === "topics" || open.has(s.id);
@@ -224,7 +208,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
             {mode !== "subjects" && showTopics && isOpen ? (
               <ul className="mt-3 space-y-2">
                 {s.topics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No Topics yet.</li> : null}
-                {s.topics.length > 0 && visibleTopics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No {BAND_LABEL[bandFilter as Band].toLowerCase()} topics in this subject.</li> : null}
+                {s.topics.length > 0 && visibleTopics.length === 0 ? <li className="text-[12px] font-medium text-muted-foreground">No topics in this subject match the colours you've chosen.</li> : null}
                 {(mode === "topics" ? groupByDfeCategory(s.name, visibleTopics) : [{ category: "", topics: s.topics }]).map((g) => (
                   <li key={g.category || "all"} className="space-y-2">
                     {g.category ? (
@@ -256,6 +240,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                     {canRate ? (
                       <ul className="mt-2 divide-y divide-border/60">
                         {topicLines(t).map((line, li) => {
+                          if (!rag.matches(ratings[line])) return null;
                           const label = t.items.length ? t.items[li]!.title : "Rate this topic";
                           return (
                             <li key={line} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-1.5">

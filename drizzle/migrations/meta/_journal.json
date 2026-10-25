@@ -50,6 +50,13 @@
       "when": 1792850964625,
       "tag": "0006_premium_subscriptions",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792941453730,
+      "tag": "0007_premium_database_rules",
+      "breakpoints": true
     }
   ]
 }

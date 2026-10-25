@@ -50,7 +50,7 @@ import type { LucideIcon } from "lucide-react";
 
 const GROUPS: { label: string; items: readonly NavTab[] }[] = [
   { label: "My revision", items: MY_REVISION_TABS },
-  { label: "Revision resources", items: FREE_RESOURCE_TABS },
+  { label: "Free resources", items: FREE_RESOURCE_TABS },
 ];
 
 const ALL_TABS: readonly NavTab[] = [...MY_REVISION_TABS, ...FREE_RESOURCE_TABS];

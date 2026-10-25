@@ -28,7 +28,7 @@ const FREE_RESOURCES: readonly NavItem[] = [
 
 const GROUPS: { label: string; items: readonly NavItem[] }[] = [
   { label: "My revision", items: MY_REVISION },
-  { label: "Revision resources", items: FREE_RESOURCES },
+  { label: "Free resources", items: FREE_RESOURCES },
 ];
 
 const MOBILE_PRIMARY = ["/library", "/topics"] as const;

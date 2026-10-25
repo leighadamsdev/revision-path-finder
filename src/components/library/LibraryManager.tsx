@@ -268,6 +268,32 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                 ))}
               </ul>
             ) : null}
+            {mode !== "subjects" && keptForLater.length ? (
+              <div className="mt-3 rounded-[12px] bg-muted/60 p-3 ring-1 ring-border">
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 text-left text-[12px] font-extrabold text-muted-foreground"
+                  aria-expanded={folderOpen.has(s.id)}
+                  onClick={() => setFolderOpen((o) => { const n = new Set(o); if (n.has(s.id)) n.delete(s.id); else n.add(s.id); return n; })}
+                >
+                  {folderOpen.has(s.id) ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+                  Kept for later ({keptForLater.length})
+                </button>
+                {folderOpen.has(s.id) ? (
+                  <ul className="mt-2 space-y-2">
+                    {keptForLater.map((t) => (
+                      <li key={t.id} className="flex items-center gap-1 rounded-[10px] bg-background p-2.5 ring-1 ring-border">
+                        <span className="min-w-0 flex-1 text-[13px] font-bold">{t.title}
+                          <span className="block text-[11px] font-medium text-muted-foreground">{t.items.length} content {t.items.length === 1 ? "item" : "items"} — not used in plans while kept here</span>
+                        </span>
+                        <Button size="icon" variant="ghost" aria-label={`Bring ${t.title} back`} title="Bring back to my topics" onClick={() => void archiveTopic(t, false)}><ArchiveRestore /></Button>
+                        <Button size="icon" variant="ghost" aria-label={`Delete ${t.title}`} onClick={() => void askRemoveTopic(t)}><Trash2 /></Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         );
       })}
@@ -298,7 +324,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                 Remove from future sessions only
               </Button>
             ) : null}
-            <Button variant="destructive" onClick={async () => { await deleteTopic(removeTopic!.topic.id); setRemoveTopic(null); refresh(); }}>
+            <Button variant="destructive" onClick={async () => { await deleteTopic(removeTopic!.topic.id); setRemoveTopic(null); refresh(); void reloadArchived(); }}>
               Delete from library
             </Button>
           </DialogFooter>

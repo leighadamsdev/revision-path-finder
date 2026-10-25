@@ -155,6 +155,25 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
         <div className="rounded-[12px] bg-card px-4 py-3 ring-1 ring-black/5">
           <p className="text-[13px] font-extrabold">Rate each topic as you go</p>
           <BandLegend />
+          <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Show topics by rating">
+            <span className="text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">Show:</span>
+            {(["all", "red", "amber", "green", "unrated"] as const).map((band) => {
+              const active = bandFilter === band;
+              const tone = band === "all" ? null : confidenceTone(band === "unrated" ? null : band === "red" ? 1 : band === "amber" ? 3 : 5);
+              return (
+                <button
+                  key={band}
+                  type="button"
+                  onClick={() => setBandFilter(band)}
+                  aria-pressed={active}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold ring-1 transition ${active ? "bg-primary text-primary-foreground ring-primary" : "bg-background text-foreground ring-border hover:ring-ring"}`}
+                >
+                  {tone ? <span className={`size-2 rounded-full ${tone.fill}`} /> : null}
+                  {band === "all" ? "All" : BAND_LABEL[band]}
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : null}
       {subjects.map((s) => {

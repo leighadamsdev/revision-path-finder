@@ -27,7 +27,7 @@ function TopicsPage() {
     <AppShell>
       <div className="mx-auto max-w-3xl">
         <h1 className="text-xl font-extrabold tracking-tight">My Topics</h1>
-        <p className="mt-1 text-[13px] font-medium text-muted-foreground">Add or import topics under the subjects you study. You can update them any time.</p>
+        <p className="mt-1 text-[13px] font-medium text-muted-foreground">Add or import topics under the subjects you study, then rate each one red, amber or green. Red topics get the most revision time. You can change them any time.</p>
         <div className="mt-4">
           {isLoading ? <Skeleton className="h-24 w-full" /> : subjects.length ? <LibraryManager subjects={subjects} refresh={refresh} mode="topics" /> : (
             <div className="space-y-3">

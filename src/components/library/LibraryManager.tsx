@@ -26,6 +26,10 @@ import { TopicDraftEditor } from "./TopicDraftEditor";
 import { ReadyListDialog } from "./ReadyListDialog";
 import { readyListFor } from "@/lib/spec-topics";
 import { groupByDfeCategory } from "@/lib/dfe-categories";
+import { BandLegend } from "@/components/BandChip";
+import { ConfidencePicker } from "@/components/ConfidencePicker";
+import { useTopicRatings } from "@/hooks/useTopicRatings";
+import { topicLines, withWholeTopicRatings } from "@/lib/library";
 
 export const libField =
   "w-full rounded-[12px] bg-background px-3 py-2.5 text-sm font-medium ring-1 ring-border focus:outline-none focus:ring-ring";
@@ -100,6 +104,9 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
   const [editTopic, setEditTopic] = useState<LibTopic | null>(null);
   const [removeTopic, setRemoveTopic] = useState<{ topic: LibTopic; sessions: number } | null>(null);
   const [open, setOpen] = useState<Set<string>>(new Set());
+  // On My Topics, every sub-topic can be rated red, amber or green right where it's listed.
+  const canRate = mode === "topics";
+  const topicRatings = useTopicRatings();
 
   async function viewSource(path: string) {
     const { data } = await supabase.storage.from("topic-sources").createSignedUrl(path, 300);
@@ -114,7 +121,14 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
 
   return (
     <div className="space-y-3">
+      {canRate && subjects.some((s) => s.topics.length) ? (
+        <div className="rounded-[12px] bg-card px-4 py-3 ring-1 ring-black/5">
+          <p className="text-[13px] font-extrabold">Rate each topic as you go</p>
+          <BandLegend />
+        </div>
+      ) : null}
       {subjects.map((s) => {
+        const ratings = canRate ? withWholeTopicRatings(topicRatings.ratings[s.name] ?? {}, s.topics) : {};
         const items = s.topics.reduce((n, t) => n + t.items.length, 0);
         const isOpen = mode === "topics" || open.has(s.id);
         return (
@@ -168,9 +182,28 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
                       <Button size="icon" variant="ghost" aria-label="Edit topic" onClick={() => setEditTopic(t)}><Pencil /></Button>
                       <Button size="icon" variant="ghost" aria-label="Remove topic" onClick={() => void askRemoveTopic(t)}><Trash2 /></Button>
                     </div>
-                    <ul className="mt-1 list-disc pl-5 text-[12px] font-medium text-muted-foreground">
-                      {t.items.map((it) => <li key={it.id}>{it.title}</li>)}
-                    </ul>
+                    {canRate ? (
+                      <ul className="mt-2 divide-y divide-border/60">
+                        {topicLines(t).map((line, li) => {
+                          const label = t.items.length ? t.items[li]!.title : "Rate this topic";
+                          return (
+                            <li key={line} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-1.5">
+                              <span className="min-w-0 flex-1 text-[12px] font-medium text-muted-foreground">{label}</span>
+                              <ConfidencePicker
+                                size="sm"
+                                label={t.items.length ? label : t.title}
+                                value={ratings[line] ?? null}
+                                onChange={(v) => void topicRatings.rate(s.name, line, v)}
+                              />
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <ul className="mt-1 list-disc pl-5 text-[12px] font-medium text-muted-foreground">
+                        {t.items.map((it) => <li key={it.id}>{it.title}</li>)}
+                      </ul>
+                    )}
                   </li>
                 ); })}
                     </ul>

@@ -17,6 +17,7 @@ export const PREMIUM_FEATURES = [
   "Exam timetable with your summer exams added for you, plus mocks",
   "Knowledge Checker: test yourself, save checkers and make flashcards from your gaps",
   "Build my AI tutor, including a tutor focused on your red topics",
+  "Practice exam questions on your topics, marked by your AI, with saved sets",
   "A weekly summary email for you and your parent or carer",
 ] as const;
 

@@ -199,14 +199,14 @@ function RateTopicsPage() {
                     <TutorFromReds
                       name={name}
                       reds={redTopics(name, lib, mine)}
-                      onBuild={(reds) => {
+                      onBuild={(reds, to) => {
                         saveTutorHandoff({
                           subject: name,
                           board: lib?.exam_board,
                           tier: lib?.qualification_level,
                           topics: reds.map((text) => ({ text, rating: 1 })),
                         });
-                        void navigate({ to: "/ai-tutor" });
+                        void navigate({ to });
                       }}
                     />
                     {kinds.length > 1 ? (
@@ -311,23 +311,33 @@ function TutorFromReds({
 }: {
   name: string;
   reds: string[];
-  onBuild: (reds: string[]) => void;
+  onBuild: (reds: string[], to: "/ai-tutor" | "/practice-questions") => void;
 }) {
+  const button =
+    "rounded-full bg-structure px-3 py-1.5 text-[12px] font-bold text-structure-foreground disabled:opacity-40";
   return (
     <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[10px] bg-background px-3 py-2.5 ring-1 ring-border">
       <Bot className="size-4 shrink-0 text-muted-foreground" />
       <p className="min-w-0 flex-1 text-[12px] font-semibold text-muted-foreground">
         {reds.length
-          ? `Build an AI tutor that focuses on your ${reds.length} red ${name} topic${reds.length === 1 ? "" : "s"}.`
-          : `Rate some ${name} topics red and you can build an AI tutor that focuses on them.`}
+          ? `Work on your ${reds.length} red ${name} topic${reds.length === 1 ? "" : "s"} with your own AI.`
+          : `Rate some ${name} topics red and you can work on them with your own AI.`}
       </p>
       <button
         type="button"
         disabled={!reds.length}
-        onClick={() => onBuild(reds)}
-        className="rounded-full bg-structure px-3 py-1.5 text-[12px] font-bold text-structure-foreground disabled:opacity-40"
+        onClick={() => onBuild(reds, "/ai-tutor")}
+        className={button}
       >
         Build my AI tutor
+      </button>
+      <button
+        type="button"
+        disabled={!reds.length}
+        onClick={() => onBuild(reds, "/practice-questions")}
+        className={button}
+      >
+        Practice questions
       </button>
       <PremiumTagIfFree />
     </div>

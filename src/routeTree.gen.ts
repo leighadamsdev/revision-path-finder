@@ -27,6 +27,7 @@ import { Route as AuthenticatedMyPlansRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPapersRouteImport } from './routes/_authenticated/papers'
 import { Route as AuthenticatedPlanRouteImport } from './routes/_authenticated/plan'
+import { Route as AuthenticatedPracticeQuestionsRouteImport } from './routes/_authenticated/practice-questions'
 import { Route as AuthenticatedPrintPlanRouteImport } from './routes/_authenticated/print-plan'
 import { Route as AuthenticatedRateTopicsRouteImport } from './routes/_authenticated/rate-topics'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
@@ -125,6 +126,12 @@ const AuthenticatedPlanRoute = AuthenticatedPlanRouteImport.update({
   path: '/plan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPracticeQuestionsRoute =
+  AuthenticatedPracticeQuestionsRouteImport.update({
+    id: '/practice-questions',
+    path: '/practice-questions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPrintPlanRoute = AuthenticatedPrintPlanRouteImport.update({
   id: '/print-plan',
   path: '/print-plan',
@@ -179,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
+  '/practice-questions': typeof AuthenticatedPracticeQuestionsRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/rate-topics': typeof AuthenticatedRateTopicsRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -205,6 +213,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/papers': typeof AuthenticatedPapersRoute
   '/plan': typeof AuthenticatedPlanRoute
+  '/practice-questions': typeof AuthenticatedPracticeQuestionsRoute
   '/print-plan': typeof AuthenticatedPrintPlanRoute
   '/rate-topics': typeof AuthenticatedRateTopicsRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -233,6 +242,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/papers': typeof AuthenticatedPapersRoute
   '/_authenticated/plan': typeof AuthenticatedPlanRoute
+  '/_authenticated/practice-questions': typeof AuthenticatedPracticeQuestionsRoute
   '/_authenticated/print-plan': typeof AuthenticatedPrintPlanRoute
   '/_authenticated/rate-topics': typeof AuthenticatedRateTopicsRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/papers'
     | '/plan'
+    | '/practice-questions'
     | '/print-plan'
     | '/rate-topics'
     | '/setup'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/papers'
     | '/plan'
+    | '/practice-questions'
     | '/print-plan'
     | '/rate-topics'
     | '/setup'
@@ -314,6 +326,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/papers'
     | '/_authenticated/plan'
+    | '/_authenticated/practice-questions'
     | '/_authenticated/print-plan'
     | '/_authenticated/rate-topics'
     | '/_authenticated/setup'
@@ -462,6 +475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/practice-questions': {
+      id: '/_authenticated/practice-questions'
+      path: '/practice-questions'
+      fullPath: '/practice-questions'
+      preLoaderRoute: typeof AuthenticatedPracticeQuestionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/print-plan': {
       id: '/_authenticated/print-plan'
       path: '/print-plan'
@@ -526,6 +546,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPapersRoute: typeof AuthenticatedPapersRoute
   AuthenticatedPlanRoute: typeof AuthenticatedPlanRoute
+  AuthenticatedPracticeQuestionsRoute: typeof AuthenticatedPracticeQuestionsRoute
   AuthenticatedPrintPlanRoute: typeof AuthenticatedPrintPlanRoute
   AuthenticatedRateTopicsRoute: typeof AuthenticatedRateTopicsRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
@@ -546,6 +567,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPapersRoute: AuthenticatedPapersRoute,
   AuthenticatedPlanRoute: AuthenticatedPlanRoute,
+  AuthenticatedPracticeQuestionsRoute: AuthenticatedPracticeQuestionsRoute,
   AuthenticatedPrintPlanRoute: AuthenticatedPrintPlanRoute,
   AuthenticatedRateTopicsRoute: AuthenticatedRateTopicsRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,

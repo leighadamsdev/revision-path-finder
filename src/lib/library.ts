@@ -8,6 +8,8 @@ export type LibTopic = {
   position: number;
   source_type: "image" | "pdf" | "manual";
   source_path: string | null;
+  archived: boolean;
+  category: string | null;
   items: LibItem[];
 };
 export type LibSubject = {
@@ -27,7 +29,7 @@ export const newKey = () => Math.random().toString(36).slice(2, 10);
 export async function fetchLibrary(): Promise<LibSubject[]> {
   const [s, t, i] = await Promise.all([
     supabase.from("library_subjects").select("id,name,exam_board,qualification_level,position").order("position").order("created_at"),
-    supabase.from("library_topics").select("id,subject_id,title,position,source_type,source_path").order("position"),
+    supabase.from("library_topics").select("id,subject_id,title,position,source_type,source_path,archived,category").eq("archived", false).order("position"),
     supabase.from("library_items").select("id,topic_id,title,position,uncertain").order("position"),
   ]);
   if (s.error) throw s.error;
@@ -67,6 +69,7 @@ export async function saveTopics(
   topics: DraftTopic[],
   source: { type: "image" | "pdf" | "manual"; path: string | null },
   startPosition: number,
+  category?: string | null,
 ) {
   for (const [index, topic] of topics.entries()) {
     const { data, error } = await supabase
@@ -77,6 +80,7 @@ export async function saveTopics(
         position: startPosition + index,
         source_type: source.type,
         source_path: source.path,
+        category: category ?? null,
       })
       .select("id")
       .single();
@@ -113,6 +117,23 @@ export async function replaceTopic(topicId: string, draft: DraftTopic, existing:
 export async function deleteTopic(topicId: string) {
   const { error } = await supabase.from("library_topics").delete().eq("id", topicId);
   if (error) throw error;
+}
+
+/** Files a topic away in the "Kept for later" folder (or brings it back). */
+export async function setTopicArchived(topicId: string, archived: boolean) {
+  const { error } = await supabase.from("library_topics").update({ archived }).eq("id", topicId);
+  if (error) throw error;
+}
+
+/** Topics filed away for later, with their items, newest first. */
+export async function fetchArchivedTopics(): Promise<LibTopic[]> {
+  const [t, i] = await Promise.all([
+    supabase.from("library_topics").select("id,subject_id,title,position,source_type,source_path,archived,category").eq("archived", true).order("position"),
+    supabase.from("library_items").select("id,topic_id,title,position,uncertain").order("position"),
+  ]);
+  if (t.error) throw t.error;
+  if (i.error) throw i.error;
+  return (t.data ?? []).map((tp) => ({ ...tp, items: (i.data ?? []).filter((it) => it.topic_id === tp.id) }));
 }
 
 export async function moveTopic(topics: LibTopic[], from: number, to: number) {

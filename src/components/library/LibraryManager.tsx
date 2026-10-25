@@ -179,6 +179,12 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
       {subjects.map((s) => {
         const ratings = canRate ? withWholeTopicRatings(topicRatings.ratings[s.name] ?? {}, s.topics) : {};
         const items = s.topics.reduce((n, t) => n + t.items.length, 0);
+        // Rating filter: a topic shows when any of its rateable lines has the chosen colour.
+        const visibleTopics =
+          canRate && bandFilter !== "all"
+            ? s.topics.filter((t) => topicLines(t).some((line) => confidenceBand(ratings[line]) === bandFilter))
+            : s.topics;
+        const keptForLater = archivedFor(s.id);
         const isOpen = mode === "topics" || open.has(s.id);
         return (
           <div key={s.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">

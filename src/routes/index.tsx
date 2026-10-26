@@ -3,6 +3,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { LogoOnDark } from "@/components/Logo";
 import { PublicHeader } from "@/components/PublicHeader";
 import { HomeSteps } from "@/components/HomeSteps";
+import { HomeDashboard } from "@/components/HomeDashboard";
+import { AppShell } from "@/components/AppShell";
+import { useAuth } from "@/hooks/useAuth";
 import { BandChip } from "@/components/BandChip";
 
 export const Route = createFileRoute("/")({
@@ -46,6 +49,15 @@ const POINTS = [
 ];
 
 function Landing() {
+  const { user } = useAuth();
+  // Signed-in students get a personal guide instead of the visitor homepage.
+  if (user) {
+    return (
+      <AppShell>
+        <HomeDashboard />
+      </AppShell>
+    );
+  }
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">
       <PublicHeader />

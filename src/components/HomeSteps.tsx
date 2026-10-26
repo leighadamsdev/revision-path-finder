@@ -123,14 +123,19 @@ export function HomeSteps() {
           Create your plan
         </h2>
         {!loading && !signedIn ? (
-          <Link
-            to="/auth"
-            search={{ mode: "signup", context: "create-plan", returnTo: "/library" }}
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground shadow-md hover:brightness-105"
-          >
-            Sign up free
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link to="/auth" className="text-sm font-bold underline-offset-4 hover:underline">
+              Already have an account? Sign in
+            </Link>
+            <Link
+              to="/auth"
+              search={{ mode: "signup", context: "create-plan", returnTo: "/library" }}
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground shadow-md hover:brightness-105"
+            >
+              Sign up free
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
         ) : null}
       </div>
       <div className="relative mt-5 w-full">

@@ -70,7 +70,10 @@ export function PublicHeader() {
           {user ? (
             <Link to="/plan" className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">My plan</Link>
           ) : (
-            <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/library" }} className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Sign up free</Link>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <Link to="/auth" className="rounded-full px-3 py-2 text-sm font-bold text-foreground ring-1 ring-border hover:bg-accent">Sign in</Link>
+              <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/library" }} className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Sign up free</Link>
+            </div>
           )}
         </div>
         <nav className="mt-3 hidden border-t border-border pt-2 sm:block" aria-label="Main navigation">
@@ -162,7 +165,10 @@ export function PublicHeader() {
                   {user ? (
                     <Link to="/plan" onClick={() => setMoreOpen(false)} className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">My plan</Link>
                   ) : (
-                    <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/library" }} onClick={() => setMoreOpen(false)} className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">Sign up free</Link>
+                    <div className="space-y-2">
+                      <Link to="/auth" search={{ mode: "signup", context: "create-plan", returnTo: "/library" }} onClick={() => setMoreOpen(false)} className="block rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-primary-foreground">Sign up free</Link>
+                      <Link to="/auth" onClick={() => setMoreOpen(false)} className="block rounded-full px-4 py-3 text-center text-sm font-bold ring-1 ring-border">Already have an account? Sign in</Link>
+                    </div>
                   )}
                 </div>
               </div>

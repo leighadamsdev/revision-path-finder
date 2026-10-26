@@ -56,7 +56,7 @@ function Landing() {
         </p>
         <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
           A bespoke revision timetable, built around exactly what you need to focus on and the time
-          you have
+          you have.
         </h1>
         <HomeSteps />
         <Link

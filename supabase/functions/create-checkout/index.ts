@@ -48,7 +48,7 @@ async function findCustomer(stripe: Stripe, db: SupabaseClient, user: User) {
 /** RevPlan Premium prices, in pence. Change them here. */
 const PRICES = { month: 499, year: 2999 } as const;
 
-// Starts a Stripe Checkout for RevPlan Premium. Body: { interval: "month" | "year" }.
+// Starts a Stripe Checkout for RevPlan Premium. Body: { interval: "month" | "year", agreedToTerms: true }.
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
@@ -57,6 +57,11 @@ Deno.serve(async (req) => {
     if (!user?.email) return json({ error: "Please sign in again." }, 401);
     const body = await req.json().catch(() => ({}));
     const interval: "month" | "year" = body?.interval === "year" ? "year" : "month";
+    if (body?.agreedToTerms !== true) {
+      return json({ error: "Please tick the box to agree to the Terms before paying." }, 400);
+    }
+    // Kept on the subscription as a record that they agreed to the Terms and asked to start straight away.
+    const agreedAt = new Date().toISOString();
 
     const stripe = stripeClient();
     let customer = await findCustomer(stripe, db, user);
@@ -89,7 +94,9 @@ Deno.serve(async (req) => {
       ],
       allow_promotion_codes: true,
       client_reference_id: user.id,
-      subscription_data: { metadata: { user_id: user.id } },
+      subscription_data: {
+        metadata: { user_id: user.id, agreed_to_terms_at: agreedAt, immediate_start_requested: "true" },
+      },
       success_url: `${site}/upgrade?success=1`,
       cancel_url: `${site}/upgrade`,
     });

@@ -59,6 +59,7 @@ function UpgradePage() {
   const { success } = Route.useSearch();
   const [interval, setBilling] = useState<"month" | "year">("year");
   const [busy, setBusy] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [checking, setChecking] = useState(Boolean(success));
 
   // Back from Stripe: check a few times, as the payment can take a moment to show.
@@ -200,18 +201,32 @@ function UpgradePage() {
                     </li>
                   ))}
                 </ul>
+                <label className="mt-5 flex items-start gap-2.5 text-[12px] font-semibold leading-snug">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="mt-0.5 size-4 shrink-0 accent-primary"
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <Link to="/terms" target="_blank" className="font-bold underline">Terms</Link>. I want Premium to
+                    start now, and I understand it renews every {interval} until I cancel. If I cancel within 14 days,
+                    I'll get a refund minus the days I've used.
+                  </span>
+                </label>
                 <Button
-                  className="mt-5 w-full"
-                  disabled={busy}
+                  className="mt-3 w-full"
+                  disabled={busy || !agreed}
                   onClick={() => {
                     setBusy(true);
-                    void openStripe("create-checkout", { interval }).finally(() => setBusy(false));
+                    void openStripe("create-checkout", { interval, agreedToTerms: true }).finally(() => setBusy(false));
                   }}
                 >
                   {busy ? "Opening secure checkout…" : `Upgrade for ${PREMIUM_PRICES[interval]} a ${interval}`}
                 </Button>
                 <p className="mt-2 text-center text-[11px] font-medium opacity-75">
-                  Secure payment by Stripe. Cancel any time from this page.
+                  Secure payment by Stripe. Cancel any time from this page. Under 18? Check with a parent or carer first.
                 </p>
               </div>
             </div>

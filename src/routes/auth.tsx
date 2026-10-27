@@ -60,6 +60,7 @@ function AuthPage() {
 
   const [schoolId, setSchoolId] = useState("");
   const [parentEmail, setParentEmail] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const schools = useQuery({
     queryKey: ["schools"],
     queryFn: async () => {
@@ -265,11 +266,26 @@ function AuthPage() {
                         They'll get a short weekly summary. You can change this any time.
                       </span>
                     </label>
+                    <label className="flex items-start gap-2.5 text-[12px] font-semibold leading-snug text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        required
+                        checked={agreed}
+                        onChange={(e) => setAgreed(e.target.checked)}
+                        className="mt-0.5 size-4 shrink-0 accent-primary"
+                      />
+                      <span>
+                        I'm 13 or older and I agree to the{" "}
+                        <Link to="/terms" target="_blank" className="font-bold text-primary underline">Terms</Link>. I've read
+                        the{" "}
+                        <Link to="/privacy" target="_blank" className="font-bold text-primary underline">Privacy policy</Link>.
+                      </span>
+                    </label>
                   </>
                 ) : null}
                 <button
                   type="submit"
-                  disabled={busy}
+                  disabled={busy || (mode === "signup" && !agreed)}
                   className="w-full rounded-full bg-primary py-3 text-sm font-extrabold text-primary-foreground disabled:opacity-60"
                 >
                   {busy ? "One moment…" : mode === "signin" ? "Sign in" : "Create account"}

@@ -68,7 +68,11 @@ async function list(db: SupabaseClient) {
         last_sign_in_at: u.last_sign_in_at ?? null,
         confirmed: Boolean(u.email_confirmed_at),
         admin: admins.has(u.id),
-        subscribed: Boolean(s?.subscribed),
+        // Matches has_premium: a lapsed subscription (paid period ended over 3 days ago) counts as Free.
+        subscribed: Boolean(
+          s?.subscribed &&
+            (!s.current_period_end || Date.parse(s.current_period_end as string) > Date.now() - 3 * 86_400_000),
+        ),
         complimentary: Boolean(s?.complimentary),
         plan: (s?.plan as string | null) ?? null,
         renews: (s?.current_period_end as string | null) ?? null,

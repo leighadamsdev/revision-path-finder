@@ -310,11 +310,22 @@ async function weeklyRun(db: SupabaseClient, force: boolean) {
   if (error) return json({ error: error.message }, 500);
 
   // The weekly summary is a Premium feature.
+  // Same rule as the database's has_premium: free Premium, or a subscription whose paid period
+  // hasn't ended more than 3 days ago (so someone who cancels and never comes back stops getting it).
   const { data: premium } = await db
     .from("subscribers")
-    .select("user_id")
+    .select("user_id, subscribed, complimentary, current_period_end")
     .or("subscribed.eq.true,complimentary.eq.true");
-  const premiumIds = new Set((premium ?? []).map((row) => row.user_id as string));
+  const graceCutoff = Date.now() - 3 * 86_400_000;
+  const premiumIds = new Set(
+    (premium ?? [])
+      .filter(
+        (row) =>
+          row.complimentary ||
+          (row.subscribed && (!row.current_period_end || Date.parse(row.current_period_end) > graceCutoff)),
+      )
+      .map((row) => row.user_id as string),
+  );
 
   const emails = await emailsFor(db);
   let sent = 0;
@@ -365,8 +376,15 @@ async function forSignedInStudent(db: SupabaseClient, req: Request, mode: "previ
   const email = renderEmail(summary, false, unsub);
   if (mode === "preview") return json({ subject: email.subject, html: email.html });
 
-  const { data: sub } = await db.from("subscribers").select("subscribed, complimentary").eq("user_id", user.id).maybeSingle();
-  if (!sub?.subscribed && !sub?.complimentary) return json({ error: "The weekly summary email is part of Premium." }, 403);
+  const { data: sub } = await db
+    .from("subscribers")
+    .select("subscribed, complimentary, current_period_end")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const paidUp =
+    sub?.subscribed &&
+    (!sub.current_period_end || Date.parse(sub.current_period_end) > Date.now() - 3 * 86_400_000);
+  if (!paidUp && !sub?.complimentary) return json({ error: "The weekly summary email is part of Premium." }, 403);
 
   if (profile?.last_digest_test_at && Date.now() - Date.parse(profile.last_digest_test_at) < 10 * 60_000) {
     return json({ error: "A test email was sent in the last 10 minutes. Check your inbox (and spam)." }, 429);

@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SiteFooter } from "@/components/SiteFooter";
 import {
   Outlet,
   Link,
@@ -141,6 +142,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <SiteFooter />
       <Toaster position="top-center" />
     </QueryClientProvider>
   );

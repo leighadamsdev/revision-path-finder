@@ -61,12 +61,12 @@ function MyPlansPage() {
         <div className="mt-5 space-y-3">
           {isLoading ? <div className="h-20 animate-pulse rounded-[16px] bg-card" /> : null}
           {!isLoading && plans.length === 0 ? (
-            <p className="rounded-[16px] bg-card p-5 text-sm font-semibold ring-1 ring-black/5">
+            <p className="rounded-[16px] bg-card p-5 text-sm font-semibold ring-1 ring-border">
               You haven't saved a plan yet. <Link to="/setup" className="font-extrabold underline">Create your first plan</Link>.
             </p>
           ) : null}
           {plans.map((p) => (
-            <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+            <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-[16px] bg-card p-4 ring-1 ring-border">
               <div className="min-w-0 flex-1">
                 <p className="text-[15px] font-extrabold">
                   {p.name}

@@ -613,7 +613,7 @@ function PracticeQuestionsPage() {
         </div>
 
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-4 lg:self-start">
-          <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+          <div className="rounded-[16px] bg-card p-4 ring-1 ring-border">
             <p className="text-sm font-extrabold">Your examiner prompt</p>
             <Field label="Which AI will you use?" htmlFor="pq-ai">
               <select
@@ -662,7 +662,7 @@ function PracticeQuestionsPage() {
             </p>
           </div>
 
-          <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+          <div className="rounded-[16px] bg-card p-4 ring-1 ring-border">
             <p className="text-sm font-extrabold">Saved sets</p>
             <p className="mt-0.5 text-[12px] font-medium text-muted-foreground">
               Save these settings to make a fresh set of questions any time.

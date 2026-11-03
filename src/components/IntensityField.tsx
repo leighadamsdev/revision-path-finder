@@ -23,7 +23,7 @@ export function IntensityField({
           onClick={() => onChange(on ? null : { weeks, sessions })}
           className={`ml-auto rounded-full px-3 py-1.5 text-[12px] font-bold ${
             on
-              ? "bg-structure text-structure-foreground"
+              ? "bg-selected text-selected-foreground"
               : "bg-card text-muted-foreground ring-1 ring-border"
           }`}
         >

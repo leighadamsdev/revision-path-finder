@@ -63,9 +63,9 @@ export function PublicHeader() {
           <Link
             to="/"
             aria-label="RevPlan home"
-            className="inline-flex items-center rounded-[8px] bg-background px-3 py-2 shadow-sm ring-1 ring-border"
+            className="inline-flex min-h-11 items-center rounded-[8px] px-1"
           >
-            <Logo className="h-8 w-auto" />
+            <Logo className="text-[26px]" />
           </Link>
           {user ? (
             <Link to="/plan" className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">My plan</Link>

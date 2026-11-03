@@ -111,7 +111,7 @@ export function TopicDraftEditor({
                   className={`h-8 text-[13px] font-medium ${item.uncertain ? "ring-2 ring-checker-highlight bg-checker-highlight/30" : ""}`}
                 />
                 {item.uncertain ? (
-                  <span title="Please check this reading" className="text-amber-700">
+                  <span title="Please check this reading" className="text-conf-mid">
                     <AlertTriangle className="size-4" />
                   </span>
                 ) : null}

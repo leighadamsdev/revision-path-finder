@@ -43,7 +43,7 @@ export function FlashcardReview({
   const style = subjectStyle(subject?.color_key);
 
   return (
-    <article className="print-hidden rounded-[14px] bg-background/60 p-3 ring-1 ring-black/5">
+    <article className="print-hidden rounded-[14px] bg-background/60 p-3 ring-1 ring-border">
       <div className="mb-2 flex items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-extrabold">
           <Layers className="size-3" strokeWidth={2.5} />

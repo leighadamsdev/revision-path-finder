@@ -203,7 +203,7 @@ function RateTopicsPage() {
             const isOpen = open === name || (rag.filtering && matchCount > 0);
             const style = subjectStyle(catalogueSubject(name)?.colorKey);
             return (
-              <div key={name} className="rounded-[12px] bg-card ring-1 ring-black/5">
+              <div key={name} className="rounded-[12px] bg-card ring-1 ring-border">
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : name)}
@@ -211,7 +211,7 @@ function RateTopicsPage() {
                   className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left"
                 >
                   <span className={`size-2 shrink-0 rounded-full ${style.dot}`} />
-                  <span className="min-w-0 flex-1 text-sm font-extrabold">{name}</span>
+                  <span className="min-w-[7.5rem] flex-1 text-sm font-extrabold">{name}</span>
                   <span className="flex items-center gap-2 text-[12px] font-bold tabular-nums">
                     <span className="text-conf-low">{count.red} red</span>
                     <span className="text-conf-mid">{count.amber} amber</span>
@@ -248,7 +248,7 @@ function RateTopicsPage() {
                             onClick={() => setList((prev) => ({ ...prev, [name]: k }))}
                             className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
                               k === kind
-                                ? "bg-structure text-structure-foreground"
+                                ? "bg-selected text-selected-foreground"
                                 : "bg-background text-muted-foreground ring-1 ring-border"
                             }`}
                           >

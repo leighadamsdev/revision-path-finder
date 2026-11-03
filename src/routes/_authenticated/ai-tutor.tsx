@@ -338,7 +338,7 @@ function AiTutorPage() {
                             <span
                               key={r.text}
                               title={r.text}
-                              className="inline-flex items-center gap-1 rounded-full bg-conf-low px-3 py-1 text-[12px] font-bold text-white"
+                              className="inline-flex items-center gap-1 rounded-full bg-conf-low px-3 py-1 text-[12px] font-bold text-background"
                             >
                               {r.text.split(": ")[0]}
                               <button
@@ -556,7 +556,7 @@ function AiTutorPage() {
             </div>
 
             <aside className="min-w-0 lg:sticky lg:top-4 lg:self-start">
-              <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+              <div className="rounded-[16px] bg-card p-4 ring-1 ring-border">
                 <p className="text-sm font-extrabold">Your tutor prompt</p>
                 <Field label="Which AI will you use?" htmlFor="tutor-ai">
                   <select

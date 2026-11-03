@@ -137,11 +137,11 @@ export function MultiSubjectPicker({
                   >
                     <span
                       className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
-                        on || already ? "bg-structure" : "ring-1 ring-border"
+                        on || already ? "bg-selected" : "ring-1 ring-border"
                       } ${already ? "opacity-50" : ""}`}
                     >
                       {on || already ? (
-                        <Check className="size-3 text-structure-foreground" strokeWidth={3} />
+                        <Check className="size-3 text-selected-foreground" strokeWidth={3} />
                       ) : null}
                     </span>
                     <span className={`text-sm font-bold ${already ? "text-muted-foreground" : ""}`}>

@@ -153,7 +153,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
   return (
     <div className="space-y-3">
       {canRate && subjects.some((s) => s.topics.length) ? (
-        <div className="rounded-[12px] bg-card px-4 py-3 ring-1 ring-black/5">
+        <div className="rounded-[12px] bg-card px-4 py-3 ring-1 ring-border">
           <p className="text-[13px] font-extrabold">Rate each topic as you go</p>
           <BandLegend />
           <div className="mt-2">
@@ -172,7 +172,7 @@ export function LibraryManager({ subjects, refresh, showTopics = true, mode = "a
         const keptForLater = archivedFor(s.id);
         const isOpen = mode === "topics" || open.has(s.id);
         return (
-          <div key={s.id} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+          <div key={s.id} className="rounded-[16px] bg-card p-4 ring-1 ring-border">
             <div className="flex items-start gap-2">
               {mode === "all" ? <Button size="icon" variant="ghost" aria-label={isOpen ? "Collapse" : "Expand"} onClick={() => setOpen((o) => { const n = new Set(o); if (n.has(s.id)) n.delete(s.id); else n.add(s.id); return n; })}>
                 {isOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}

@@ -174,7 +174,7 @@ export function MockExamImport({
             onClick={() => setSource(key)}
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold ${
               source === key
-                ? "bg-structure text-structure-foreground"
+                ? "bg-selected text-selected-foreground"
                 : "bg-card text-muted-foreground ring-1 ring-border"
             }`}
           >

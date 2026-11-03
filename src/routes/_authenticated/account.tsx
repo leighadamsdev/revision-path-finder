@@ -88,7 +88,7 @@ function AccountPage() {
         <h1 className="text-xl font-extrabold tracking-tight">Your account</h1>
         <p className="mt-1 text-[13px] font-medium text-muted-foreground">{user?.email}</p>
         <MembershipCard />
-        <div className="mt-5 space-y-4 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+        <div className="mt-5 space-y-4 rounded-[16px] bg-card p-5 ring-1 ring-border">
           <label className="block">
             <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">School</span>
             <SchoolSearch schools={schools.data ?? []} value={schoolId} onChange={setSchoolId} />
@@ -151,7 +151,7 @@ function WeeklySummaryPreview() {
   }
 
   return (
-    <div className="mt-5 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+    <div className="mt-5 rounded-[16px] bg-card p-5 ring-1 ring-border">
       <h2 className="text-sm font-extrabold">Your weekly summary</h2>
       <p className="mt-1 text-[12px] font-medium text-muted-foreground">
         See what this week's email says so far. It updates as you tick off sessions, use the
@@ -195,7 +195,7 @@ function MembershipCard() {
   const { isPremium, subscription, loading } = usePremium();
   if (loading) return null;
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+    <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[16px] bg-card p-4 ring-1 ring-border">
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Membership</p>
         <p className="text-sm font-extrabold">

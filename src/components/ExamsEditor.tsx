@@ -195,7 +195,7 @@ export function ExamsEditor({
           const subjectTopics = topics.filter((t) => t.subject_id === subject.id);
           const papers = official.filter((o) => o.subject_id === subject.id);
           return (
-            <div key={subject.id} className="rounded-[12px] bg-background p-3 ring-1 ring-black/5">
+            <div key={subject.id} className="rounded-[12px] bg-background p-3 ring-1 ring-border">
               <p className="flex items-center gap-2 text-[13px] font-extrabold">
                 <span className={`size-2 rounded-full ${style.dot}`} />
                 {subject.name}
@@ -236,7 +236,7 @@ export function ExamsEditor({
                             }
                             className={`rounded-full px-3 py-1 text-[11px] font-extrabold ${
                               exam.kind === kind
-                                ? "bg-structure text-structure-foreground"
+                                ? "bg-selected text-selected-foreground"
                                 : "text-muted-foreground"
                             }`}
                           >

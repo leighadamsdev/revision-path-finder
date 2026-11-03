@@ -940,7 +940,7 @@ function SetupPage() {
           </nav>
         ) : null}
 
-        <div id="step-card" tabIndex={-1} className="rounded-[18px] bg-card p-4 ring-1 ring-black/5 outline-none sm:p-5">
+        <div id="step-card" tabIndex={-1} className="rounded-[18px] bg-card p-4 ring-1 ring-border outline-none sm:p-5">
           {step === 1 ? (
             <>
               <p className="text-lg font-extrabold tracking-tight">
@@ -993,11 +993,11 @@ function SetupPage() {
                             >
                               <span
                                 className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${
-                                  isOn ? "bg-structure" : "ring-1 ring-border"
+                                  isOn ? "bg-selected" : "ring-1 ring-border"
                                 }`}
                               >
                                 {isOn ? (
-                                  <Check className="size-3 text-structure-foreground" strokeWidth={3} />
+                                  <Check className="size-3 text-selected-foreground" strokeWidth={3} />
                                 ) : null}
                               </span>
                               <span className="text-sm font-bold">{subjectName}</span>
@@ -1013,7 +1013,7 @@ function SetupPage() {
                                     onClick={() => setTier(subjectName, tier)}
                                     className={`rounded-full px-3 py-1 text-[12px] font-bold ${
                                       pick?.tier === tier
-                                        ? "bg-structure text-structure-foreground"
+                                        ? "bg-selected text-selected-foreground"
                                         : "bg-card text-muted-foreground ring-1 ring-border"
                                     }`}
                                   >
@@ -1042,7 +1042,7 @@ function SetupPage() {
                                         )
                                       }
                                       className={`rounded-full px-3 py-1 text-[12px] font-bold ${
-                                        on ? "bg-structure text-structure-foreground" : "bg-card text-muted-foreground ring-1 ring-border"
+                                        on ? "bg-selected text-selected-foreground" : "bg-card text-muted-foreground ring-1 ring-border"
                                       }`}
                                     >
                                       {label}
@@ -1239,7 +1239,7 @@ function SetupPage() {
                                 onClick={() => setSource((prev) => ({ ...prev, [pick.name]: key }))}
                                 className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
                                   mode === key
-                                    ? "bg-structure text-structure-foreground"
+                                    ? "bg-selected text-selected-foreground"
                                     : "bg-card text-muted-foreground ring-1 ring-border"
                                 }`}
                               >
@@ -1310,7 +1310,7 @@ function SetupPage() {
                                 onClick={() => toggleAllTopics(pick.name, options)}
                                 className={`mt-3 rounded-full px-3 py-1.5 text-[12px] font-bold ${
                                   ticked.length === options.length
-                                    ? "bg-structure text-structure-foreground"
+                                    ? "bg-selected text-selected-foreground"
                                     : "bg-card text-muted-foreground ring-1 ring-border"
                                 }`}
                               >
@@ -1488,7 +1488,7 @@ function SetupPage() {
                         }
                         className={`rounded-full px-3 py-2 text-[13px] font-bold ${
                           on
-                            ? "bg-structure text-structure-foreground"
+                            ? "bg-selected text-selected-foreground"
                             : "bg-background text-muted-foreground ring-1 ring-border"
                         }`}
                       >
@@ -1579,8 +1579,8 @@ function SetupPage() {
                           onClick={() => setExcludedSubjects((prev) => (subjectOn ? [...prev, p.name] : prev.filter((n) => n !== p.name)))}
                           className="flex items-center gap-2.5 text-left"
                         >
-                          <span className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${subjectOn ? "bg-structure" : "ring-1 ring-border"}`}>
-                            {subjectOn ? <Check className="size-3 text-structure-foreground" strokeWidth={3} /> : null}
+                          <span className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${subjectOn ? "bg-selected" : "ring-1 ring-border"}`}>
+                            {subjectOn ? <Check className="size-3 text-selected-foreground" strokeWidth={3} /> : null}
                           </span>
                           <span className="text-sm font-extrabold">{p.name}{p.tier ? ` (${p.tier})` : ""}</span>
                         </button>
@@ -1615,9 +1615,9 @@ function SetupPage() {
                                   aria-checked={!out}
                                   aria-label={`Include ${subLabel(r.topic)}`}
                                   onClick={() => setExcluded((prev) => (out ? prev.filter((k) => k !== r.key) : [...prev, r.key]))}
-                                  className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${!out ? "bg-structure" : "ring-1 ring-border"}`}
+                                  className={`grid size-5 shrink-0 place-items-center rounded-[6px] ${!out ? "bg-selected" : "ring-1 ring-border"}`}
                                 >
-                                  {!out ? <Check className="size-3 text-structure-foreground" strokeWidth={3} /> : null}
+                                  {!out ? <Check className="size-3 text-selected-foreground" strokeWidth={3} /> : null}
                                 </button>
                                 <span className={`size-2.5 shrink-0 rounded-full ${tone}`} aria-hidden="true" />
                                 <div className="min-w-0 flex-1">
@@ -1821,7 +1821,7 @@ function TopicRow({
     >
       <span
         className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-[6px] ${
-          on ? "bg-structure" : "ring-1 ring-border"
+          on ? "bg-selected" : "ring-1 ring-border"
         }`}
       >
         {on ? <Check className="size-3 text-background" strokeWidth={3} /> : null}

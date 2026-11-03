@@ -135,7 +135,7 @@ function ExamCalendarPage() {
         ) : null}
 
         {exams.length === 0 ? (
-          subjects.length > 0 ? null : <div className="mt-5 rounded-[16px] bg-card p-6 text-center ring-1 ring-black/5">
+          subjects.length > 0 ? null : <div className="mt-5 rounded-[16px] bg-card p-6 text-center ring-1 ring-border">
             <CalendarDays className="mx-auto size-6 text-muted-foreground" aria-hidden="true" />
             <p className="mt-3 text-sm font-extrabold tracking-tight">No exam dates yet</p>
             <p className="mx-auto mt-1 max-w-[42ch] text-[13px] font-medium text-muted-foreground">
@@ -144,7 +144,7 @@ function ExamCalendarPage() {
           </div>
         ) : (
           <>
-            <div className="mt-5 rounded-[16px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
+            <div className="mt-5 rounded-[16px] bg-card p-4 ring-1 ring-border sm:p-5">
               <div className="flex items-center justify-between">
                 <button
                   type="button"
@@ -228,7 +228,7 @@ function ExamCalendarPage() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-[16px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
+            <div className="mt-4 rounded-[16px] bg-card p-4 ring-1 ring-border sm:p-5">
               <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">
                 All exams, soonest first
               </p>
@@ -239,7 +239,7 @@ function ExamCalendarPage() {
                   return (
                     <li
                       key={exam.key}
-                      className={`flex items-center gap-2.5 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-black/5 ${
+                      className={`flex items-center gap-2.5 rounded-[12px] bg-background px-3 py-2.5 ring-1 ring-border ${
                         days < 0 ? "opacity-55" : ""
                       }`}
                     >

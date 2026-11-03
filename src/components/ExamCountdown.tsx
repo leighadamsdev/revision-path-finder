@@ -47,7 +47,7 @@ export function ExamCountdown({
   const done = dated.filter((item) => item.days < 0);
 
   return (
-    <section className="mb-5 rounded-[16px] bg-card p-4 ring-1 ring-black/5 print:hidden sm:p-5">
+    <section className="mb-5 rounded-[16px] bg-card p-4 ring-1 ring-border print:hidden sm:p-5">
       <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">
         Exam countdown
       </p>

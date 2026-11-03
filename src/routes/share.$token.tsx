@@ -37,7 +37,7 @@ function SharedPlanPage() {
       <PublicHeader />
       <div className="bg-structure">
         <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-5 py-3">
-          <LogoOnDark className="h-5 w-auto" />
+          <LogoOnDark />
           <span className="ml-auto rounded-full bg-structure-foreground/10 px-3 py-1 text-[11px] font-extrabold text-structure-foreground/80">
             Shared read-only
           </span>
@@ -46,7 +46,7 @@ function SharedPlanPage() {
 
       <main className="mx-auto max-w-3xl px-5 pb-20 pt-8">
         {!data ? (
-          <div className="rounded-[16px] bg-card p-6 ring-1 ring-black/5">
+          <div className="rounded-[16px] bg-card p-6 ring-1 ring-border">
             <p className="text-lg font-extrabold tracking-tight">This link is no longer valid</p>
             <p className="mt-2 text-[13px] font-medium leading-relaxed text-muted-foreground">
               The student may have turned sharing off, or the link was copied incorrectly.
@@ -108,7 +108,7 @@ function SharedPlanPage() {
                       if (daySessions.length === 0) return null;
                       const date = planDayDate(data.plan.start_date, week, day);
                       return (
-                        <div key={day} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+                        <div key={day} className="rounded-[16px] bg-card p-4 ring-1 ring-border">
                           <p className="text-sm font-extrabold tracking-tight">
                             {day}
                             {date && (
@@ -126,7 +126,7 @@ function SharedPlanPage() {
                               return (
                                 <div
                                   key={session.id}
-                                  className="rounded-[14px] bg-background/60 p-3 ring-1 ring-black/5"
+                                  className="rounded-[14px] bg-background/60 p-3 ring-1 ring-border"
                                 >
                                   <div className="flex items-center gap-2">
                                     <span
@@ -158,7 +158,7 @@ function SharedPlanPage() {
               );
             })}
 
-            <p className="mt-12 rounded-[16px] bg-card p-5 text-center text-[13px] font-semibold text-muted-foreground ring-1 ring-black/5">
+            <p className="mt-12 rounded-[16px] bg-card p-5 text-center text-[13px] font-semibold text-muted-foreground ring-1 ring-border">
               Shared from{" "}
               <Link to="/" className="font-extrabold text-primary underline underline-offset-2">
                 RevPlan

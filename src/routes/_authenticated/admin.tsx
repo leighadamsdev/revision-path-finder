@@ -77,7 +77,7 @@ function AdminPage() {
             onClick={() => setTab(t.key)}
             className={`${pill} ${
               tab === t.key
-                ? "bg-structure text-structure-foreground"
+                ? "bg-selected text-selected-foreground"
                 : "bg-card text-foreground ring-1 ring-border"
             }`}
           >
@@ -100,7 +100,7 @@ function AdminPage() {
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">{children}</div>;
+  return <div className="rounded-[16px] bg-card p-4 ring-1 ring-border">{children}</div>;
 }
 
 function useSubjectList() {
@@ -536,7 +536,7 @@ function EditableRow({
   const dirty = fields.some((f) => draft[f.key] !== f.value);
 
   return (
-    <div className="rounded-[14px] bg-card p-3 ring-1 ring-black/5">
+    <div className="rounded-[14px] bg-card p-3 ring-1 ring-border">
       {heading ? (
         <p className="mb-2 text-[12px] font-extrabold text-muted-foreground">{heading}</p>
       ) : null}

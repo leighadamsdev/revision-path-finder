@@ -113,7 +113,7 @@ export function UsersPanel() {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+      <div className="rounded-[16px] bg-card p-4 ring-1 ring-border">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[10px] bg-background px-3 py-2 ring-1 ring-border">
             <Search className="size-4 text-muted-foreground" />
@@ -139,7 +139,7 @@ export function UsersPanel() {
               onClick={() => setFilter(key)}
               className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${
                 filter === key
-                  ? "bg-structure text-structure-foreground"
+                  ? "bg-selected text-selected-foreground"
                   : "bg-background ring-1 ring-border"
               }`}
             >
@@ -156,7 +156,7 @@ export function UsersPanel() {
 
       {users.isLoading ? <Skeleton className="h-40 w-full" /> : null}
       {users.isError ? (
-        <p className="rounded-[12px] bg-card p-4 text-[13px] font-semibold ring-1 ring-black/5">
+        <p className="rounded-[12px] bg-card p-4 text-[13px] font-semibold ring-1 ring-border">
           {(users.error as Error).message} If you've just added this feature, ask Lovable to deploy
           the admin-users edge function.
         </p>
@@ -167,7 +167,7 @@ export function UsersPanel() {
           const m = membership(u);
           const isBusy = (k: string) => busy === `${u.id}:${k}`;
           return (
-            <li key={u.id} className="rounded-[14px] bg-card p-4 ring-1 ring-black/5">
+            <li key={u.id} className="rounded-[14px] bg-card p-4 ring-1 ring-border">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="min-w-0 truncate text-sm font-extrabold">{u.email}</p>
                 {m ? (

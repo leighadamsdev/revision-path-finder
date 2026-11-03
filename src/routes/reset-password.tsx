@@ -60,7 +60,7 @@ function ResetPasswordPage() {
       <PublicHeader />
 
       <main className="mx-auto w-full max-w-md flex-1 px-5 pb-16 pt-6">
-        <div className="rounded-[18px] bg-card p-5 ring-1 ring-black/5">
+        <div className="rounded-[18px] bg-card p-5 ring-1 ring-border">
           <p className="text-lg font-extrabold tracking-tight">Choose a new password</p>
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
             Open this page from the link we emailed you, then pick a new password.

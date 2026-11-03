@@ -66,7 +66,7 @@ function PapersPage() {
           const isCollapsed = collapsed[name] ?? true;
 
           return (
-            <div key={name} className="rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+            <div key={name} className="rounded-[16px] bg-card p-4 ring-1 ring-border">
               <button
                 type="button"
                 onClick={() => toggle(name)}

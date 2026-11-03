@@ -325,7 +325,7 @@ export function HomeDashboard() {
           {topicCount ? (
             <Link
               to="/rate-topics"
-              className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[14px] bg-card px-4 py-3 ring-1 ring-black/5 hover:ring-border"
+              className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[14px] bg-card px-4 py-3 ring-1 ring-border hover:ring-border"
             >
               <span className="text-[12px] font-extrabold uppercase tracking-wide text-muted-foreground">
                 Your topics
@@ -351,7 +351,7 @@ export function HomeDashboard() {
                 <li key={r.title}>
                   <Link
                     to={r.to}
-                    className="group flex items-start gap-3 rounded-[14px] bg-card p-4 ring-1 ring-black/5 hover:ring-border"
+                    className="group flex items-start gap-3 rounded-[14px] bg-card p-4 ring-1 ring-border hover:ring-border"
                   >
                     <StatusIcon status={r.status} />
                     <div className="min-w-0 flex-1">
@@ -452,7 +452,7 @@ function StatusIcon({ status }: { status: Status }) {
   const base = "grid size-8 shrink-0 place-items-center rounded-[8px]";
   if (status === "done")
     return (
-      <span className={`${base} bg-conf-high text-white`} aria-label="Done">
+      <span className={`${base} bg-conf-high text-background`} aria-label="Done">
         <Check className="size-4" strokeWidth={3} />
       </span>
     );
@@ -491,7 +491,7 @@ function Shortcut({
   return (
     <Link
       to={premium ? "/upgrade" : to}
-      className="flex items-start gap-3 rounded-[14px] bg-card p-4 ring-1 ring-black/5 hover:ring-border"
+      className="flex items-start gap-3 rounded-[14px] bg-card p-4 ring-1 ring-border hover:ring-border"
     >
       <span className="grid size-8 shrink-0 place-items-center rounded-[8px] bg-background text-foreground ring-1 ring-border">
         {icon}

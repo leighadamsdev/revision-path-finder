@@ -64,7 +64,7 @@ export function TopicsConfidencePanel({
 
   return (
     <section className="mb-7 print:hidden">
-      <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
+      <div className="rounded-[16px] bg-card p-4 ring-1 ring-border sm:p-5">
         <p className="text-sm font-extrabold tracking-tight">Topics and confidence</p>
         <div className="mt-1">
           <BandLegend />

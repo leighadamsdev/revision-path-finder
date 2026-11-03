@@ -142,7 +142,7 @@ export function SessionCard({
 
   return (
     <article
-      className={`print-session rounded-[14px] p-3 ring-1 ring-black/5 ${done ? "bg-background/30 opacity-75" : "bg-background/60"}`}
+      className={`print-session rounded-[14px] p-3 ring-1 ring-border ${done ? "bg-background/30 opacity-75" : "bg-background/60"}`}
     >
       <div className="mb-2 flex items-center gap-2">
         <span

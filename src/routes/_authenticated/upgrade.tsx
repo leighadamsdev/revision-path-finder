@@ -100,7 +100,7 @@ function UpgradePage() {
             <Skeleton className="h-40 w-full" />
           </div>
         ) : isPremium ? (
-          <div className="mt-5 rounded-[16px] bg-card p-6 ring-1 ring-black/5">
+          <div className="mt-5 rounded-[16px] bg-card p-6 ring-1 ring-border">
             <p className="text-lg font-extrabold">
               {success ? "Welcome to Premium! " : ""}
               {subscription?.subscribed
@@ -156,7 +156,7 @@ function UpgradePage() {
             </p>
 
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+              <div className="rounded-[16px] bg-card p-5 ring-1 ring-border">
                 <p className="text-[12px] font-extrabold uppercase tracking-wide text-muted-foreground">Free</p>
                 <p className="mt-1 text-2xl font-extrabold">£0</p>
                 <ul className="mt-4 space-y-2">

@@ -45,7 +45,7 @@ export function NextBestAction({ hideTimetableLink = false }: { hideTimetableLin
   }
 
   return (
-    <section aria-label="Next best action" className="mb-5 rounded-[18px] bg-structure p-4 text-background print:hidden sm:p-5">
+    <section aria-label="Next best action" className="mb-5 rounded-[18px] bg-structure p-4 text-structure-foreground ring-1 ring-primary/40 print:hidden sm:p-5">
       <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-primary">{a.eyebrow}</p>
       <p className="mt-1 text-lg font-extrabold tracking-tight">{a.title}</p>
       <p className="mt-1 text-[13px] font-medium opacity-85">{a.body}</p>

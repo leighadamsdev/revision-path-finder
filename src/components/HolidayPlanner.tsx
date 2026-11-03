@@ -102,7 +102,7 @@ export function HolidayPlanner({
                     }
                     className={`rounded-full px-2.5 py-1.5 text-[12px] font-bold ${
                       on
-                        ? "bg-structure text-structure-foreground"
+                        ? "bg-selected text-selected-foreground"
                         : "bg-background text-muted-foreground ring-1 ring-border"
                     }`}
                   >

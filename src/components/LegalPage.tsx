@@ -65,7 +65,7 @@ export function LegalPage({
 /** The "kid-friendly summary" box at the top of a policy. */
 export function Summary({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="mt-6 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+    <div className="mt-6 rounded-[16px] bg-card p-5 ring-1 ring-border">
       <p className="text-[12px] font-extrabold uppercase tracking-wide text-primary">{title}</p>
       <ul className="mt-3 space-y-2 text-[15px] font-semibold leading-relaxed [&_li]:ml-5 [&_li]:list-disc">{children}</ul>
     </div>

@@ -68,7 +68,7 @@ export function RagFilter({
   const chip = (on: boolean) =>
     `inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold ${
       on
-        ? "bg-structure text-structure-foreground"
+        ? "bg-selected text-selected-foreground"
         : "bg-background text-muted-foreground ring-1 ring-border"
     }`;
   return (

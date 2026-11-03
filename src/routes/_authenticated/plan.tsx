@@ -203,7 +203,7 @@ function TimetablePage() {
   if (!plan) {
     return (
       <AppShell>
-        <div className="rounded-[16px] bg-card p-6 ring-1 ring-black/5">
+        <div className="rounded-[16px] bg-card p-6 ring-1 ring-border">
           <p className="text-lg font-extrabold tracking-tight">Let's build your first plan</p>
           <p className="mt-2 max-w-[46ch] text-[13px] font-medium leading-relaxed text-muted-foreground">
             It only takes a few short steps: pick your subjects, say how long you've got, and choose the
@@ -223,7 +223,7 @@ function TimetablePage() {
   return (
     <AppShell
       headerCentre={
-        <div className="flex items-center gap-1 rounded-full bg-card p-1 ring-1 ring-black/5">
+        <div className="flex items-center gap-1 rounded-full bg-card p-1 ring-1 ring-border">
           <button
             onClick={() => setWeek((w) => Math.max(1, w - 1))}
             aria-label="Previous week"
@@ -292,7 +292,7 @@ function TimetablePage() {
       <PacePrompts plan={plan} subjects={subjects} topics={topics} subtopics={subtopics} sessions={sessions} />
 
       <section className="mb-7 print:hidden">
-        <div className="rounded-[16px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
+        <div className="rounded-[16px] bg-card p-4 ring-1 ring-border sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-extrabold tracking-tight">This week</p>
@@ -382,7 +382,7 @@ function TimetablePage() {
           const dayDate = planDayDate(plan.start_date, week, day);
           const today = dayDate ? isToday(dayDate) : false;
           return (
-            <section key={day} className="print-day rounded-[16px] bg-card p-3 ring-1 ring-black/5 sm:p-4">
+            <section key={day} className="print-day rounded-[16px] bg-card p-3 ring-1 ring-border sm:p-4">
               <div className="print-day-heading mb-2 flex items-center justify-between px-1">
                 <p className="text-sm font-extrabold tracking-tight">
                   {day} <span className="font-semibold text-muted-foreground">· {planDayLabel(plan.start_date, week, day).replace(`${day.slice(0, 3)} `, "")}</span>

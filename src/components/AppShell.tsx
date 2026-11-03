@@ -101,12 +101,12 @@ export function AppShell({
 
   return (
     <div className="app-shell min-h-screen bg-background font-sans text-foreground">
-      <div className="app-header sticky top-0 z-20 border-b border-structure bg-structure text-structure-foreground">
+      <div className="app-header sticky top-0 z-20 border-b border-border bg-background/90 text-structure-foreground backdrop-blur">
         <div className="mx-auto max-w-5xl px-4 pb-3 pt-4 sm:px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <Link to="/" aria-label="Home" title="Home">
-                <LogoOnDark className="h-5 w-auto" />
+                <LogoOnDark />
               </Link>
               <div className="min-w-0 leading-none">
                 {plan ? (

@@ -34,7 +34,7 @@ function LibraryPage() {
         <p className="mt-1 text-[13px] font-medium text-muted-foreground">
           Tick all your subjects at once and set their tiers here. Add topics for each subject on the next screen.
         </p>
-        <div className="mt-4 rounded-[16px] bg-card p-4 ring-1 ring-black/5">
+        <div className="mt-4 rounded-[16px] bg-card p-4 ring-1 ring-border">
           {adding || (!isLoading && subjects.length === 0) ? (
             <MultiSubjectPicker
               existing={subjects}

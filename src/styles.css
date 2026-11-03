@@ -3,40 +3,46 @@
 @import "tw-animate-css";
 
 /*
- * RevPlan design system — "modernist study planner".
- * Light grey canvas, deep navy (#14133e) structure, vivid orange (#fe9a00) actions.
- * All colour values are oklch. Never hardcode colours in components.
+ * RevPlan design system — "night mode neon".
+ * Near-black canvas (#0c0c14), raised indigo-grey cards, electric lime (#c8ff3d) actions,
+ * neon red / amber / green for ratings. Space Grotesk headings, DM Sans body.
+ * Never hardcode colours in components: use these tokens.
  */
 
 @theme {
-  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "DM Sans", ui-sans-serif, system-ui, sans-serif;
 
-  /* Subject hues — one per subject, used across every tab */
-  --color-maths: oklch(0.5076 0.086 226.21);
-  --color-eng: oklch(0.5915 0.1371 9.92);
-  --color-lit: oklch(0.5564 0.1263 349.05);
-  --color-sci: oklch(0.5349 0.0973 150.7);
-  --color-chem: oklch(0.5956 0.0871 195.07);
-  --color-phys: oklch(0.5158 0.1144 278.62);
-  --color-hist: oklch(0.626 0.1221 71.73);
-  --color-biz: oklch(0.4809 0.0961 43.59);
-  --color-media: oklch(0.5211 0.0636 246.13);
-  --color-pe: oklch(0.4796 0.109 303.93);
-  --color-structure: oklch(0.2192 0.0798 278.56);
-  --color-structure-foreground: oklch(0.9605 0.0046 258.32);
+  /* Subject hues — one per subject, used across every tab (light enough to read on dark) */
+  --color-maths: oklch(0.78 0.13 226.21);
+  --color-eng: oklch(0.78 0.13 9.92);
+  --color-lit: oklch(0.78 0.13 349.05);
+  --color-sci: oklch(0.78 0.13 150.7);
+  --color-chem: oklch(0.78 0.13 195.07);
+  --color-phys: oklch(0.78 0.13 278.62);
+  --color-hist: oklch(0.78 0.13 71.73);
+  --color-biz: oklch(0.78 0.13 43.59);
+  --color-media: oklch(0.78 0.13 246.13);
+  --color-pe: oklch(0.78 0.13 303.93);
+  /* Raised panels (feature cards, headers) */
+  --color-structure: #1d1d2e;
+  --color-structure-foreground: #f2f2f7;
+  /* Selected chips, ticked boxes, the active tab */
+  --color-selected: #c8ff3d;
+  --color-selected-foreground: #0c0c14;
 
-  /* Confidence traffic lights — 1–2 red, 3–4 amber, 5 green */
-  --color-conf-low: oklch(0.5769 0.1775 24.91);
-  --color-conf-mid: oklch(0.7137 0.1434 70.08);
-  --color-conf-high: oklch(0.5479 0.132 150.35);
-  --color-exam-imminent: oklch(0.55 0.24 27);
+  /* Confidence traffic lights — red, amber, green (neon on dark; use dark text on them) */
+  --color-conf-low: #ff4d6d;
+  --color-conf-mid: #ffb547;
+  --color-conf-high: #3dffa2;
+  --color-exam-imminent: #ff4d6d;
 
-  /* Legacy checker tokens — mapped onto the navy (#14133e) & orange (#fe9a00) palette */
-  --color-checker-ink: #14133e;
-  --color-checker-mint: #fe9a00;
-  --color-checker-paper: #f3f4f6;
-  --color-checker-line: #e2e4ea;
-  --color-checker-highlight: #ffd699;
+  /* Knowledge Checker tokens — ink and paper swap, so ink panels read as light cards */
+  --color-checker-ink: #f2f2f7;
+  --color-checker-mint: #c8ff3d;
+  --color-checker-paper: #161622;
+  --color-checker-line: #2a2a3d;
+  --color-checker-highlight: #c8ff3d;
 }
 
 @theme inline {
@@ -72,26 +78,27 @@
 }
 
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.9605 0.0046 258.32);
-  --foreground: oklch(0.2192 0.0798 278.56);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2192 0.0798 278.56);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2192 0.0798 278.56);
-  --primary: oklch(0.7724 0.1728 65.37);
-  --primary-foreground: oklch(0.2192 0.0798 278.56);
-  --secondary: oklch(0.928 0.012 265);
-  --secondary-foreground: oklch(0.2192 0.0798 278.56);
-  --muted: oklch(0.928 0.012 265);
-  --muted-foreground: oklch(0.4806 0.037 274.5);
-  --accent: oklch(0.944 0.047 73);
-  --accent-foreground: oklch(0.2192 0.0798 278.56);
-  --destructive: oklch(0.5915 0.1371 9.92);
-  --destructive-foreground: oklch(0.9942 0.0069 88.64);
-  --border: oklch(0.885 0.012 265);
-  --input: oklch(0.885 0.012 265);
-  --ring: oklch(0.7724 0.1728 65.37);
+  color-scheme: dark;
+  --radius: 1rem;
+  --background: #0c0c14;
+  --foreground: #f2f2f7;
+  --card: #161622;
+  --card-foreground: #f2f2f7;
+  --popover: #1b1b2a;
+  --popover-foreground: #f2f2f7;
+  --primary: #c8ff3d;
+  --primary-foreground: #0c0c14;
+  --secondary: #232334;
+  --secondary-foreground: #f2f2f7;
+  --muted: #232334;
+  --muted-foreground: #a3a3bd;
+  --accent: #262638;
+  --accent-foreground: #f2f2f7;
+  --destructive: #ff4d6d;
+  --destructive-foreground: #0c0c14;
+  --border: #2a2a3d;
+  --input: #34344a;
+  --ring: #c8ff3d;
 }
 
 @keyframes fadeSaved {
@@ -157,6 +164,17 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 35%, transparent);
   }
 }
 

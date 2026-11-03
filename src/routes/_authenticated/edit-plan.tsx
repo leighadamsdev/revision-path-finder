@@ -298,7 +298,7 @@ function EditPlanPage() {
           </Button>
         </div>
 
-        <div className="mt-5 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+        <div className="mt-5 rounded-[16px] bg-card p-5 ring-1 ring-border">
           <label className="block">
             <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
               Plan name
@@ -354,7 +354,7 @@ function EditPlanPage() {
                     }
                     className={`rounded-full px-3 py-2 text-[13px] font-bold ${
                       on
-                        ? "bg-structure text-structure-foreground"
+                        ? "bg-selected text-selected-foreground"
                         : "bg-background text-muted-foreground ring-1 ring-border"
                     }`}
                   >
@@ -423,7 +423,7 @@ function EditPlanPage() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+        <div className="mt-4 rounded-[16px] bg-card p-5 ring-1 ring-border">
           <p className="text-sm font-extrabold tracking-tight">Subjects, exam dates and confidence</p>
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
             Exam dates are optional — add them whenever your school confirms them. Topics you feel
@@ -595,7 +595,7 @@ function EditPlanPage() {
           </Button>
         </div>
 
-        <div className="mt-6 rounded-[16px] bg-card p-5 ring-1 ring-black/5">
+        <div className="mt-6 rounded-[16px] bg-card p-5 ring-1 ring-border">
           <p className="text-sm font-extrabold tracking-tight">Delete this plan</p>
           <p className="mt-1 text-[13px] font-medium text-muted-foreground">
             Removes the plan and every session in it. This can't be undone.

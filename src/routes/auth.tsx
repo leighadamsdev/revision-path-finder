@@ -129,7 +129,7 @@ function AuthPage() {
       <PublicHeader />
 
       <main className="mx-auto w-full max-w-md flex-1 px-5 pb-16 pt-6">
-        <div className="rounded-[18px] bg-card p-5 ring-1 ring-black/5">
+        <div className="rounded-[18px] bg-card p-5 ring-1 ring-border">
           {checkEmail ? (
             <div>
               <p className="text-lg font-extrabold tracking-tight">Check your email</p>

@@ -102,7 +102,7 @@ export function ReadyListDialog({
           onClick={() => setMany(allKeys, !allOn)}
           className={`justify-self-start rounded-full px-3 py-1.5 text-[12px] font-bold ${
             allOn
-              ? "bg-structure text-structure-foreground"
+              ? "bg-selected text-selected-foreground"
               : "bg-card text-muted-foreground ring-1 ring-border"
           }`}
         >
@@ -148,11 +148,11 @@ export function ReadyListDialog({
                         >
                           <span
                             className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-[6px] ${
-                              on ? "bg-structure" : "ring-1 ring-border"
+                              on ? "bg-selected" : "ring-1 ring-border"
                             }`}
                           >
                             {on ? (
-                              <Check className="size-3 text-structure-foreground" strokeWidth={3} />
+                              <Check className="size-3 text-selected-foreground" strokeWidth={3} />
                             ) : null}
                           </span>
                           <span className="text-[13px] font-medium">{e.label}</span>

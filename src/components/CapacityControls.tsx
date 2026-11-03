@@ -10,7 +10,7 @@ export function CapacityControls({
 }) {
   const budgetHours = value.weeklyMinutesBudget ? value.weeklyMinutesBudget / 60 : "";
   return (
-    <div className="space-y-3 rounded-[12px] bg-background p-3 ring-1 ring-black/5">
+    <div className="space-y-3 rounded-[12px] bg-background p-3 ring-1 ring-border">
       <label className="block">
         <span className="text-[12px] font-extrabold">Weekly time budget (optional)</span>
         <span className="mt-0.5 block text-[11px] font-medium text-muted-foreground">

@@ -156,7 +156,7 @@ export function HomeSteps() {
               <li key={step.title} className="relative flex items-start">
                 <div
                   className={`z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-[8px] text-lg font-extrabold shadow-lg sm:flex ${
-                    step.done ? "bg-conf-high text-white" : "bg-primary text-primary-foreground"
+                    step.done ? "bg-conf-high text-background" : "bg-primary text-primary-foreground"
                   }`}
                 >
                   {step.done ? (
@@ -176,7 +176,7 @@ export function HomeSteps() {
                   <div className="mb-3 flex items-center gap-2 sm:hidden">
                     <span
                       className={`flex h-9 w-9 items-center justify-center rounded-[8px] text-sm font-extrabold shadow-md ${
-                        step.done ? "bg-conf-high text-white" : "bg-primary text-primary-foreground"
+                        step.done ? "bg-conf-high text-background" : "bg-primary text-primary-foreground"
                       }`}
                     >
                       {step.done ? (

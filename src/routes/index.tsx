@@ -159,7 +159,7 @@ function PlanMockup() {
       </p>
       <div className="mt-3 overflow-hidden rounded-[8px] bg-card shadow-[0_20px_60px_-25px] shadow-structure/35 ring-1 ring-border">
         <div className="flex flex-wrap items-center gap-3 bg-structure px-4 py-3">
-          <LogoOnDark className="h-5 w-auto" />
+          <LogoOnDark />
           <div className="ml-auto flex items-center gap-1.5">
             {["Week 2", "Week 3", "Week 4"].map((week, i) => (
               <span
@@ -189,7 +189,7 @@ function PlanMockup() {
                   return (
                     <div
                       key={session.topic}
-                      className="rounded-[14px] bg-background/60 p-3 ring-1 ring-black/5"
+                      className="rounded-[14px] bg-background/60 p-3 ring-1 ring-border"
                     >
                       <div className="flex items-center gap-2">
                         <span

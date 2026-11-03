@@ -19,7 +19,7 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-3 rounded-[16px] bg-card p-4 ring-1 ring-black/5 sm:p-5">
+    <section className="space-y-3 rounded-[16px] bg-card p-4 ring-1 ring-border sm:p-5">
       <div>
         <p className="flex items-center gap-2 text-sm font-extrabold">
           <span className="grid size-6 place-items-center rounded-[6px] bg-primary text-[12px] text-primary-foreground">
@@ -142,7 +142,7 @@ export function MultiGroup({
               title={o.prompt}
               className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-bold ${
                 on
-                  ? "bg-structure text-structure-foreground"
+                  ? "bg-selected text-selected-foreground"
                   : "bg-background text-muted-foreground ring-1 ring-border"
               }`}
             >

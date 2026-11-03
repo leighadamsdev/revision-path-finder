@@ -16,8 +16,11 @@ import {
 } from "lucide-react";
 
 import { PremiumTag } from "@/components/PremiumGate";
+import { ProgressHero } from "@/components/ProgressHero";
+import { TodaySessions } from "@/components/TodaySessions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActivePlan, useExams, usePlanSessions, usePlanSubjects } from "@/hooks/useActivePlan";
+import { useActivity } from "@/hooks/useActivity";
 import { useAuth } from "@/hooks/useAuth";
 import { useLibrary } from "@/hooks/useLibrary";
 import { usePremium } from "@/hooks/usePremium";
@@ -64,6 +67,7 @@ export function HomeDashboard() {
   const planSubjects = usePlanSubjects(plan?.id).data ?? [];
   const sessions = usePlanSessions(plan?.id).data ?? [];
   const exams = useExams(plan?.id).data ?? [];
+  const activity = useActivity();
   const checkers = useQuery({
     queryKey: ["home-checkers", user?.id],
     enabled: Boolean(user) && isPremium,
@@ -128,6 +132,16 @@ export function HomeDashboard() {
     .sort((a, b) => a.iso.localeCompare(b.iso) || a.s.session_slot - b.s.session_slot)[0];
   const subjectName = (id: string | null) =>
     planSubjects.find((p) => p.id === id)?.name ?? "Revision";
+  const todayItems = isPremium
+    ? dated
+        .filter((x) => x.iso === todayIso && !x.s.missed_at)
+        .sort((a, b) => a.s.session_slot - b.s.session_slot)
+        .map((x) => ({
+          s: x.s,
+          subject: subjectName(x.s.subject_id),
+          colorKey: planSubjects.find((p) => p.id === x.s.subject_id)?.color_key,
+        }))
+    : [];
 
   const nextExam = exams
     .filter((e) => e.exam_date && e.exam_date >= todayIso)
@@ -258,7 +272,7 @@ export function HomeDashboard() {
                 to: "/setup",
                 action: "Build my plan",
               }
-            : next && next.iso === todayIso
+            : !todayItems.length && next && next.iso === todayIso
               ? {
                   title: `Today: ${subjectName(next.s.subject_id)}`,
                   body: next.s.topic_text
@@ -307,6 +321,10 @@ export function HomeDashboard() {
         </div>
       ) : (
         <>
+          <ProgressHero bands={bands} activity={activity.data} />
+
+          {plan ? <TodaySessions planId={plan.id} items={todayItems} /> : null}
+
           <Link
             to={suggestion.to}
             className="group mt-5 block rounded-[16px] bg-structure p-5 text-structure-foreground shadow-lg ring-2 ring-primary transition-transform hover:-translate-y-0.5 sm:p-6"
@@ -321,26 +339,6 @@ export function HomeDashboard() {
               <ArrowRight className="size-4" aria-hidden="true" />
             </span>
           </Link>
-
-          {topicCount ? (
-            <Link
-              to="/rate-topics"
-              className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[14px] bg-card px-4 py-3 ring-1 ring-border hover:ring-border"
-            >
-              <span className="text-[12px] font-extrabold uppercase tracking-wide text-muted-foreground">
-                Your topics
-              </span>
-              <Count dot="bg-conf-low" n={bands.red} label="red" />
-              <Count dot="bg-conf-mid" n={bands.amber} label="amber" />
-              <Count dot="bg-conf-high" n={bands.green} label="green" />
-              {bands.unrated ? (
-                <Count dot="ring-1 ring-muted-foreground/50" n={bands.unrated} label="not rated" />
-              ) : null}
-              <span className="ml-auto inline-flex items-center gap-1 text-[12px] font-bold text-primary">
-                View by colour <ArrowRight className="size-3.5" />
-              </span>
-            </Link>
-          ) : null}
 
           <section className="mt-6" aria-labelledby="progress-heading">
             <h2 id="progress-heading" className="text-lg font-extrabold tracking-tight">
@@ -436,15 +434,6 @@ export function HomeDashboard() {
         </>
       )}
     </div>
-  );
-}
-
-function Count({ dot, n, label }: { dot: string; n: number; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] font-bold">
-      <span className={`size-2.5 rounded-full ${dot}`} />
-      <span className="tabular-nums">{n}</span> {label}
-    </span>
   );
 }
 

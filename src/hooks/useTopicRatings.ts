@@ -33,6 +33,7 @@ export function useTopicRatings() {
       void queryClient.invalidateQueries({ queryKey: key });
       return;
     }
+    void queryClient.invalidateQueries({ queryKey: ["activity"] });
     if (options?.updatePlans !== false)
       void queryClient.invalidateQueries({ queryKey: ["plan-topics"] });
   }

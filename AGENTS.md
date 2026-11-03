@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Use the semantic light-grey, deep-navy (#14133e), and orange (#fe9a00) palette across the app so every page shares one accessible visual system.
+- Use the "night mode neon" theme tokens in src/styles.css across the app (near-black #0c0c14 background, #161622 cards, lime #c8ff3d actions and selected states, neon red/amber/green ratings, Space Grotesk headings, DM Sans body). Never hardcode colours; use the tokens so every page shares one accessible visual system.
 - The planner is a 3-stage journey (Subjects & exams with five short screens, Check what I know, Choose & build) inside the existing setup route; internal step numbers stay persisted so old drafts and edit/copy journeys remain compatible.
 - Left-out plan topics are stored as plan_topics rows with excluded=true (fetchPlanTopics skips them) so they can be re-included later; sub-topics are stored as "Parent › Sub" topic text so they schedule like topics.
 - Keep subjects and topics in the same reusable library data, but present them on separate My Subjects and My Topics routes so students add subjects first without duplicating records.

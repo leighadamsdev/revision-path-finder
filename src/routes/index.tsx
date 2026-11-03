@@ -66,10 +66,13 @@ function Landing() {
         <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           GCSE REVISION PLANNER AND KNOWLEDGE CHECKER
         </p>
-        <h1 className="mt-3 max-w-[30ch] text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          A bespoke revision timetable, built around exactly what you need to focus on and the time
-          you have.
+        <h1 className="mt-3 text-5xl font-extrabold leading-[1.02] tracking-tight sm:text-7xl">
+          Revise smarter, <span className="whitespace-nowrap text-primary">not longer.</span>
         </h1>
+        <p className="mt-4 max-w-[52ch] text-lg font-medium leading-relaxed text-muted-foreground sm:text-xl">
+          Tell us your subjects and your exam dates. We'll build a plan around what you find hardest
+          and the time you have.
+        </p>
         <HomeSteps />
         <Link
           to="/revision-guide"

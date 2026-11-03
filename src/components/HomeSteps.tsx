@@ -120,7 +120,7 @@ export function HomeSteps() {
     <section className="mt-8 w-full" aria-labelledby="create-plan-heading">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="create-plan-heading" className="text-2xl font-extrabold tracking-tight">
-          Create your plan
+          5 simple steps
         </h2>
         {!loading && !signedIn ? (
           <div className="flex flex-wrap items-center gap-3">

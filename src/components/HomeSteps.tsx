@@ -1,6 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Check, RefreshCw } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  Check,
+  Gauge,
+  RefreshCw,
+  Route,
+  type LucideIcon,
+} from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useActivePlan, useExams, usePlanTopics } from "@/hooks/useActivePlan";
@@ -22,20 +31,20 @@ type To =
 
 type Step = {
   title: string;
+  /** One short line: the steps are icon tiles, so keep it under ten words. */
   body: string;
+  icon: LucideIcon;
   /** Where the step is done in the app. */
   to: To;
-  /** Button label when this is the student's next step. */
-  cta: string;
   done: boolean;
-  /** Something students keep doing rather than finish once: shown with a repeat icon. */
+  /** Something students keep doing rather than finish once. */
   ongoing?: boolean;
   /** Part of Premium: free students are sent to the Upgrade page instead. */
   premium?: boolean;
 };
 
 /**
- * The steps on the home page (four to set up, then one to keep doing), each linking to where it's done. For a signed-in student
+ * The steps on the home page as compact icon tiles (four to set up, then one to keep doing). For a signed-in student
  * finished steps are ticked and the next one is highlighted with its own button, so there's
  * no separate "what to do next" box. Signed-out visitors are sent to sign up first.
  */
@@ -67,44 +76,43 @@ export function HomeSteps() {
   const hasRatings =
     topics.some((t) => t.confidence != null) ||
     Object.values(savedRatings).some((subject) => Object.keys(subject).length > 0);
-  const inSetup = !plan && Boolean(draft.data);
 
   const steps: Step[] = [
     {
-      title: "Pick your subjects",
-      body: "Tick every subject you take and choose your tier and exam board.",
+      title: "Pick subjects",
+      body: "Your subjects, exam boards and tiers.",
+      icon: BookOpen,
       to: "/library",
-      cta: "Add my subjects",
       done: signedIn && hasSubjects,
     },
     {
-      title: "Choose and rate your topics",
-      body: "Use a ready-made exam board list, upload a photo of your revision guide, or type your own. Then rate each topic red, amber or green: red topics get the most revision time.",
+      title: "Rate topics",
+      body: "Red, amber or green. Red gets most time.",
+      icon: Gauge,
       to: hasTopics ? "/rate-topics" : "/topics",
-      cta: hasTopics ? "Rate my topics" : "Choose my topics",
       done: signedIn && hasTopics && hasRatings,
     },
     {
-      title: "Get your exam dates",
-      body: "Annual summer exams are added from the official timetable. Add mocks from your school's website, a printed sheet or a downloaded list.",
+      title: "Add exams",
+      body: "Summer exams added for you, plus mocks.",
+      icon: CalendarDays,
       to: plan ? "/exams" : "/setup",
-      cta: plan ? "Check my exams" : "Add my exam dates",
       done: signedIn && exams.length > 0,
       premium: true,
     },
     {
       title: "Get your plan",
-      body: "A week-by-week timetable that puts your red topics first and adds more sessions as exams get closer, including holidays.",
+      body: "Week by week, red topics first.",
+      icon: Route,
       to: plan ? "/plan" : "/setup",
-      cta: plan ? "Open my plan" : inSetup ? "Carry on with my plan" : "Build my plan",
       done: signedIn && Boolean(plan),
       premium: true,
     },
     {
-      title: "Keep checking what you know",
-      body: "After you revise a topic, test yourself with the Knowledge Checker or practice exam questions. Then update your confidence rating, so your plan keeps focusing on what you find hardest.",
+      title: "Keep checking",
+      body: "Test yourself, then update your colours.",
+      icon: RefreshCw,
       to: "/knowledge-checker",
-      cta: "Test myself",
       done: false,
       ongoing: true,
       premium: true,
@@ -118,115 +126,83 @@ export function HomeSteps() {
 
   return (
     <section className="mt-8 w-full" aria-labelledby="create-plan-heading">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="create-plan-heading" className="text-2xl font-extrabold tracking-tight">
-          5 simple steps
-        </h2>
-        {!loading && !signedIn ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <Link to="/auth" className="text-sm font-bold underline-offset-4 hover:underline">
-              Already have an account? Sign in
-            </Link>
-            <Link
-              to="/auth"
-              search={{ mode: "signup", context: "create-plan", returnTo: "/library" }}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground shadow-md hover:brightness-105"
-            >
-              Sign up free
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-          </div>
-        ) : null}
-      </div>
-      <div className="relative mt-5 w-full">
-        <div
-          aria-hidden="true"
-          className="absolute bottom-6 left-[26px] top-6 hidden w-0.5 bg-primary sm:block"
-        />
-        <ol className="space-y-6">
-          {steps.map((step, i) => {
-            const isNext = i === next;
-            const linkProps = signedIn
-              ? { to: locked(step) ? ("/upgrade" as const) : step.to }
-              : ({
-                  to: "/auth",
-                  search: { mode: "signup", context: "create-plan", returnTo: step.to },
-                } as const);
-            return (
-              <li key={step.title} className="relative flex items-start">
-                <div
-                  className={`z-10 hidden h-14 w-14 shrink-0 items-center justify-center rounded-[8px] text-lg font-extrabold shadow-lg sm:flex ${
-                    step.done ? "bg-conf-high text-background" : "bg-primary text-primary-foreground"
-                  }`}
-                >
-                  {step.done ? (
-                    <Check className="size-6" strokeWidth={3} aria-label="Done" />
-                  ) : step.ongoing ? (
-                    <RefreshCw className="size-6" strokeWidth={3} aria-label="Keep doing" />
-                  ) : (
-                    String(i + 1).padStart(2, "0")
-                  )}
+      <h2 id="create-plan-heading" className="text-2xl font-extrabold tracking-tight">
+        5 simple steps
+      </h2>
+      <ol className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+        {steps.map((step, i) => {
+          const isNext = i === next;
+          const Icon = step.icon;
+          const linkProps = signedIn
+            ? { to: locked(step) ? ("/upgrade" as const) : step.to }
+            : ({
+                to: "/auth",
+                search: { mode: "signup", context: "create-plan", returnTo: step.to },
+              } as const);
+          return (
+            <li key={step.title} className={step.ongoing ? "col-span-2 sm:col-span-1" : ""}>
+              <Link
+                {...linkProps}
+                className={`group relative flex h-full flex-col gap-3 rounded-[16px] bg-card p-4 ring-1 transition-all hover:-translate-y-0.5 hover:ring-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  isNext ? "ring-2 ring-primary" : "ring-border"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`grid size-11 place-items-center rounded-[12px] ${
+                      step.done
+                        ? "bg-conf-high text-background"
+                        : "bg-primary/12 text-primary ring-1 ring-primary/30"
+                    }`}
+                  >
+                    {step.done ? (
+                      <Check className="size-5" strokeWidth={3} aria-label="Done" />
+                    ) : (
+                      <Icon className="size-5" strokeWidth={2.25} aria-hidden="true" />
+                    )}
+                  </span>
+                  <span className="font-[family-name:var(--font-display)] text-[13px] font-bold text-muted-foreground">
+                    {step.ongoing ? "Repeat" : String(i + 1).padStart(2, "0")}
+                  </span>
                 </div>
-                <Link
-                  {...linkProps}
-                  className={`group block w-full rounded-[8px] bg-structure p-5 text-structure-foreground shadow-lg transition-transform duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary sm:ml-8 sm:p-6 ${
-                    isNext ? "ring-2 ring-primary" : ""
-                  } ${step.done && !isNext ? "opacity-80" : ""}`}
-                >
-                  <div className="mb-3 flex items-center gap-2 sm:hidden">
-                    <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-[8px] text-sm font-extrabold shadow-md ${
-                        step.done ? "bg-conf-high text-background" : "bg-primary text-primary-foreground"
-                      }`}
-                    >
-                      {step.done ? (
-                        <Check className="size-4" strokeWidth={3} aria-hidden="true" />
-                      ) : step.ongoing ? (
-                        <RefreshCw className="size-4" strokeWidth={3} aria-hidden="true" />
-                      ) : (
-                        String(i + 1).padStart(2, "0")
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-xl font-extrabold tracking-tight">{step.title}</h2>
-                    {isNext ? (
-                      <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-primary-foreground">
-                        {step.ongoing ? "Keep going" : "Next"}
-                      </span>
-                    ) : step.ongoing ? (
-                      <span className="text-[12px] font-bold text-primary">As you revise</span>
-                    ) : step.done ? (
-                      <span className="text-[12px] font-bold text-conf-high">Done</span>
-                    ) : null}
-                    {locked(step) ? <PremiumTag /> : null}
-                  </div>
-                  <p className="mt-1 text-base font-medium leading-relaxed opacity-90">
+                <div>
+                  <p className="flex flex-wrap items-center gap-1.5 text-[16px] font-bold leading-tight">
+                    {step.title}
+                  </p>
+                  <p className="mt-1 text-[13px] font-medium leading-snug text-muted-foreground">
                     {step.body}
                   </p>
+                </div>
+                {i === 1 ? (
+                  <span className="flex gap-1" aria-hidden="true">
+                    <span className="h-1.5 flex-1 rounded-full bg-conf-low" />
+                    <span className="h-1.5 flex-1 rounded-full bg-conf-mid" />
+                    <span className="h-1.5 flex-1 rounded-full bg-conf-high" />
+                  </span>
+                ) : null}
+                <div className="mt-auto flex items-center justify-between gap-2">
+                  {step.premium && !isPremium ? <PremiumTag /> : <span />}
                   {isNext ? (
-                    <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-primary-foreground">
-                      {locked(step) ? "Upgrade to Premium" : step.cta}
-                      <ArrowRight className="size-4" aria-hidden="true" />
+                    <span className="rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-extrabold uppercase text-primary-foreground">
+                      Next
                     </span>
                   ) : (
-                    <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-primary opacity-80 transition-opacity group-hover:opacity-100">
-                      {step.ongoing ? step.cta : step.done ? "Review or change" : "Go to this step"}
-                      <ArrowRight className="size-3.5" aria-hidden="true" />
-                    </span>
+                    <ArrowRight
+                      className="size-4 text-primary opacity-60 transition-opacity group-hover:opacity-100"
+                      aria-hidden="true"
+                    />
                   )}
-                </Link>
-              </li>
-            );
-          })}
-        </ol>
-        {!loading && !signedIn ? (
-          <p className="mt-5 text-[13px] font-semibold text-muted-foreground">
-            Sign up free for steps 1 and 2. Premium adds your exam timetable, plan and the Knowledge
-            Checker.
-          </p>
-        ) : null}
-      </div>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+      {!loading && !signedIn ? (
+        <p className="mt-3 text-[12px] font-semibold text-muted-foreground">
+          Steps 1 and 2 are free. Premium adds 3, 4 and 5.
+        </p>
+      ) : null}
     </section>
   );
 }

@@ -80,8 +80,6 @@ function Landing() {
 
         <QuickLinks />
 
-        <CheckerMockup />
-
         <PlanMockup />
 
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
@@ -149,7 +147,6 @@ const SUBJECT_STYLES: Record<string, { tag: string; dot: string; fill: string }>
   sci: { tag: "bg-sci/10 text-sci", dot: "bg-sci", fill: "bg-sci" },
   hist: { tag: "bg-hist/10 text-hist", dot: "bg-hist", fill: "bg-hist" },
 };
-
 
 function PlanMockup() {
   return (
@@ -223,130 +220,6 @@ function PlanMockup() {
       <p className="mt-3 text-center text-[13px] font-semibold text-muted-foreground">
         Two sessions a day, one topic each — rate how it went and RevPlan brings weak topics back
         before exam day.
-      </p>
-    </div>
-  );
-}
-
-const CHECKER_ROWS = [
-  {
-    component: "Lock-and-key model",
-    recall: [
-      "Enzyme's active site shape matches the substrate",
-      "High temperatures denature the active site",
-    ],
-    gaps: ["Optimum pH: pepsin is around pH 2 — recheck notes"],
-  },
-  {
-    component: "Rate of reaction",
-    recall: ["Rate rises with temperature until the enzyme denatures"],
-    gaps: [
-      "Substrate concentration: what happens at the plateau?",
-      "Denatured vs saturated — which is which",
-    ],
-  },
-];
-
-function CheckerMockup() {
-  return (
-    <div className="mt-14">
-      <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-        What a knowledge checker looks like
-      </p>
-      <div className="mt-3 overflow-hidden rounded-[8px] border border-structure bg-card shadow-[0_20px_60px_-25px] shadow-structure/35">
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-structure px-4 py-3 text-structure-foreground">
-          <div>
-            <p className="text-[11px] font-extrabold uppercase text-primary">
-              RevPlan · active recall
-            </p>
-            <p className="mt-0.5 text-[15px] font-extrabold">
-              Closed book first. Be honest with the gaps.
-            </p>
-          </div>
-          <span className="rounded-[8px] border border-primary/60 px-2.5 py-1 text-[13px] font-extrabold tabular-nums">
-            21:47 ⏱
-          </span>
-        </div>
-
-        <div className="grid gap-2 border-b border-border bg-background px-4 py-3 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground sm:grid-cols-[1fr_1.4fr_0.7fr]">
-          <span>
-            Subject
-            <span className="mt-1 block text-[13px] font-bold normal-case tracking-normal text-foreground">
-              Biology
-            </span>
-          </span>
-          <span>
-            Topic title
-            <span className="mt-1 block text-[13px] font-bold normal-case tracking-normal text-foreground">
-              Enzymes
-            </span>
-          </span>
-          <span>
-            Date
-            <span className="mt-1 block text-[13px] font-bold normal-case tracking-normal text-foreground">
-              24 Sep
-            </span>
-          </span>
-        </div>
-
-        {CHECKER_ROWS.map((row, index) => (
-          <div
-            key={row.component}
-            className="grid border-b border-border md:grid-cols-[0.7fr_1.3fr]"
-          >
-            <div className="border-b border-border bg-background p-4 md:border-b-0 md:border-r">
-              <p className="text-[11px] font-extrabold uppercase text-muted-foreground">
-                Key component {index + 1}
-              </p>
-              <p className="mt-2 text-[14px] font-bold leading-snug">{row.component}</p>
-            </div>
-            <div className="grid gap-3 p-4 sm:grid-cols-2">
-              <div>
-                <p className="text-[11px] font-extrabold uppercase text-muted-foreground">
-                  What I already know
-                </p>
-                <ul className="mt-2 space-y-1.5">
-                  {row.recall.map((line) => (
-                    <li
-                      key={line}
-                      className="text-[12.5px] font-semibold leading-relaxed text-foreground"
-                    >
-                      {line}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="text-[11px] font-extrabold uppercase text-foreground">
-                  Gaps and corrections
-                </p>
-                <div className="mt-2 rounded-[6px] border-l-4 border-primary bg-accent p-2.5">
-                  <ul className="space-y-1.5">
-                    {row.gaps.map((line) => (
-                      <li
-                        key={line}
-                        className="text-[12.5px] font-semibold leading-relaxed text-foreground"
-                      >
-                        {line}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        <div className="flex flex-col justify-between gap-2 bg-accent px-4 py-3 text-[13px] font-extrabold text-foreground sm:flex-row sm:items-center">
-          <span>3 secure items · 3 highlighted gaps</span>
-          <span className="self-start rounded-full bg-primary px-3 py-1.5 text-[11px] text-primary-foreground sm:self-auto">
-            Priority: Target highlighted gaps next
-          </span>
-        </div>
-      </div>
-      <p className="mt-3 text-center text-[13px] font-semibold text-muted-foreground">
-        Brain dump from memory, then open your notes and highlight exactly what was missing — every
-        gap becomes a flashcard or a lower confidence rating in your plan.
       </p>
     </div>
   );

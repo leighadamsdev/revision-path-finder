@@ -86,7 +86,7 @@ export function HomeSteps() {
     },
     {
       title: "Get your exam dates",
-      body: "Your summer exams are added from the official timetable. Add mocks from your school's website, a printed sheet or a downloaded list.",
+      body: "Annual summer exams are added from the official timetable. Add mocks from your school's website, a printed sheet or a downloaded list.",
       to: plan ? "/exams" : "/setup",
       cta: plan ? "Check my exams" : "Add my exam dates",
       done: signedIn && exams.length > 0,

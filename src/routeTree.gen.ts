@@ -38,6 +38,7 @@ import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSitesRouteImport } from './routes/_authenticated/sites'
 import { Route as AuthenticatedTopicsRouteImport } from './routes/_authenticated/topics'
 import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
+import { Route as PremiumFeatureRouteImport } from './routes/premium.$feature'
 import { Route as ShareTokenRouteImport } from './routes/share.$token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -186,6 +187,11 @@ const AuthenticatedUpgradeRoute = AuthenticatedUpgradeRouteImport.update({
   path: '/upgrade',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const PremiumFeatureRoute = PremiumFeatureRouteImport.update({
+  id: '/premium/$feature',
+  path: '/premium/$feature',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShareTokenRoute = ShareTokenRouteImport.update({
   id: '/share/$token',
   path: '/share/$token',
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/sites': typeof AuthenticatedSitesRoute
   '/topics': typeof AuthenticatedTopicsRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
+  '/premium/$feature': typeof PremiumFeatureRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesByTo {
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/sites': typeof AuthenticatedSitesRoute
   '/topics': typeof AuthenticatedTopicsRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
+  '/premium/$feature': typeof PremiumFeatureRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesById {
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/_authenticated/sites': typeof AuthenticatedSitesRoute
   '/_authenticated/topics': typeof AuthenticatedTopicsRoute
   '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
+  '/premium/$feature': typeof PremiumFeatureRoute
   '/share/$token': typeof ShareTokenRoute
 }
 export interface FileRouteTypes {
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/sites'
     | '/topics'
     | '/upgrade'
+    | '/premium/$feature'
     | '/share/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/sites'
     | '/topics'
     | '/upgrade'
+    | '/premium/$feature'
     | '/share/$token'
   id:
     | '__root__'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sites'
     | '/_authenticated/topics'
     | '/_authenticated/upgrade'
+    | '/premium/$feature'
     | '/share/$token'
   fileRoutesById: FileRoutesById
 }
@@ -396,6 +408,7 @@ export interface RootRouteChildren {
   RevisionHelpRoute: typeof RevisionHelpRoute
   RevisionToolsRoute: typeof RevisionToolsRoute
   TermsRoute: typeof TermsRoute
+  PremiumFeatureRoute: typeof PremiumFeatureRoute
   ShareTokenRoute: typeof ShareTokenRoute
 }
 
@@ -604,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUpgradeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/premium/$feature': {
+      id: '/premium/$feature'
+      path: '/premium/$feature'
+      fullPath: '/premium/$feature'
+      preLoaderRoute: typeof PremiumFeatureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/share/$token': {
       id: '/share/$token'
       path: '/share/$token'
@@ -671,6 +691,7 @@ const rootRouteChildren: RootRouteChildren = {
   RevisionHelpRoute: RevisionHelpRoute,
   RevisionToolsRoute: RevisionToolsRoute,
   TermsRoute: TermsRoute,
+  PremiumFeatureRoute: PremiumFeatureRoute,
   ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport

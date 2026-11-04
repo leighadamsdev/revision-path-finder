@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { usePremium } from "@/hooks/usePremium";
 import { PremiumTag } from "@/components/PremiumGate";
+import { navHref } from "@/lib/premium-previews";
 
 type NavItem = { to: string; label: string; premium?: boolean };
 
@@ -36,7 +37,8 @@ const MOBILE_PRIMARY = ["/library", "/topics"] as const;
 
 export function PublicHeader() {
   const { user } = useAuth();
-  const { isPremium } = usePremium();
+  const { isPremium, loading: premiumLoading } = usePremium();
+  const showPreview = !premiumLoading && !isPremium;
   const [moreOpen, setMoreOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const pathname = useLocation().pathname;
@@ -111,7 +113,7 @@ export function PublicHeader() {
                     {group.items.map((item) => (
                       <Link
                         key={item.to}
-                        to={item.to}
+                        to={navHref(item.to, item.premium, showPreview)}
                         onClick={() => setOpenGroup(null)}
                         className={`flex items-center gap-2 whitespace-nowrap rounded-[8px] px-3 py-2.5 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${
                           isActive(item.to) ? activeLinkClass : ""
@@ -133,7 +135,7 @@ export function PublicHeader() {
             {GROUPS.flatMap((group) => group.items)
               .filter((item) => (MOBILE_PRIMARY as readonly string[]).includes(item.to))
               .map((item) => (
-                <Link key={item.to} to={item.to} className="flex min-h-11 items-center justify-center rounded-[8px] px-1 text-center text-[11px] font-bold text-muted-foreground" activeProps={{ className: activeLinkClass }} activeOptions={{ exact: true }}>{item.label}</Link>
+                <Link key={item.to} to={navHref(item.to, item.premium, showPreview)} className="flex min-h-11 items-center justify-center rounded-[8px] px-1 text-center text-[11px] font-bold text-muted-foreground" activeProps={{ className: activeLinkClass }} activeOptions={{ exact: true }}>{item.label}</Link>
               ))}
             <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} className="flex min-h-11 items-center justify-center gap-1 rounded-[8px] text-[11px] font-bold text-muted-foreground hover:bg-secondary">
               {moreOpen ? <X className="size-4" /> : <Menu className="size-4" />} More
@@ -157,7 +159,7 @@ export function PublicHeader() {
                   <div key={group.label}>
                     <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70">{group.label}</p>
                     {group.items.map((item) => (
-                      <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)} className={`flex items-center gap-2 rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${isActive(item.to) ? activeLinkClass : ""}`}>{item.label}{item.premium && !isPremium ? <PremiumTag className="ml-auto" /> : null}</Link>
+                      <Link key={item.to} to={navHref(item.to, item.premium, showPreview)} onClick={() => setMoreOpen(false)} className={`flex items-center gap-2 rounded-[8px] px-3 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground ${isActive(item.to) ? activeLinkClass : ""}`}>{item.label}{item.premium && !isPremium ? <PremiumTag className="ml-auto" /> : null}</Link>
                     ))}
                   </div>
                 ))}

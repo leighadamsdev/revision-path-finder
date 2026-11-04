@@ -18,6 +18,7 @@ import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { usePremium } from "@/hooks/usePremium";
 import { PremiumTag } from "@/components/PremiumGate";
 import { supabase } from "@/integrations/supabase/client";
+import { navHref } from "@/lib/premium-previews";
 
 type To =
   | "/library"
@@ -134,7 +135,7 @@ export function HomeSteps() {
           const isNext = i === next;
           const Icon = step.icon;
           const linkProps = signedIn
-            ? { to: locked(step) ? ("/upgrade" as const) : step.to }
+            ? { to: locked(step) ? navHref(step.to, true, true) : step.to }
             : ({
                 to: "/auth",
                 search: { mode: "signup", context: "create-plan", returnTo: step.to },

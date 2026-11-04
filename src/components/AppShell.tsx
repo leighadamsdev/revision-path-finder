@@ -28,6 +28,7 @@ import { useIsAdmin } from "@/hooks/useRole";
 import { usePremium } from "@/hooks/usePremium";
 import { PremiumTag } from "@/components/PremiumGate";
 import { LogoOnDark } from "@/components/Logo";
+import { navHref } from "@/lib/premium-previews";
 
 
 const MY_REVISION_TABS: readonly NavTab[] = [
@@ -209,7 +210,7 @@ export function AppShell({
                       {group.items.map((tab) => (
                         <Link
                           key={tab.to}
-                          to={tab.to}
+                          to={navHref(tab.to, tab.premium, showUpgrade)}
                           onClick={() => setOpenGroup(null)}
                           className={`flex items-center gap-3 whitespace-nowrap rounded-[8px] px-3 py-2.5 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10 ${
                             isActive(tab.to) ? "bg-structure-foreground/10 text-primary" : ""
@@ -243,7 +244,7 @@ export function AppShell({
                 <House className="size-4" /><span className="text-[10px] font-bold">Home</span>
               </Link>
               {ALL_TABS.filter((tab) => (MOBILE_PRIMARY as readonly string[]).includes(tab.to)).map((tab) => (
-                <Link key={tab.to} to={tab.to} className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-[8px] px-1 text-structure-foreground/70" activeProps={{ className: "bg-structure-foreground/10 text-primary" }} activeOptions={{ exact: true }}>
+                <Link key={tab.to} to={navHref(tab.to, tab.premium, showUpgrade)} className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-[8px] px-1 text-structure-foreground/70" activeProps={{ className: "bg-structure-foreground/10 text-primary" }} activeOptions={{ exact: true }}>
                   <tab.icon className="size-4" strokeWidth={2.5} />
                   <span className="whitespace-nowrap text-[10px] font-bold">{tab.label}</span>
                 </Link>
@@ -271,7 +272,7 @@ export function AppShell({
                     <div key={group.label}>
                       <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-wide text-structure-foreground/50">{group.label}</p>
                       {group.items.map((tab) => (
-                        <Link key={tab.to} to={tab.to} onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10" activeProps={{ className: "bg-structure-foreground/10 text-primary" }}>
+                        <Link key={tab.to} to={navHref(tab.to, tab.premium, showUpgrade)} onClick={() => setMoreOpen(false)} className="flex items-center gap-3 rounded-[8px] px-3 py-3 text-sm font-bold text-structure-foreground/80 hover:bg-structure-foreground/10" activeProps={{ className: "bg-structure-foreground/10 text-primary" }}>
                           <tab.icon className="size-4 shrink-0" />{tab.label}
                           {tab.premium && showUpgrade ? <PremiumTag className="ml-auto" /> : null}
                         </Link>

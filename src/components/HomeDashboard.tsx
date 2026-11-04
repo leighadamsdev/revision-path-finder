@@ -28,6 +28,7 @@ import { useTopicRatings } from "@/hooks/useTopicRatings";
 import { supabase } from "@/integrations/supabase/client";
 import { topicLines, withWholeTopicRatings } from "@/lib/library";
 import { planDayDate } from "@/lib/plan-dates";
+import { navHref } from "@/lib/premium-previews";
 
 type To =
   | "/library"
@@ -51,7 +52,8 @@ type ProgressRow = {
   title: string;
   status: Status;
   detail: string;
-  to: To;
+  /** A page in the app, or a Premium example page (/premium/...). */
+  to: string;
   action: string;
 };
 
@@ -192,8 +194,8 @@ export function HomeDashboard() {
           title: "Your exam dates",
           status: "locked",
           detail: "Premium adds your summer exams from the official timetable, plus your mocks.",
-          to: "/upgrade",
-          action: "See Premium",
+          to: "/premium/exam-timetable",
+          action: "See an example",
         },
     isPremium
       ? {
@@ -213,8 +215,8 @@ export function HomeDashboard() {
           title: "Your revision plan",
           status: "locked",
           detail: "Premium turns your topics and ratings into a week-by-week timetable.",
-          to: "/upgrade",
-          action: "See Premium",
+          to: "/premium/revision-planner",
+          action: "See an example",
         },
     isPremium
       ? {
@@ -479,7 +481,7 @@ function Shortcut({
 }) {
   return (
     <Link
-      to={premium ? "/upgrade" : to}
+      to={premium ? navHref(to, true, true) : to}
       className="flex items-start gap-3 rounded-[14px] bg-card p-4 ring-1 ring-border hover:ring-border"
     >
       <span className="grid size-8 shrink-0 place-items-center rounded-[8px] bg-background text-foreground ring-1 ring-border">
